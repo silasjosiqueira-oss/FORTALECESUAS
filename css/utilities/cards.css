@@ -1,0 +1,373 @@
+/* ============================================
+   COMPONENTS - CARDS
+   Estilos para cards
+   ============================================ */
+
+/* ============================================
+   BASE CARD
+   ============================================ */
+
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--color-white);
+    background-clip: border-box;
+    border: var(--border-width-thin) solid var(--admin-border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--admin-card-shadow);
+    transition: all var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   CARD BODY
+   ============================================ */
+
+.card-body {
+    flex: 1 1 auto;
+    padding: var(--space-lg);
+}
+
+.card-body > :last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   CARD HEADER
+   ============================================ */
+
+.card-header {
+    padding: var(--space-md) var(--space-lg);
+    background-color: var(--color-gray-50);
+    border-bottom: var(--border-width-thin) solid var(--admin-border-color);
+    border-top-left-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+    border-top-right-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+}
+
+.card-header:first-child {
+    border-radius: calc(var(--border-radius-md) - var(--border-width-thin)) calc(var(--border-radius-md) - var(--border-width-thin)) 0 0;
+}
+
+/* ============================================
+   CARD FOOTER
+   ============================================ */
+
+.card-footer {
+    padding: var(--space-md) var(--space-lg);
+    background-color: var(--color-gray-50);
+    border-top: var(--border-width-thin) solid var(--admin-border-color);
+    border-bottom-left-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+    border-bottom-right-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+}
+
+.card-footer:last-child {
+    border-radius: 0 0 calc(var(--border-radius-md) - var(--border-width-thin)) calc(var(--border-radius-md) - var(--border-width-thin));
+}
+
+/* ============================================
+   CARD TITLE & SUBTITLE
+   ============================================ */
+
+.card-title {
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-gray-900);
+    line-height: var(--line-height-tight);
+}
+
+.card-subtitle {
+    margin-top: calc(var(--space-sm) * -0.5);
+    margin-bottom: var(--space-md);
+    font-size: var(--font-size-sm);
+    color: var(--admin-text-muted);
+}
+
+/* ============================================
+   CARD TEXT
+   ============================================ */
+
+.card-text {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-gray-700);
+}
+
+.card-text:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   CARD IMAGE
+   ============================================ */
+
+.card-img,
+.card-img-top,
+.card-img-bottom {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.card-img,
+.card-img-top {
+    border-top-left-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+    border-top-right-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+}
+
+.card-img,
+.card-img-bottom {
+    border-bottom-left-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+    border-bottom-right-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+}
+
+/* ============================================
+   CARD IMAGE OVERLAY
+   ============================================ */
+
+.card-img-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: var(--space-lg);
+    border-radius: calc(var(--border-radius-md) - var(--border-width-thin));
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.7));
+    color: var(--color-white);
+}
+
+/* ============================================
+   CARD LINK
+   ============================================ */
+
+.card-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.card-link:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+}
+
+.card-link + .card-link {
+    margin-left: var(--space-lg);
+}
+
+/* ============================================
+   CARD VARIANTS
+   ============================================ */
+
+/* Hoverable Card */
+.card-hoverable {
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.card-hoverable:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Borderless Card */
+.card-borderless {
+    border: none;
+    box-shadow: none;
+}
+
+/* Flat Card */
+.card-flat {
+    box-shadow: none;
+}
+
+/* ============================================
+   CARD COLORS
+   ============================================ */
+
+.card-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.card-primary .card-header,
+.card-primary .card-footer {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.card-secondary {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--color-white);
+}
+
+.card-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-white);
+}
+
+.card-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.card-warning {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-white);
+}
+
+.card-info {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+    color: var(--color-white);
+}
+
+.card-light {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-200);
+}
+
+.card-dark {
+    background-color: var(--color-gray-900);
+    border-color: var(--color-gray-900);
+    color: var(--color-white);
+}
+
+/* ============================================
+   CARD GROUP
+   ============================================ */
+
+.card-group {
+    display: flex;
+    flex-flow: row wrap;
+    gap: var(--space-md);
+}
+
+.card-group > .card {
+    flex: 1 0 0%;
+    margin-bottom: 0;
+}
+
+/* ============================================
+   CARD DECK
+   ============================================ */
+
+.card-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+    gap: var(--space-lg);
+}
+
+/* ============================================
+   CARD COLUMNS
+   ============================================ */
+
+.card-columns {
+    column-count: 3;
+    column-gap: var(--space-lg);
+}
+
+.card-columns .card {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: var(--space-lg);
+    break-inside: avoid;
+}
+
+@media (max-width: 991px) {
+    .card-columns {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 767px) {
+    .card-columns {
+        column-count: 1;
+    }
+}
+
+/* ============================================
+   DASHBOARD CARDS (Específico do Sistema)
+   ============================================ */
+
+.dashboard-card {
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, var(--color-white) 0%, var(--color-gray-50) 100%);
+}
+
+.dashboard-card .card-value {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    line-height: 1;
+    margin-bottom: var(--space-xs);
+}
+
+.dashboard-card .card-label {
+    font-size: var(--font-size-sm);
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: var(--font-weight-medium);
+}
+
+.dashboard-card .card-icon {
+    width: 4.8rem;
+    height: 4.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--space-md);
+}
+
+.dashboard-card.card-primary .card-icon {
+    background-color: var(--color-primary-alpha);
+    color: var(--color-primary);
+}
+
+.dashboard-card.card-success .card-icon {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: var(--color-success);
+}
+
+.dashboard-card.card-danger .card-icon {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--color-danger);
+}
+
+.dashboard-card.card-warning .card-icon {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: var(--color-warning);
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 767px) {
+    .card-body {
+        padding: var(--space-md);
+    }
+
+    .card-header,
+    .card-footer {
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .dashboard-card {
+        padding: var(--space-lg);
+    }
+}

@@ -1,0 +1,108 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.4rem;
+    color: var(--color-gray-900);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--space-sm);
+}
+
+h1 { font-size: 2.8rem; }
+h2 { font-size: 2.4rem; }
+h3 { font-size: 2.0rem; }
+h4 { font-size: 1.8rem; }
+h5 { font-size: 1.6rem; }
+h6 { font-size: 1.4rem; }
+
+p {
+    margin-bottom: var(--space-md);
+}
+
+/* Tipografia específica do sistema administrativo */
+.sidebar-heading a {
+    font-size: 1.8rem;
+    font-weight: 400;
+}
+
+.menu .list-group-item {
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.text-site {
+    font-size: 1.4rem;
+    font-weight: 400;
+}
+
+.list-info h4 {
+    color: var(--admin-primary-blue);
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.list-info .title {
+    font-size: 1.6rem;
+    font-weight: 400;
+    display: block;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.text-secondary {
+    color: var(--admin-text-muted) !important;
+    font-size: 1.4rem;
+}
+
+.adm-menu-type-separator span {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 0.05rem;
+}
+
+.subgroup .list-group-item {
+    font-size: 1.3rem;
+}
+
+.dropdown-item {
+    font-size: 1.4rem;
+}
+
+/* Tipografia para cards do dashboard */
+.card h4 {
+    font-size: 2.4rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.card p {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+}
+
+/* Utilitários de texto */
+.text-decoration-none {
+    text-decoration: none !important;
+}
+
+.text-left {
+    text-align: left !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-primary {
+    color: var(--admin-primary-blue) !important;
+}

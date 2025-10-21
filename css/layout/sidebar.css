@@ -1,0 +1,139 @@
+.sidebar {
+    width: 280px;
+    background: #483D8B;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+.sidebar__header {
+    padding: var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.sidebar__logo {
+    width: 40px;
+    height: 40px;
+    background: var(--color-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+}
+
+.sidebar__title {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.sidebar__nav {
+    flex: 1;
+    padding: var(--space-md) 0;
+    overflow-y: auto;
+}
+
+.sidebar__nav ul {
+    list-style: none;
+}
+
+.sidebar__nav li a {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--color-gray-300);
+    text-decoration: none;
+    transition: var(--transition);
+    border-left: 4px solid transparent;
+    gap: var(--space-sm);
+    font-size: 1.4rem;
+}
+
+/* Estilos específicos dos ícones */
+.sidebar__nav li a i {
+    margin-right: var(--space-sm);
+    width: 18px;
+    text-align: center;
+    font-size: 16px;
+    opacity: 0.85;
+    transition: var(--transition);
+}
+
+.sidebar__nav li a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+/* Ícone no hover */
+.sidebar__nav li a:hover i {
+    opacity: 1;
+    transform: scale(1.1);
+    color: white;
+}
+
+.sidebar__nav li a.active {
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: var(--color-secondary);
+    color: white;
+}
+
+/* Ícone do link ativo */
+.sidebar__nav li a.active i {
+    color: var(--color-secondary);
+    opacity: 1;
+}
+
+.sidebar__nav .badge {
+    margin-left: auto;
+}
+
+.sidebar__footer {
+    padding: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-panel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+/* Ícone no user-avatar */
+.user-avatar i {
+    font-size: 18px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+.user-role {
+    font-size: 1.2rem;
+    color: var(--color-gray-300);
+}

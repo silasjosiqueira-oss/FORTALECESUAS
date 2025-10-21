@@ -1,0 +1,225 @@
+/* ============================================
+   UTILITIES - BORDERS
+   Bordas e border radius
+   ============================================ */
+
+/* ============================================
+   BORDAS
+   ============================================ */
+
+.border {
+    border: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.border-0 {
+    border: 0 !important;
+}
+
+/* Bordas Individuais */
+.border-top {
+    border-top: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.border-top-0 {
+    border-top: 0 !important;
+}
+
+.border-right {
+    border-right: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.border-right-0 {
+    border-right: 0 !important;
+}
+
+.border-bottom {
+    border-bottom: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.border-bottom-0 {
+    border-bottom: 0 !important;
+}
+
+.border-left {
+    border-left: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.border-left-0 {
+    border-left: 0 !important;
+}
+
+/* ============================================
+   BORDER WIDTH
+   ============================================ */
+
+.border-1 {
+    border-width: var(--border-width-thin) !important;
+}
+
+.border-2 {
+    border-width: var(--border-width-medium) !important;
+}
+
+.border-3 {
+    border-width: 3px !important;
+}
+
+.border-4 {
+    border-width: var(--border-width-thick) !important;
+}
+
+.border-5 {
+    border-width: 5px !important;
+}
+
+/* ============================================
+   BORDER STYLE
+   ============================================ */
+
+.border-solid {
+    border-style: solid !important;
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.border-dotted {
+    border-style: dotted !important;
+}
+
+.border-double {
+    border-style: double !important;
+}
+
+.border-none {
+    border-style: none !important;
+}
+
+/* ============================================
+   BORDER RADIUS
+   ============================================ */
+
+.rounded-0 {
+    border-radius: 0 !important;
+}
+
+.rounded-sm {
+    border-radius: var(--border-radius-sm) !important;
+}
+
+.rounded,
+.rounded-md {
+    border-radius: var(--border-radius-md) !important;
+}
+
+.rounded-lg {
+    border-radius: var(--border-radius-lg) !important;
+}
+
+.rounded-xl {
+    border-radius: var(--border-radius-xl) !important;
+}
+
+.rounded-2xl {
+    border-radius: var(--border-radius-2xl) !important;
+}
+
+.rounded-full {
+    border-radius: var(--border-radius-full) !important;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+/* Border Radius - Cantos Individuais */
+.rounded-top {
+    border-top-left-radius: var(--border-radius-md) !important;
+    border-top-right-radius: var(--border-radius-md) !important;
+}
+
+.rounded-right {
+    border-top-right-radius: var(--border-radius-md) !important;
+    border-bottom-right-radius: var(--border-radius-md) !important;
+}
+
+.rounded-bottom {
+    border-bottom-left-radius: var(--border-radius-md) !important;
+    border-bottom-right-radius: var(--border-radius-md) !important;
+}
+
+.rounded-left {
+    border-top-left-radius: var(--border-radius-md) !important;
+    border-bottom-left-radius: var(--border-radius-md) !important;
+}
+
+/* Cantos Específicos */
+.rounded-top-left {
+    border-top-left-radius: var(--border-radius-md) !important;
+}
+
+.rounded-top-right {
+    border-top-right-radius: var(--border-radius-md) !important;
+}
+
+.rounded-bottom-left {
+    border-bottom-left-radius: var(--border-radius-md) !important;
+}
+
+.rounded-bottom-right {
+    border-bottom-right-radius: var(--border-radius-md) !important;
+}
+
+/* ============================================
+   OUTLINE
+   ============================================ */
+
+.outline-none {
+    outline: none !important;
+}
+
+.outline {
+    outline: 2px solid var(--admin-border-color) !important;
+    outline-offset: 2px !important;
+}
+
+.outline-primary {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+.outline-secondary {
+    outline: 2px solid var(--color-secondary) !important;
+    outline-offset: 2px !important;
+}
+
+.outline-success {
+    outline: 2px solid var(--color-success) !important;
+    outline-offset: 2px !important;
+}
+
+.outline-danger {
+    outline: 2px solid var(--color-danger) !important;
+    outline-offset: 2px !important;
+}
+
+/* ============================================
+   DIVIDE (Para listas e grids)
+   ============================================ */
+
+.divide-y > * + * {
+    border-top: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.divide-x > * + * {
+    border-left: var(--border-width-thin) solid var(--admin-border-color) !important;
+}
+
+.divide-gray-200 > * + * {
+    border-color: var(--color-gray-200) !important;
+}
+
+.divide-gray-300 > * + * {
+    border-color: var(--color-gray-300) !important;
+}

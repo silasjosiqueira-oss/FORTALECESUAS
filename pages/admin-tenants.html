@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Multi-Tenant - Sistema CRAS</title>
+
+    <!-- CSS do Sistema -->
+    <link rel="stylesheet" href="../css/base/reset.css">
+    <link rel="stylesheet" href="../css/base/variables.css">
+    <link rel="stylesheet" href="../css/base/typography.css">
+    <link rel="stylesheet" href="../css/layout/sidebar.css">
+    <link rel="stylesheet" href="../css/layout/header.css">
+    <link rel="stylesheet" href="../css/layout/grid.css">
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/forms.css">
+    <link rel="stylesheet" href="../css/components/modal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #483D8B;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .tenant-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .tenant-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tenant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .tenant-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .tenant-url {
+            color: #483D8B;
+            font-size: 0.9rem;
+        }
+
+        .tenant-url i {
+            margin-right: 0.25rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-ativo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-trial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-suspenso {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-cancelado {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .tenant-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .tenant-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .expiring-soon {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .expired {
+            border-left: 4px solid #ef4444;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #483D8B;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">AS</div>
+                <h1 class="sidebar__title">Assistência Social</h1>
+            </div>
+            <nav class="sidebar__nav">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="atendimento.html"><i class="fas fa-users"></i><span>Atendimentos</span></a></li>
+                    <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+                    <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+                    <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Atividades</span></a></li>
+                    <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+                    <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+                    <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+                    <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+                    <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+                    <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+                    <li><a href="usuarios.html"><i class="fas fa-user-cog"></i><span>Usuários</span></a></li>
+                    <li><a href="admin-tenants.html" class="active"><i class="fas fa-network-wired"></i><span>Multi-Tenant</span></a></li>
+                    <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+                    <li><a href="login.html"><i class="fas fa-sign-out-alt"></i><span>Logoff</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2><i class="fas fa-network-wired"></i> Painel Multi-Tenant</h2>
+                    <p class="header-subtitle">Gerenciamento centralizado de todas as organizações</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn--primary" id="btn-novo-tenant">
+                        <i class="fas fa-plus"></i> Nova Organização
+                    </button>
+                    <button class="btn btn--outline" onclick="carregarTenants()">
+                        <i class="fas fa-sync"></i> Atualizar
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Estatísticas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-tenants">0</div>
+                        <div class="stat-label">Total de Organizações</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="tenants-ativos">0</div>
+                        <div class="stat-label">Ativos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="tenants-trial">0</div>
+                        <div class="stat-label">Em Trial</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-usuarios">0</div>
+                        <div class="stat-label">Total de Usuários</div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-filter"></i> Filtros</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="filter-status">
+                                <option value="">Todos</option>
+                                <option value="ativo">Ativo</option>
+                                <option value="trial">Trial</option>
+                                <option value="suspenso">Suspenso</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plano</label>
+                            <select class="form-select" id="filter-plano">
+                                <option value="">Todos</option>
+                                <option value="basico">Básico</option>
+                                <option value="profissional">Profissional</option>
+                                <option value="empresarial">Empresarial</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pesquisar</label>
+                            <input type="text" class="form-input" id="search-input" placeholder="Nome ou subdomínio...">
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn--primary" onclick="aplicarFiltros()">
+                            <i class="fas fa-search"></i> Pesquisar
+                        </button>
+                        <button class="btn btn--outline" onclick="limparFiltros()">
+                            <i class="fas fa-times"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Tenants -->
+                <div id="tenants-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Novo/Editar Tenant -->
+    <div id="modal-tenant" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Nova Organização</h3>
+                <button class="modal-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <form id="form-tenant" onsubmit="salvarTenant(event)">
+                <input type="hidden" id="tenant-id">
+
+                <div class="form-group">
+                    <label class="form-label">Nome da Organização *</label>
+                    <input type="text" class="form-input" id="tenant-nome" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Subdomínio *</label>
+                        <input type="text" class="form-input" id="tenant-subdomain" required pattern="[a-z0-9-]+" placeholder="exemplo">
+                        <small style="color: #64748b;">Somente letras minúsculas, números e hífen</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CNPJ</label>
+                        <input type="text" class="form-input" id="tenant-cnpj" placeholder="00.000.000/0000-00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email de Contato *</label>
+                    <input type="email" class="form-input" id="tenant-email" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Plano *</label>
+                        <select class="form-select" id="tenant-plano" required>
+                            <option value="">Selecione</option>
+                            <option value="basico">Básico</option>
+                            <option value="profissional">Profissional</option>
+                            <option value="empresarial">Empresarial</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Limite de Usuários</label>
+                        <input type="number" class="form-input" id="tenant-limite" value="10" min="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data de Vencimento</label>
+                    <input type="date" class="form-input" id="tenant-vencimento">
+                </div>
+
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn--outline" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn btn--primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let tenants = [];
+        const API_BASE = '/api/admin/tenants';
+        const SUPER_ADMIN_KEY = 'CHAVE_SUPER_ADMIN_TEMPORARIA'; // TODO: Implementar autenticação real
+
+        // Headers para requisições
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Super-Admin-Key': SUPER_ADMIN_KEY
+            };
+        }
+
+        // Carregar Tenants
+        async function carregarTenants() {
+            try {
+                const res = await fetch(API_BASE, {
+                    headers: getHeaders()
+                });
+
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    tenants = data.dados;
+                    renderizarTenants(tenants);
+                    calcularEstatisticas();
+                } else {
+                    mostrarNotificacao(data.mensagem || 'Erro ao carregar organizações', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar tenants:', error);
+                mostrarNotificacao('Erro de conexão', 'error');
+            }
+        }
+
+        // Calcular Estatísticas
+        function calcularEstatisticas() {
+            const total = tenants.length;
+            const ativos = tenants.filter(t => t.status === 'ativo').length;
+            const trial = tenants.filter(t => t.plano === 'trial' || t.dias_restantes <= 30).length;
+            const totalUsuarios = tenants.reduce((sum, t) => sum + (t.usuarios_ativos || 0), 0);
+
+            document.getElementById('total-tenants').textContent = total;
+            document.getElementById('tenants-ativos').textContent = ativos;
+            document.getElementById('tenants-trial').textContent = trial;
+            document.getElementById('total-usuarios').textContent = totalUsuarios;
+        }
+
+        // Renderizar Tenants
+        function renderizarTenants(lista) {
+            const container = document.getElementById('tenants-container');
+
+            if (lista.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #64748b;">
+                        <i class="fas fa-building" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>Nenhuma organização encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = lista.map(t => {
+                const statusClass = t.status === 'ativo' ? 'status-ativo' :
+                                  t.status === 'trial' ? 'status-trial' :
+                                  t.status === 'suspenso' ? 'status-suspenso' : 'status-cancelado';
+
+                const expiring = t.dias_restantes <= 7 && t.dias_restantes > 0;
+                const expired = t.dias_restantes < 0;
+                const cardClass = expired ? 'tenant-card expired' : expiring ? 'tenant-card expiring-soon' : 'tenant-card';
+
+                const url = `https://${t.subdomain}.fortalecesuas.com`;
+
+                return `
+                    <div class="${cardClass}">
+                        <div class="tenant-header">
+                            <div>
+                                <div class="tenant-title">${t.nome_organizacao}</div>
+                                <div class="tenant-url">
+                                    <i class="fas fa-link"></i>
+                                    <a href="${url}" target="_blank">${t.subdomain}.fortalecesuas.com</a>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${t.status}</span>
+                        </div>
+
+                        <div class="tenant-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Plano</span>
+                                <span class="detail-value">${t.plano}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Usuários Ativos</span>
+                                <span class="detail-value">${t.usuarios_ativos || 0} / ${t.limite_usuarios}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Vencimento</span>
+                                <span class="detail-value">${new Date(t.data_vencimento).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Dias Restantes</span>
+                                <span class="detail-value" style="color: ${expired ? '#ef4444' : expiring ? '#f59e0b' : '#166534'}">
+                                    ${t.dias_restantes} dias
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="tenant-actions">
+                            <button class="btn btn-sm btn--outline" onclick="editarTenant(${t.id})" title="Editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="renovarTenant(${t.id})" title="Renovar">
+                                <i class="fas fa-calendar-plus"></i> Renovar
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="alterarStatusTenant(${t.id}, '${t.status}')" title="Alterar Status">
+                                <i class="fas fa-toggle-on"></i> Status
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="visualizarTenant(${t.id})" title="Ver Detalhes">
+                                <i class="fas fa-eye"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Abrir Modal Novo
+        function abrirModalNovo() {
+            document.getElementById('modal-title').textContent = 'Nova Organização';
+            document.getElementById('form-tenant').reset();
+            document.getElementById('tenant-id').value = '';
+
+            // Definir data de vencimento padrão (30 dias)
+            const dataVencimento = new Date();
+            dataVencimento.setDate(dataVencimento.getDate() + 30);
+            document.getElementById('tenant-vencimento').value = dataVencimento.toISOString().split('T')[0];
+
+            document.getElementById('modal-tenant').style.display = 'flex';
+        }
+
+        // Editar Tenant
+        function editarTenant(id) {
+            const tenant = tenants.find(t => t.id === id);
+            if (!tenant) return;
+
+            document.getElementById('modal-title').textContent = 'Editar Organização';
+            document.getElementById('tenant-id').value = tenant.id;
+            document.getElementById('tenant-nome').value = tenant.nome_organizacao;
+            document.getElementById('tenant-subdomain').value = tenant.subdomain;
+            document.getElementById('tenant-subdomain').disabled = true; // Não permitir alterar subdomínio
+            document.getElementById('tenant-cnpj').value = tenant.cnpj || '';
+            document.getElementById('tenant-email').value = tenant.email_contato;
+            document.getElementById('tenant-plano').value = tenant.plano;
+            document.getElementById('tenant-limite').value = tenant.limite_usuarios;
+            document.getElementById('tenant-vencimento').value = tenant.data_vencimento.split('T')[0];
+
+            document.getElementById('modal-tenant').style.display = 'flex';
+        }
+
+        // Salvar Tenant
+        async function salvarTenant(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('tenant-id').value;
+            const dados = {
+                subdomain: document.getElementById('tenant-subdomain').value.toLowerCase(),
+                nome_organizacao: document.getElementById('tenant-nome').value,
+                cnpj: document.getElementById('tenant-cnpj').value,
+                email_contato: document.getElementById('tenant-email').value,
+                plano: document.getElementById('tenant-plano').value,
+                limite_usuarios: parseInt(document.getElementById('tenant-limite').value),
+                data_vencimento: document.getElementById('tenant-vencimento').value
+            };
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_BASE}/${id}` : API_BASE;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: getHeaders(),
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    fecharModal();
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem || result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar tenant:', error);
+                mostrarNotificacao('Erro ao salvar organização', 'error');
+            }
+        }
+
+        // Renovar Tenant
+        async function renovarTenant(id) {
+            const dias = prompt('Quantos dias deseja adicionar?', '30');
+            if (!dias) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/${id}/renovar`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ dias: parseInt(dias) })
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao renovar:', error);
+                mostrarNotificacao('Erro ao renovar assinatura', 'error');
+            }
+        }
+
+        // Alterar Status
+        async function alterarStatusTenant(id, statusAtual) {
+            const opcoes = ['ativo', 'trial', 'suspenso', 'cancelado'];
+            const novoStatus = prompt(`Status atual: ${statusAtual}\nNovo status (${opcoes.join(', ')}):`, statusAtual);
+
+            if (!novoStatus || !opcoes.includes(novoStatus)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/${id}/status`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ status: novoStatus })
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar status:', error);
+                mostrarNotificacao('Erro ao alterar status', 'error');
+            }
+        }
+
+        // Visualizar Detalhes
+        function visualizarTenant(id) {
+            const tenant = tenants.find(t => t.id === id);
+            if (!tenant) return;
+
+            const detalhes = `
+Nome: ${tenant.nome_organizacao}
+Subdomínio: ${tenant.subdomain}
+CNPJ: ${tenant.cnpj || '-'}
+Email: ${tenant.email_contato}
+Plano: ${tenant.plano}
+Status: ${tenant.status}
+Usuários: ${tenant.usuarios_ativos || 0} / ${tenant.limite_usuarios}
+Vencimento: ${new Date(tenant.data_vencimento).toLocaleDateString('pt-BR')}
+Dias Restantes: ${tenant.dias_restantes}
+Criado em: ${new Date(tenant.created_at).toLocaleDateString('pt-BR')}
+            `.trim();
+
+            alert(detalhes);
+        }
+
+        // Aplicar Filtros
+        function aplicarFiltros() {
+            const status = document.getElementById('filter-status').value;
+            const plano = document.getElementById('filter-plano').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+
+            let filtrados = tenants;
+
+            if (status) {
+                filtrados = filtrados.filter(t => t.status === status);
+            }
+            if (plano) {
+                filtrados = filtrados.filter(t => t.plano === plano);
+            }
+            if (search) {
+                filtrados = filtrados.filter(t =>
+                    t.nome_organizacao.toLowerCase().includes(search) ||
+                    t.subdomain.toLowerCase().includes(search)
+                );
+            }
+
+            renderizarTenants(filtrados);
+        }
+
+        // Limpar Filtros
+        function limparFiltros() {
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-plano').value = '';
+            document.getElementById('search-input').value = '';
+            renderizarTenants(tenants);
+        }
+
+        // Fechar Modal
+        function fecharModal() {
+            document.getElementById('modal-tenant').style.display = 'none';
+            document.getElementById('form-tenant').reset();
+            document.getElementById('tenant-subdomain').disabled = false;
+        }
+
+        // Notificação
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const cores = {
+                success: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0', icon: 'check-circle' },
+                error: { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca', icon: 'exclamation-circle' },
+                warning: { bg: '#fffbeb', color: '#d97706', border: '#fed7aa', icon: 'exclamation-triangle' },
+                info: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', icon: 'info-circle' }
+            };
+
+            const cor = cores[tipo] || cores.info;
+
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                min-width: 300px;
+                padding: 1rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: ${cor.bg};
+                color: ${cor.color};
+                border: 1px solid ${cor.border};
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            `;
+
+            notif.innerHTML = `
+                <i class="fas fa-${cor.icon}"></i>
+                <span>${mensagem}</span>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; margin-left: auto; cursor: pointer; font-size: 1.25rem; color: inherit;">&times;</button>
+            `;
+
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                if (notif.parentNode) notif.remove();
+            }, 5000);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btn-novo-tenant').addEventListener('click', abrirModalNovo);
+            document.getElementById('search-input').addEventListener('input', aplicarFiltros);
+
+            // Carregar dados iniciais
+            carregarTenants();
+        });
+    </script>
+</body>
+</html>

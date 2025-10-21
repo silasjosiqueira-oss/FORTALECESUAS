@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Atendimento - Sistema Fortalece</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Bibliotecas para exportar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- CSS Structure -->
+    <link rel="stylesheet" href="../css/base/reset.css">
+    <link rel="stylesheet" href="../css/base/variables.css">
+    <link rel="stylesheet" href="../css/base/typography.css">
+    <link rel="stylesheet" href="../css/layout/sidebar.css">
+    <link rel="stylesheet" href="../css/layout/header.css">
+    <link rel="stylesheet" href="../css/layout/grid.css">
+    <link rel="stylesheet" href="../css/layout/responsive.css">
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/forms.css">
+    <link rel="stylesheet" href="../css/components/modal.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .form-section {
+            background: white;
+            border-left: 4px solid #2563eb;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .family-member {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .family-member-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .family-member-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .family-member-remove {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .family-member-remove:hover {
+            background: #b91c1c;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            margin: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #notifications-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .btn--info {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn--info:hover {
+            background: #2563eb;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .info-box-icon {
+            color: #2563eb;
+            font-size: 1.5rem;
+        }
+
+        .info-box-content {
+            flex: 1;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-box-value {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid-2,
+            .form-grid-3,
+            .form-grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">AS</div>
+                <h1 class="sidebar__title">Assistência Social</h1>
+            </div>
+            <nav class="sidebar__nav">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Início</span></a></li>
+                    <li><a href="atendimento.html" class="active"><i class="fas fa-users"></i><span>Atendimentos</span></a></li>
+                    <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+                    <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+                    <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Grupos/Atividades</span></a></li>
+                    <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+                    <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+                    <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+                    <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+                    <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+                    <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+                    <li><a href="configuracoes.html"><i class="fas fa-cogs"></i><span>Configurações</span></a></li>
+                    <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+                    <li><a href="login.html"><i class="fas fa-sign-out-alt"></i><span>Logoff</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Sistema Fortalece - Assistência Social</h2>
+                    <p class="header-subtitle">Rio Pardo, RS</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn--info btn-sm" onclick="exportarPDF()" title="Exportar PDF">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                    <button class="btn btn--secondary btn-sm" onclick="voltarAtendimentos()" title="Voltar">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                    <button class="btn btn--danger btn-sm" onclick="logout()" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fas fa-edit"></i> Formulário de Novo Atendimento
+                        </h1>
+                        <p class="page-subtitle">Preencha todos os dados do atendimento</p>
+                    </div>
+                </div>
+
+                <!-- Informações do Protocolo -->
+                <div class="info-box">
+                    <div class="info-box-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <div class="info-box-title">Protocolo de Atendimento</div>
+                        <div class="info-box-value" id="protocoloNumber">Será gerado ao salvar</div>
+                    </div>
+                </div>
+
+                <form id="formNovoAtendimento">
+                    <!-- Informações do Atendimento -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-info-circle"></i> Informações do Atendimento
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label required">Data do Atendimento</label>
+                                <input type="date" class="form-control" name="dataAtendimento" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Hora do Atendimento</label>
+                                <input type="time" class="form-control" name="horaAtendimento" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Formato do Atendimento</label>
+                                <select class="form-control" name="formatoAtendimento" required>
+                                    <option value="presencial">Presencial</option>
+                                    <option value="telefone">Telefone</option>
+                                    <option value="virtual">Virtual/Online</option>
+                                    <option value="visita">Visita Domiciliar</option>
+                                    <option value="busca-ativa">Busca Ativa</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Protocolo Anterior</label>
+                                <input type="text" class="form-control" name="protocoloAnterior"
+                                       placeholder="Se for continuação">
+                            </div>
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label required">Recepcionista</label>
+                                <select class="form-control" name="recepcionista" required>
+                                    <option value="">Selecione</option>
+                                    <option value="maria-silva">Maria Silva</option>
+                                    <option value="joao-santos">João Santos</option>
+                                    <option value="ana-costa">Ana Costa</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porta de Entrada</label>
+                                <select class="form-control" name="portaEntrada">
+                                    <option value="espontanea">Demanda Espontânea</option>
+                                    <option value="busca-ativa">Busca Ativa</option>
+                                    <option value="encaminhamento">Encaminhamento</option>
+                                    <option value="retorno">Retorno</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Agendamento</label>
+                                <select class="form-control" name="tipoAgendamento">
+                                    <option value="imediato">Atendimento Imediato</option>
+                                    <option value="agendado">Agendado</option>
+                                    <option value="retorno">Retorno Agendado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dados de Identificação -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-user"></i> Dados de Identificação
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label required">Nome Completo</label>
+                                <input type="text" class="form-control" name="nomeCompleto" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nome Social</label>
+                                <input type="text" class="form-control" name="nomeSocial">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado Civil</label>
+                                <select class="form-control" name="estadoCivil">
+                                    <option value="">Selecione</option>
+                                    <option value="solteiro">Solteiro(a)</option>
+                                    <option value="casado">Casado(a)</option>
+                                    <option value="viuvo">Viúvo(a)</option>
+                                    <option value="separado">Separado(a)</option>
+                                    <option value="divorciado">Divorciado(a)</option>
+                                    <option value="uniao-estavel">União Estável</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Data de Nascimento</label>
+                                <input type="date" class="form-control" name="dataNascimento" required>
+                            </div>
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label">RG</label>
+                                <input type="text" class="form-control" name="rg">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">CPF</label>
+                                <input type="text" class="form-control" name="cpf" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cadastro Único</label>
+                                <input type="text" class="form-control" name="cadUnico">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">NIS</label>
+                                <input type="text" class="form-control" name="nis">
+                            </div>
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label">Cor/Raça</label>
+                                <select class="form-control" name="corRaca">
+                                    <option value="nao-declarou">Não declarou</option>
+                                    <option value="branca">Branca</option>
+                                    <option value="preta">Preta</option>
+                                    <option value="parda">Parda</option>
+                                    <option value="amarela">Amarela</option>
+                                    <option value="indigena">Indígena</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sexo</label>
+                                <select class="form-control" name="sexo">
+                                    <option value="nao-informado">Não informado</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="feminino">Feminino</option>
+                                    <option value="intersexo">Intersexo</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Identidade de Gênero</label>
+                                <select class="form-control" name="identidadeGenero">
+                                    <option value="nao-informado">Não informado</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="feminino">Feminino</option>
+                                    <option value="bigenero">Bigênero</option>
+                                    <option value="agenero">Agênero</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Orientação Sexual</label>
+                                <select class="form-control" name="orientacaoSexual">
+                                    <option value="nao-informado">Não informado</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Filiação 1</label>
+                                <input type="text" class="form-control" name="filiacao1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Filiação 2</label>
+                                <input type="text" class="form-control" name="filiacao2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Naturalidade</label>
+                                <input type="text" class="form-control" name="naturalidade">
+                            </div>
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Nacionalidade</label>
+                                <input type="text" class="form-control" name="nacionalidade" value="Brasileira">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">País de Origem</label>
+                                <input type="text" class="form-control" name="paisOrigem" value="Brasil">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" name="telefone">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações - Identificação</label>
+                            <textarea class="form-control" name="observacoesIdentificacao" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Especificidades -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-star"></i> Especificidades
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Religião/Tradições Espirituais</label>
+                                <select class="form-control" name="religiao">
+                                    <option value="">Não informado</option>
+                                    <option value="cristianismo">Cristianismo</option>
+                                    <option value="islamismo">Islamismo</option>
+                                    <option value="judaismo">Judaísmo</option>
+                                    <option value="espiritismo">Espiritismo</option>
+                                    <option value="budismo">Budismo</option>
+                                    <option value="umbanda">Umbanda</option>
+                                    <option value="candomble">Candomblé</option>
+                                    <option value="hinduismo">Hinduísmo</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Situações Específicas (marque as que se aplicam)</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="cigano" id="cigano">
+                                    <label for="cigano">Cigano</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="ribeirinho" id="ribeirinho">
+                                    <label for="ribeirinho">Ribeirinho</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="pomerano" id="pomerano">
+                                    <label for="pomerano">Pomerano</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="comunidade-terreiro" id="comunidade-terreiro">
+                                    <label for="comunidade-terreiro">Pertence a comunidade de terreiro</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="indigena" id="indigena">
+                                    <label for="indigena">Indígena</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="pescador" id="pescador">
+                                    <label for="pescador">Pescador</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="assentado" id="assentado">
+                                    <label for="assentado">Assentado</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="agricultor" id="agricultor">
+                                    <label for="agricultor">Agricultor</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="catador" id="catador">
+                                    <label for="catador">Catador material reciclável</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="quilombola" id="quilombola">
+                                    <label for="quilombola">Quilombola</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="extrativista" id="extrativista">
+                                    <label for="extrativista">Extrativista</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="situacoesEspecificas[]" value="migrante" id="migrante">
+                                    <label for="migrante">Migrante</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demanda Rede de Proteção -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-network-wired"></i> Demanda Rede de Proteção
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label">Órgão Expedidor</label>
+                                <select class="form-control" name="orgaoExpedidor">
+                                    <option value="">Não se aplica</option>
+                                    <option value="mp">Ministério Público</option>
+                                    <option value="pj">Poder Judiciário</option>
+                                    <option value="ct">Conselho Tutelar</option>
+                                    <option value="creas">CREAS</option>
+                                    <option value="educacao">Secretaria de Educação</option>
+                                    <option value="saude">Secretaria de Saúde</option>
+                                    <option value="policia">Polícia Civil</option>
+                                    <option value="defensoria">Defensoria Pública</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Data Recebimento</label>
+                                <input type="date" class="form-control" name="dataRecebimentoDemanda">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Prazo Execução</label>
+                                <input type="date" class="form-control" name="prazoExecucao">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nº Ofício/Documento</label>
+                                <input type="text" class="form-control" name="numeroOficio" placeholder="Ex: OF. 123/2024">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descrição da Demanda da Rede</label>
+                            <textarea class="form-control" name="descricaoDemandaRede" rows="3"
+                                      placeholder="Descreva a demanda recebida da rede de proteção, se aplicável..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Contato -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-address-book"></i> Dados de Contato
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Endereço Completo</label>
+                                <input type="text" class="form-control" name="endereco" placeholder="Rua, número, complemento">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bairro</label>
+                                <input type="text" class="form-control" name="bairro">
+                            </div>
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label">CEP</label>
+                                <input type="text" class="form-control" name="cep">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" class="form-control" name="cidade" value="Rio Pardo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado</label>
+                                <input type="text" class="form-control" name="estado" value="RS">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentação -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-id-card"></i> Documentação
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Data Emissão RG</label>
+                                <input type="date" class="form-control" name="dataEmissaoRg">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Órgão Emissor</label>
+                                <input type="text" class="form-control" name="orgaoEmissor">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Federação</label>
+                                <input type="text" class="form-control" name="federacao" value="RS">
+                            </div>
+                        </div>
+                        <div class="form-grid-4">
+                            <div class="form-group">
+                                <label class="form-label">Carteira de Trabalho</label>
+                                <input type="text" class="form-control" name="carteiraTrabalho">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Título Eleitor</label>
+                                <input type="text" class="form-control" name="tituloEleitor">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Zona</label>
+                                <input type="text" class="form-control" name="zona">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Seção</label>
+                                <input type="text" class="form-control" name="secao">
+                            </div>
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Cartão SUS</label>
+                                <input type="text" class="form-control" name="cartaoSus">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Boletim de Ocorrência</label>
+                                <input type="text" class="form-control" name="boletimOcorrencia">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Anexos</label>
+                                <input type="file" class="form-control" name="anexosDocumentacao" multiple>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações Documentação</label>
+                            <textarea class="form-control" name="observacoesDocumentacao" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Saúde -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-heartbeat"></i> Informações de Saúde
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações de Saúde</label>
+                            <textarea class="form-control" name="observacoesSaude" rows="4"
+                                      placeholder="Descreva condições de saúde relevantes, medicações, necessidades especiais, deficiências, acompanhamentos médicos, etc."></textarea>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Possui Deficiência?</label>
+                                <select class="form-control" name="possuiDeficiencia">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Deficiência</label>
+                                <input type="text" class="form-control" name="tipoDeficiencia" placeholder="Especifique se houver">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Remuneração -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-money-bill-wave"></i> Situação de Renda/Remuneração
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Possui Remuneração?</label>
+                                <select class="form-control" name="possuiRemuneracao">
+                                    <option value="">Selecione</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="nao">Não</option>
+                                    <option value="desempregado">Desempregado</option>
+                                    <option value="beneficio">Recebe Benefício</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Frequência da Remuneração</label>
+                                <select class="form-control" name="frequenciaRemuneracao">
+                                    <option value="">Selecione</option>
+                                    <option value="mensal">Mensal</option>
+                                    <option value="semanal">Semanal</option>
+                                    <option value="diaria">Diária</option>
+                                    <option value="eventual">Eventual</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Valor da Remuneração</label>
+                                <input type="number" class="form-control" name="valorRemuneracao" step="0.01" placeholder="0,00">
+                            </div>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Recebe Doações?</label>
+                                <select class="form-control" name="recebeDoacoes">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Situação da Moradia</label>
+                                <select class="form-control" name="situacaoMoradia">
+                                    <option value="">Selecione</option>
+                                    <option value="propria">Casa Própria</option>
+                                    <option value="alugada">Alugada</option>
+                                    <option value="cedida">Cedida</option>
+                                    <option value="financiada">Financiada</option>
+                                    <option value="ocupacao">Ocupação</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Composição Familiar -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-users"></i> Composição Familiar
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Responsável pela Família</label>
+                            <input type="text" class="form-control" name="responsavelFamilia"
+                                   placeholder="Nome do responsável pela composição familiar">
+                        </div>
+                        <div id="familyMembers">
+                            <div class="family-member">
+                                <div class="family-member-header">
+                                    <span class="family-member-title">Membro da Família 1</span>
+                                </div>
+                                <div class="form-grid-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Nome</label>
+                                        <input type="text" class="form-control" name="familyMemberName[]">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Parentesco</label>
+                                        <select class="form-control" name="familyMemberRelation[]">
+                                            <option value="">Selecione</option>
+                                            <option value="conjuge">Cônjuge</option>
+                                            <option value="companheiro">Companheiro(a)</option>
+                                            <option value="filho">Filho(a)</option>
+                                            <option value="pai">Pai</option>
+                                            <option value="mae">Mãe</option>
+                                            <option value="irmao">Irmão/Irmã</option>
+                                            <option value="avo">Avô/Avó</option>
+                                            <option value="neto">Neto(a)</option>
+                                            <option value="sogro">Sogro(a)</option>
+                                            <option value="genro">Genro/Nora</option>
+                                            <option value="cunhado">Cunhado(a)</option>
+                                            <option value="outros">Outros</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Idade</label>
+                                        <input type="number" class="form-control" name="familyMemberAge[]" min="0" max="120">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Data Inclusão</label>
+                                        <input type="date" class="form-control" name="familyMemberDateInclusao[]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn--secondary btn-sm" onclick="addFamilyMember()">
+                            <i class="fas fa-plus"></i> Adicionar Membro da Família
+                        </button>
+                    </div>
+
+                    <!-- Motivos do Atendimento -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-clipboard-list"></i> Motivos do Atendimento
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="atendimento-psicologico" id="motivo-psicologico">
+                                <label for="motivo-psicologico">Atendimento Psicológico</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="atendimento-psicossocial" id="motivo-psicossocial">
+                                <label for="motivo-psicossocial">Atendimento Psicossocial</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="atendimento-social" id="motivo-social">
+                                <label for="motivo-social">Atendimento Social</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="atualizacao-cadastro-unico" id="motivo-cadunico">
+                                <label for="motivo-cadunico">Atualização Cadastro Único</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="auxilio-brasil" id="motivo-auxilio-brasil">
+                                <label for="motivo-auxilio-brasil">Auxílio Brasil</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="auxilio-emergencial" id="motivo-auxilio-emergencial">
+                                <label for="motivo-auxilio-emergencial">Auxílio Emergencial</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="beneficios-eventuais" id="motivo-beneficios-eventuais">
+                                <label for="motivo-beneficios-eventuais">Benefícios Eventuais</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="boleto-habitacao" id="motivo-boleto-habitacao">
+                                <label for="motivo-boleto-habitacao">Boleto Habitação</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="carteirinha-idoso" id="motivo-carteirinha-idoso">
+                                <label for="motivo-carteirinha-idoso">Carteirinha do Idoso</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="devolve-icms" id="motivo-devolve-icms">
+                                <label for="motivo-devolve-icms">Devolve ICMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="doacao-agasalhos" id="motivo-doacao-agasalhos">
+                                <label for="motivo-doacao-agasalhos">Doação Agasalhos</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="doacao-cobertores" id="motivo-doacao-cobertores">
+                                <label for="motivo-doacao-cobertores">Doação Cobertores</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="utensilios-domesticos" id="motivo-utensilios-domesticos">
+                                <label for="motivo-utensilios-domesticos">Utensílios Domésticos</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="encaminhamento-bpc" id="motivo-encaminhamento-bpc">
+                                <label for="motivo-encaminhamento-bpc">Encaminhamento BPC</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="encaminhamento-carteira-idoso" id="motivo-encaminhamento-carteira-idoso">
+                                <label for="motivo-encaminhamento-carteira-idoso">Encaminhamento Carteira do Idoso</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="encaminhamento-rg" id="motivo-encaminhamento-rg">
+                                <label for="motivo-encaminhamento-rg">Encaminhamento RG</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="encaminhamento-inss" id="motivo-encaminhamento-inss">
+                                <label for="motivo-encaminhamento-inss">Encaminhamento INSS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="exclusao-cadastro-unico" id="motivo-exclusao-cadunico">
+                                <label for="motivo-exclusao-cadunico">Exclusão Cadastro Único</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="impressao-2via-cpf" id="motivo-impressao-cpf">
+                                <label for="motivo-impressao-cpf">Impressão 2ª Via CPF</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="inclusao-cadastro-unico" id="motivo-inclusao-cadunico">
+                                <label for="motivo-inclusao-cadunico">Inclusão Cadastro Único</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="informacoes" id="motivo-informacoes">
+                                <label for="motivo-informacoes">Informações</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="informacoes-cadastro-unico" id="motivo-informacoes-cadunico">
+                                <label for="motivo-informacoes-cadunico">Informações Cadastro Único</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="inscricoes-atividades-coletivas" id="motivo-inscricoes-atividades">
+                                <label for="motivo-inscricoes-atividades">Inscrições Atividades Coletivas</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="motivosAtendimento[]" value="outros-atendimentos" id="motivo-outros">
+                                <label for="motivo-outros">Outros Atendimentos</label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label required">Descrição da Demanda/Motivo</label>
+                            <textarea class="form-control" name="descricaoDemanda" rows="4" required
+                                      placeholder="Descreva detalhadamente a situação, demanda ou motivo do atendimento..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Profissionais Envolvidos e Encaminhamentos -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-user-tie"></i> Profissionais e Encaminhamentos
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label required">Técnico Responsável</label>
+                                <select class="form-control" name="tecnicoResponsavel" required>
+                                    <option value="">Selecione</option>
+                                    <option value="ana-costa">Ana Costa - Assistente Social</option>
+                                    <option value="carlos-santos">Carlos Santos - Psicólogo</option>
+                                    <option value="maria-silva">Maria Silva - Secretária</option>
+                                    <option value="joao-oliveira">João Oliveira - Coordenador</option>
+                                    <option value="patricia-lima">Patricia Lima - Assistente Social</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Atendimento</label>
+                                <select class="form-control" name="tipoAtendimento">
+                                    <option value="Atendimento Social">Atendimento Social</option>
+                                    <option value="Atendimento Psicológico">Atendimento Psicológico</option>
+                                    <option value="Atendimento Psicossocial">Atendimento Psicossocial</option>
+                                    <option value="Orientação">Orientação</option>
+                                    <option value="Cadastro">Cadastro</option>
+                                    <option value="Encaminhamento">Encaminhamento</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Unidade</label>
+                                <select class="form-control" name="unidade">
+                                    <option value="CRAS Principal">CRAS Principal</option>
+                                    <option value="CREAS">CREAS</option>
+                                    <option value="Secretaria de Assistência">Secretaria de Assistência</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">Prioridade</label>
+                                <select class="form-control" name="prioridade">
+                                    <option value="normal">Normal</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status do Atendimento</label>
+                                <select class="form-control" name="status">
+                                    <option value="aguardando">Aguardando Atendimento</option>
+                                    <option value="em-andamento">Em Andamento</option>
+                                    <option value="agendado">Agendado</option>
+                                    <option value="concluido">Concluído</option>
+                                    <option value="suspenso">Suspenso</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Data de Retorno</label>
+                                <input type="date" class="form-control" name="dataRetorno">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Encaminhamentos, Serviços, Programas, Projetos</label>
+                            <textarea class="form-control" name="encaminhamentos" rows="3"
+                                      placeholder="Descreva os encaminhamentos necessários, serviços, programas ou projetos..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Providências Tomadas</label>
+                            <textarea class="form-control" name="providenciasTomadas" rows="3"
+                                      placeholder="Descreva as providências já tomadas no atendimento..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Controle de Acesso e Sigilo -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-lock"></i> Controle de Acesso e Sigilo
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Nível de Sigilo</label>
+                                <select class="form-control" name="nivelSigilo">
+                                    <option value="normal">Normal</option>
+                                    <option value="restrito">Restrito</option>
+                                    <option value="confidencial">Confidencial</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Profissionais com Acesso</label>
+                                <select class="form-control" name="profissionaisAcesso[]" multiple>
+                                    <option value="todos">Todos os profissionais</option>
+                                    <option value="assistentes-sociais">Apenas Assistentes Sociais</option>
+                                    <option value="psicologos">Apenas Psicólogos</option>
+                                    <option value="coordenacao">Apenas Coordenação</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações sobre Sigilo</label>
+                            <textarea class="form-control" name="observacoesSigilo" rows="2"
+                                      placeholder="Informações sensíveis que requerem atenção especial..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Anexos Finais -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-paperclip"></i> Anexos do Atendimento
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Anexar Documentos</label>
+                            <input type="file" class="form-control" name="anexosAtendimento" multiple>
+                            <small class="form-text text-muted">Formatos aceitos: PDF, JPG, PNG, DOC, DOCX</small>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Botões de Ação -->
+                <div class="form-actions" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e2e8f0;">
+                    <button class="btn btn--secondary" onclick="voltarAtendimentos()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+
+                    <button class="btn btn--primary" onclick="salvarAtendimento()">
+                        <i class="fas fa-check"></i> Salvar Atendimento
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loading-overlay">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <h4>Carregando...</h4>
+            <p id="loading-message">Aguarde enquanto processamos sua solicitação</p>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications-container"></div>
+
+    <script>
+// ==========================================
+// VARIÁVEIS GLOBAIS
+// ==========================================
+let familyMemberCount = 1;
+let autoSaveInterval;
+
+// ==========================================
+// VERIFICAÇÃO DE AUTENTICAÇÃO AO CARREGAR
+// ==========================================
+window.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Iniciando formulário de atendimento...');
+
+    // Verificar se está autenticado
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showNotification('Você precisa fazer login primeiro', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/login.html';
+        }, 2000);
+        return;
+    }
+
+    // Definir data e hora atual
+    const now = new Date();
+    document.querySelector('input[name="dataAtendimento"]').value = now.toISOString().split('T')[0];
+    document.querySelector('input[name="horaAtendimento"]').value = now.toTimeString().slice(0,5);
+
+    // Aplicar máscaras
+    const cpfInput = document.querySelector('input[name="cpf"]');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', maskCPF);
+        cpfInput.addEventListener('blur', function() {
+            const cpfValido = validarCPF(this.value);
+            if (this.value && !cpfValido) {
+                showNotification('CPF inválido!', 'error', 3000);
+                this.style.borderColor = '#dc2626';
+            } else if (cpfValido) {
+                this.style.borderColor = '#059669';
+                buscarPorCPF(this.value);
+            }
+        });
+    }
+
+    const telefoneInput = document.querySelector('input[name="telefone"]');
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', maskTelefone);
+    }
+
+    const cepInput = document.querySelector('input[name="cep"]');
+    if (cepInput) {
+        cepInput.addEventListener('input', maskCEP);
+        cepInput.addEventListener('blur', autocompleteCEP);
+    }
+
+    // Verificar rascunho no sessionStorage
+    const rascunho = sessionStorage.getItem('rascunhoAtendimento');
+    if (rascunho && confirm('Deseja carregar o rascunho salvo anteriormente?')) {
+        try {
+            const data = JSON.parse(rascunho);
+            preencherFormulario(data);
+            showNotification('Rascunho carregado!', 'info');
+        } catch (error) {
+            console.error('Erro ao carregar rascunho:', error);
+        }
+    }
+
+    // Iniciar auto-save
+    iniciarAutoSave();
+
+    console.log('✅ Formulário carregado com sucesso!');
+});
+
+// ==========================================
+// AUTO-SAVE DE RASCUNHO
+// ==========================================
+function iniciarAutoSave() {
+    // Salvar automaticamente a cada 30 segundos
+    autoSaveInterval = setInterval(() => {
+        const formData = new FormData(document.getElementById('formNovoAtendimento'));
+        let hasData = false;
+
+        for (let [key, value] of formData.entries()) {
+            if (value && value.trim() !== '') {
+                hasData = true;
+                break;
+            }
+        }
+
+        if (hasData) {
+            salvarRascunho(true); // true = silencioso
+            console.log('💾 Rascunho salvo automaticamente');
+        }
+    }, 30000); // 30 segundos
+}
+
+// Limpar interval ao sair
+window.addEventListener('beforeunload', function() {
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+    }
+});
+
+// ==========================================
+// VALIDAÇÃO DE CPF
+// ==========================================
+function validarCPF(cpf) {
+    cpf = cpf.replace(/\D/g, '');
+
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let digito1 = resto === 10 || resto === 11 ? 0 : resto;
+
+    if (parseInt(cpf.charAt(9)) !== digito1) {
+        return false;
+    }
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let digito2 = resto === 10 || resto === 11 ? 0 : resto;
+
+    return parseInt(cpf.charAt(10)) === digito2;
+}
+
+// ==========================================
+// BUSCAR CIDADÃO POR CPF
+// ==========================================
+async function buscarPorCPF(cpf) {
+    const cpfLimpo = cpf.replace(/\D/g, '');
+
+    if (cpfLimpo.length !== 11) return;
+
+    try {
+        showLoading('Verificando cadastro...');
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(`/api/atendimentos/buscar-cpf/${cpfLimpo}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const dados = await response.json();
+
+            if (dados.encontrado && dados.dados) {
+                const dataFormatada = dados.dados.ultimoAtendimento ?
+                    new Date(dados.dados.ultimoAtendimento).toLocaleDateString('pt-BR') :
+                    'Sem registro';
+
+                if (confirm(`✅ Cidadão já cadastrado!\n\nNome: ${dados.dados.nomeCompleto}\nÚltimo atendimento: ${dataFormatada}\n\nDeseja carregar os dados anteriores?`)) {
+                    preencherFormulario(dados.dados);
+                    showNotification('Dados carregados com sucesso!', 'success');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar CPF:', error);
+    } finally {
+        hideLoading();
+    }
+}
+
+// ==========================================
+// PREENCHER FORMULÁRIO COM DADOS
+// ==========================================
+function preencherFormulario(dados) {
+    Object.keys(dados).forEach(key => {
+        const element = document.querySelector(`[name="${key}"]`);
+        if (element) {
+            if (element.type === 'checkbox') {
+                element.checked = dados[key] === 'on' || dados[key] === true;
+            } else if (element.type === 'radio') {
+                const radio = document.querySelector(`[name="${key}"][value="${dados[key]}"]`);
+                if (radio) radio.checked = true;
+            } else {
+                element.value = dados[key];
+            }
+        }
+    });
+
+    // Processar arrays de checkboxes
+    if (dados.motivosAtendimento && Array.isArray(dados.motivosAtendimento)) {
+        dados.motivosAtendimento.forEach(valor => {
+            const checkbox = document.querySelector(`input[name="motivosAtendimento[]"][value="${valor}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    if (dados.situacoesEspecificas && Array.isArray(dados.situacoesEspecificas)) {
+        dados.situacoesEspecificas.forEach(valor => {
+            const checkbox = document.querySelector(`input[name="situacoesEspecificas[]"][value="${valor}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+}
+
+// ==========================================
+// FUNÇÃO PARA ADICIONAR MEMBRO FAMILIAR
+// ==========================================
+function addFamilyMember() {
+    familyMemberCount++;
+    const container = document.getElementById('familyMembers');
+    const newMember = document.createElement('div');
+    newMember.className = 'family-member';
+    newMember.innerHTML = `
+        <div class="family-member-header">
+            <span class="family-member-title">Membro da Família ${familyMemberCount}</span>
+            <button type="button" class="family-member-remove" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i> Remover
+            </button>
+        </div>
+        <div class="form-grid-4">
+            <div class="form-group">
+                <label class="form-label">Nome</label>
+                <input type="text" class="form-control" name="familyMemberName[]">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Parentesco</label>
+                <select class="form-control" name="familyMemberRelation[]">
+                    <option value="">Selecione</option>
+                    <option value="conjuge">Cônjuge</option>
+                    <option value="companheiro">Companheiro(a)</option>
+                    <option value="filho">Filho(a)</option>
+                    <option value="pai">Pai</option>
+                    <option value="mae">Mãe</option>
+                    <option value="irmao">Irmão/Irmã</option>
+                    <option value="avo">Avô/Avó</option>
+                    <option value="neto">Neto(a)</option>
+                    <option value="sogro">Sogro(a)</option>
+                    <option value="genro">Genro/Nora</option>
+                    <option value="cunhado">Cunhado(a)</option>
+                    <option value="outros">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Idade</label>
+                <input type="number" class="form-control" name="familyMemberAge[]" min="0" max="120">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data Inclusão</label>
+                <input type="date" class="form-control" name="familyMemberDateInclusao[]" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+        </div>
+    `;
+    container.appendChild(newMember);
+    showNotification('Membro adicionado', 'success', 2000);
+}
+
+// ==========================================
+// FUNÇÃO PARA VOLTAR À PÁGINA DE ATENDIMENTOS
+// ==========================================
+function voltarAtendimentos() {
+    const form = document.getElementById('formNovoAtendimento');
+    const formData = new FormData(form);
+    let hasData = false;
+
+    for (let [key, value] of formData.entries()) {
+        if (value && value.trim() !== '') {
+            hasData = true;
+            break;
+        }
+    }
+
+    if (hasData) {
+        if (confirm('Você tem dados não salvos no formulário. Deseja realmente voltar?\n\nDica: Use Ctrl+S para salvar um rascunho.')) {
+            window.location.href = 'atendimento.html';
+        }
+    } else {
+        window.location.href = 'atendimento.html';
+    }
+}
+
+// ==========================================
+// FUNÇÃO PARA SALVAR RASCUNHO
+// ==========================================
+function salvarRascunho(silencioso = false) {
+    const formData = new FormData(document.getElementById('formNovoAtendimento'));
+    const rascunho = {};
+
+    for (let [key, value] of formData.entries()) {
+        rascunho[key] = value;
+    }
+
+    // Processar checkboxes
+    const motivosChecked = Array.from(
+        document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
+    ).map(cb => cb.value);
+    rascunho.motivosAtendimento = motivosChecked;
+
+    const situacoesChecked = Array.from(
+        document.querySelectorAll('input[name="situacoesEspecificas[]"]:checked')
+    ).map(cb => cb.value);
+    rascunho.situacoesEspecificas = situacoesChecked;
+
+    // Usar sessionStorage
+    sessionStorage.setItem('rascunhoAtendimento', JSON.stringify(rascunho));
+    sessionStorage.setItem('rascunhoTimestamp', new Date().toISOString());
+
+    if (!silencioso) {
+        showNotification('💾 Rascunho salvo com sucesso!', 'success', 2000);
+    }
+}
+
+// ==========================================
+// FUNÇÃO PARA SALVAR ATENDIMENTO
+// ==========================================
+async function salvarAtendimento() {
+    const form = document.getElementById('formNovoAtendimento');
+
+    // Validação básica
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        showNotification('Preencha todos os campos obrigatórios!', 'warning');
+        return;
+    }
+
+    // Validar CPF
+    const cpf = document.querySelector('input[name="cpf"]').value;
+    if (cpf && !validarCPF(cpf)) {
+        showNotification('CPF inválido! Verifique o número digitado.', 'error');
+        document.querySelector('input[name="cpf"]').focus();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const atendimentoData = Object.fromEntries(formData);
+
+    // Gerar número de protocolo
+    const protocolo = 'AT' + Date.now();
+    atendimentoData.protocolo = protocolo;
+    atendimentoData.registro = protocolo.substring(2);
+    document.getElementById('protocoloNumber').textContent = protocolo;
+
+    // Processar checkboxes
+    atendimentoData.motivosAtendimento = Array.from(
+        document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
+    ).map(cb => cb.value);
+
+    atendimentoData.situacoesEspecificas = Array.from(
+        document.querySelectorAll('input[name="situacoesEspecificas[]"]:checked')
+    ).map(cb => cb.value);
+
+    // Coletar dados dos membros familiares
+    const familyMemberNames = document.querySelectorAll('input[name="familyMemberName[]"]');
+    const familyMembers = [];
+    familyMemberNames.forEach((input, index) => {
+        if (input.value) {
+            familyMembers.push({
+                nome: input.value,
+                parentesco: document.querySelectorAll('select[name="familyMemberRelation[]"]')[index]?.value,
+                idade: document.querySelectorAll('input[name="familyMemberAge[]"]')[index]?.value,
+                dataInclusao: document.querySelectorAll('input[name="familyMemberDateInclusao[]"]')[index]?.value
+            });
+        }
+    });
+    atendimentoData.composicaoFamiliar = familyMembers;
+
+    try {
+        showLoading('Salvando atendimento...');
+
+        // Buscar token do localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showNotification('Sessão expirada. Faça login novamente.', 'error');
+            setTimeout(() => window.location.href = '/pages/login.html', 2000);
+            return;
+        }
+
+        // Enviar para o servidor
+        const response = await fetch('/api/atendimentos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(atendimentoData)
+        });
+
+        // Tratamento de erros específicos
+        if (response.status === 401) {
+            showNotification('Sessão expirada. Redirecionando para login...', 'error');
+            localStorage.removeItem('token');
+            setTimeout(() => window.location.href = '/pages/login.html', 2000);
+            return;
+        }
+
+        if (response.status === 403) {
+            showNotification('Você não tem permissão para criar atendimentos', 'error');
+            return;
+        }
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || error.mensagem || 'Erro ao salvar');
+        }
+
+        const resultado = await response.json();
+
+        showNotification(
+            `✅ Atendimento #${resultado.registro || protocolo} criado com sucesso!`,
+            'success'
+        );
+
+        // Limpar rascunho
+        sessionStorage.removeItem('rascunhoAtendimento');
+        sessionStorage.removeItem('rascunhoTimestamp');
+
+        // Limpar interval de auto-save
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+        }
+
+        setTimeout(() => {
+            window.location.href = '/pages/atendimento.html';
+        }, 1500);
+
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        showNotification(
+            error.message || 'Erro ao salvar atendimento. Tente novamente.',
+            'error'
+        );
+    } finally {
+        hideLoading();
+    }
+}
+
+// ==========================================
+// FUNÇÃO PARA EXPORTAR PDF
+// ==========================================
+async function exportarPDF() {
+    showLoading('Gerando PDF do formulário...');
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const formData = new FormData(document.getElementById('formNovoAtendimento'));
+        let y = 20;
+        const leftMargin = 15;
+        const lineHeight = 7;
+        const pageHeight = 280;
+
+        // Função auxiliar para adicionar nova página
+        function checkPageBreak() {
+            if (y > pageHeight) {
+                doc.addPage();
+                y = 20;
+            }
+        }
+
+        // Cabeçalho
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.text('FORMULÁRIO DE ATENDIMENTO', 105, y, { align: 'center' });
+        y += 8;
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text('Sistema Fortalece SUAS - Rio Pardo/RS', 105, y, { align: 'center' });
+        y += 10;
+
+        doc.setFontSize(9);
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, y, { align: 'center' });
+        y += 12;
+
+        // Função para adicionar seção
+        function addSection(title) {
+            checkPageBreak();
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(title, leftMargin, y);
+            y += lineHeight;
+            doc.line(leftMargin, y, 195, y);
+            y += lineHeight;
+        }
+
+        // Função para adicionar campo
+        function addField(label, value) {
+            checkPageBreak();
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text(label + ':', leftMargin, y);
+            doc.setFont(undefined, 'normal');
+            const text = value || 'Não informado';
+            doc.text(text, leftMargin + 50, y);
+            y += lineHeight;
+        }
+
+        // 1. DADOS DO ATENDIMENTO
+        addSection('DADOS DO ATENDIMENTO');
+        addField('Data', formData.get('dataAtendimento') || '');
+        addField('Hora', formData.get('horaAtendimento') || '');
+        addField('Formato', formData.get('formatoAtendimento') || '');
+        addField('Recepcionista', formData.get('recepcionista') || '');
+        y += 3;
+
+        // 2. IDENTIFICAÇÃO
+        addSection('DADOS DE IDENTIFICAÇÃO');
+        addField('Nome Completo', formData.get('nomeCompleto') || '');
+        addField('Nome Social', formData.get('nomeSocial') || '');
+        addField('CPF', formData.get('cpf') || '');
+        addField('Data Nascimento', formData.get('dataNascimento') || '');
+        addField('Estado Civil', formData.get('estadoCivil') || '');
+        addField('RG', formData.get('rg') || '');
+        addField('NIS', formData.get('nis') || '');
+        addField('Cadastro Único', formData.get('cadUnico') || '');
+        y += 3;
+
+        // 3. CONTATO
+        addSection('DADOS DE CONTATO');
+        addField('Telefone', formData.get('telefone') || '');
+        addField('Email', formData.get('email') || '');
+        addField('Endereço', formData.get('endereco') || '');
+        addField('Bairro', formData.get('bairro') || '');
+        addField('CEP', formData.get('cep') || '');
+        addField('Cidade', formData.get('cidade') || '');
+        y += 3;
+
+        // 4. MOTIVOS DO ATENDIMENTO
+        addSection('MOTIVOS DO ATENDIMENTO');
+        const motivos = Array.from(
+            document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
+        ).map(cb => cb.nextElementSibling.textContent);
+
+        if (motivos.length > 0) {
+            doc.setFontSize(9);
+            motivos.forEach(motivo => {
+                checkPageBreak();
+                doc.text('• ' + motivo, leftMargin + 5, y);
+                y += lineHeight;
+            });
+        } else {
+            addField('Motivos', 'Nenhum motivo selecionado');
+        }
+        y += 3;
+
+        // 5. DESCRIÇÃO DA DEMANDA
+        addSection('DESCRIÇÃO DA DEMANDA');
+        doc.setFontSize(9);
+        const descricao = formData.get('descricaoDemanda') || 'Não informado';
+        const splitText = doc.splitTextToSize(descricao, 180);
+        splitText.forEach(line => {
+            checkPageBreak();
+            doc.text(line, leftMargin, y);
+            y += lineHeight;
+        });
+        y += 3;
+
+        // 6. PROFISSIONAL RESPONSÁVEL
+        addSection('PROFISSIONAL E ENCAMINHAMENTOS');
+        addField('Técnico Responsável', formData.get('tecnicoResponsavel') || '');
+        addField('Tipo de Atendimento', formData.get('tipoAtendimento') || '');
+        addField('Unidade', formData.get('unidade') || '');
+        addField('Status', formData.get('status') || '');
+        addField('Prioridade', formData.get('prioridade') || '');
+        y += 3;
+
+        // Rodapé
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Página ${i} de ${totalPages}`, 105, 290, { align: 'center' });
+            doc.text('Sistema Fortalece SUAS - Documento Confidencial', 105, 295, { align: 'center' });
+        }
+
+        // Salvar PDF
+        const nomeArquivo = `atendimento_${formData.get('cpf')?.replace(/\D/g, '') || Date.now()}_${Date.now()}.pdf`;
+        doc.save(nomeArquivo);
+
+        showNotification('✅ PDF gerado com sucesso!', 'success');
+
+    } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+        showNotification('❌ Erro ao gerar PDF. Verifique se os dados estão corretos.', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES
+// ==========================================
+
+function showLoading(message = 'Carregando...') {
+    const loadingElement = document.getElementById('loading-overlay');
+    const messageElement = document.getElementById('loading-message');
+    if (messageElement) {
+        messageElement.textContent = message;
+    }
+    if (loadingElement) {
+        loadingElement.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const loadingElement = document.getElementById('loading-overlay');
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+}
+
+function showNotification(message, type = 'info', duration = 5000) {
+    const container = document.getElementById('notifications-container');
+    if (!container) return;
+
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type}`;
+
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+
+    notification.innerHTML = `
+        <i class="fas fa-${icons[type] || 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; margin-left: auto; cursor: pointer; font-size: 1.25rem; color: inherit;">&times;</button>
+    `;
+
+    container.appendChild(notification);
+
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+}
+
+function logout() {
+    if (confirm('Tem certeza que deseja sair do sistema?')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+        showNotification('Encerrando sessão...', 'info');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+    }
+}
+
+// ==========================================
+// MÁSCARAS DE INPUT
+// ==========================================
+
+function maskCPF(event) {
+    let value = event.target.value.replace(/\D/g, '');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    event.target.value = value;
+}
+
+function maskTelefone(event) {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 10) {
+        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 6) {
+        value = value.replace(/(\d{2})(\d{4})(\d)/, '($1) $2-$3');
+    } else if (value.length >= 2) {
+        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+    }
+    event.target.value = value;
+}
+
+function maskCEP(event) {
+    let value = event.target.value.replace(/\D/g, '');
+    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    event.target.value = value;
+}
+
+// ==========================================
+// AUTOCOMPLETE CEP
+// ==========================================
+
+async function autocompleteCEP(event) {
+    const cep = event.target.value.replace(/\D/g, '');
+    if (cep.length === 8) {
+        try {
+            showLoading('Buscando endereço...');
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+
+            if (!data.erro) {
+                document.querySelector('input[name="endereco"]').value = data.logradouro || '';
+                document.querySelector('input[name="bairro"]').value = data.bairro || '';
+                document.querySelector('input[name="cidade"]').value = data.localidade || 'Rio Pardo';
+                document.querySelector('input[name="estado"]').value = data.uf || 'RS';
+                showNotification('✅ Endereço encontrado!', 'success', 2000);
+            } else {
+                showNotification('CEP não encontrado', 'warning');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            showNotification('Erro ao buscar CEP', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+}
+
+// ==========================================
+// PREVENIR PERDA DE DADOS
+// ==========================================
+
+window.addEventListener('beforeunload', function(e) {
+    const form = document.getElementById('formNovoAtendimento');
+    const formData = new FormData(form);
+    let hasData = false;
+
+    for (let [key, value] of formData.entries()) {
+        if (value && value.trim() !== '') {
+            hasData = true;
+            break;
+        }
+    }
+
+    if (hasData) {
+        e.preventDefault();
+        e.returnValue = '';
+        salvarRascunho(true); // Salvar rascunho silenciosamente ao sair
+    }
+});
+
+// ==========================================
+// ATALHOS DE TECLADO
+// ==========================================
+
+document.addEventListener('keydown', function(event) {
+    // Ctrl+S para salvar rascunho
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        salvarRascunho();
+    }
+
+    // ESC para voltar
+    if (event.key === 'Escape') {
+        voltarAtendimentos();
+    }
+
+    // Ctrl+P para gerar PDF
+    if (event.ctrlKey && event.key === 'p') {
+        event.preventDefault();
+        exportarPDF();
+    }
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+/* ============================================
+   COMPONENTS - BUTTONS
+   Estilos para botões
+   ============================================ */
+
+/* ============================================
+   BASE BUTTON
+   ============================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.6rem;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-normal);
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: var(--border-width-thin) solid transparent;
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-fast);
+    background-color: transparent;
+    color: var(--color-gray-900);
+}
+
+.btn:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn:focus {
+    outline: 0;
+    box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled,
+.btn.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   BUTTON VARIANTS
+   ============================================ */
+
+/* Primary Button */
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: var(--color-white);
+}
+
+.btn-primary:focus {
+    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-primary-alpha);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--color-white);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-secondary-dark);
+    border-color: var(--color-secondary-dark);
+    color: var(--color-white);
+}
+
+/* Success Button */
+.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-white);
+}
+
+.btn-success:hover {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success-dark);
+    color: var(--color-white);
+}
+
+/* Warning Button */
+.btn-warning {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-white);
+}
+
+.btn-warning:hover {
+    background-color: var(--color-warning-dark);
+    border-color: var(--color-warning-dark);
+    color: var(--color-white);
+}
+
+/* Danger Button */
+.btn-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.btn-danger:hover {
+    background-color: var(--color-danger-dark);
+    border-color: var(--color-danger-dark);
+    color: var(--color-white);
+}
+
+/* Info Button */
+.btn-info {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+    color: var(--color-white);
+}
+
+.btn-info:hover {
+    background-color: var(--color-info-dark);
+    border-color: var(--color-info-dark);
+    color: var(--color-white);
+}
+
+/* Light Button */
+.btn-light {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-300);
+    color: var(--color-gray-900);
+}
+
+.btn-light:hover {
+    background-color: var(--color-gray-200);
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-900);
+}
+
+/* Dark Button */
+.btn-dark {
+    background-color: var(--color-gray-900);
+    border-color: var(--color-gray-900);
+    color: var(--color-white);
+}
+
+.btn-dark:hover {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-800);
+    color: var(--color-white);
+}
+
+/* ============================================
+   OUTLINE BUTTONS
+   ============================================ */
+
+.btn-outline-primary {
+    background-color: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-outline-secondary {
+    background-color: transparent;
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--color-white);
+}
+
+.btn-outline-success {
+    background-color: transparent;
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-white);
+}
+
+.btn-outline-danger {
+    background-color: transparent;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.btn-outline-warning {
+    background-color: transparent;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-white);
+}
+
+.btn-outline-info {
+    background-color: transparent;
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+    color: var(--color-white);
+}
+
+.btn-outline-dark {
+    background-color: transparent;
+    border-color: var(--color-gray-900);
+    color: var(--color-gray-900);
+}
+
+.btn-outline-dark:hover {
+    background-color: var(--color-gray-900);
+    border-color: var(--color-gray-900);
+    color: var(--color-white);
+}
+
+/* ============================================
+   BUTTON SIZES
+   ============================================ */
+
+.btn-xs {
+    padding: 0.4rem 0.8rem;
+    font-size: var(--font-size-xs);
+    border-radius: var(--border-radius-sm);
+}
+
+.btn-sm {
+    padding: 0.6rem 1.2rem;
+    font-size: var(--font-size-sm);
+    border-radius: var(--border-radius-sm);
+}
+
+.btn-lg {
+    padding: 1.2rem 2.4rem;
+    font-size: var(--font-size-lg);
+    border-radius: var(--border-radius-lg);
+}
+
+.btn-xl {
+    padding: 1.6rem 3.2rem;
+    font-size: var(--font-size-xl);
+    border-radius: var(--border-radius-lg);
+}
+
+/* ============================================
+   BUTTON BLOCK
+   ============================================ */
+
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+/* ============================================
+   BUTTON ICON
+   ============================================ */
+
+.btn-icon {
+    padding: 0.8rem;
+    width: 4rem;
+    height: 4rem;
+}
+
+.btn-icon.btn-sm {
+    padding: 0.6rem;
+    width: 3.2rem;
+    height: 3.2rem;
+}
+
+.btn-icon.btn-lg {
+    padding: 1.2rem;
+    width: 5.6rem;
+    height: 5.6rem;
+}
+
+.btn svg,
+.btn i {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.btn-sm svg,
+.btn-sm i {
+    width: 1.4rem;
+    height: 1.4rem;
+}
+
+.btn-lg svg,
+.btn-lg i {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Ícone com texto */
+.btn svg + span,
+.btn i + span {
+    margin-left: 0.8rem;
+}
+
+.btn span + svg,
+.btn span + i {
+    margin-left: 0.8rem;
+}
+
+/* ============================================
+   BUTTON GROUP
+   ============================================ */
+
+.btn-group {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.btn-group > .btn {
+    position: relative;
+    flex: 1 1 auto;
+    border-radius: 0;
+}
+
+.btn-group > .btn:first-child {
+    border-top-left-radius: var(--border-radius-md);
+    border-bottom-left-radius: var(--border-radius-md);
+}
+
+.btn-group > .btn:last-child {
+    border-top-right-radius: var(--border-radius-md);
+    border-bottom-right-radius: var(--border-radius-md);
+}
+
+.btn-group > .btn:not(:last-child) {
+    border-right-width: 0;
+}
+
+.btn-group > .btn:hover,
+.btn-group > .btn:focus,
+.btn-group > .btn:active {
+    z-index: 1;
+}
+
+/* ============================================
+   BUTTON LOADING STATE
+   ============================================ */
+
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 1.6rem;
+    height: 1.6rem;
+    top: 50%;
+    left: 50%;
+    margin-left: -0.8rem;
+    margin-top: -0.8rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   GHOST BUTTON
+   ============================================ */
+
+.btn-ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-gray-700);
+}
+
+.btn-ghost:hover {
+    background-color: var(--color-gray-100);
+    border-color: transparent;
+    color: var(--color-gray-900);
+}
+
+/* ============================================
+   LINK BUTTON
+   ============================================ */
+
+.btn-link {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: 0;
+}
+
+.btn-link:hover {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+    transform: none;
+}

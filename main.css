@@ -1,0 +1,254 @@
+@import url('css/base/reset.css');
+@import url('css/base/variables.css');
+@import url('css/base/typography.css');
+@import url('css/layout/sidebar.css');
+@import url('css/layout/header.css');
+@import url('css/layout/grid.css');
+@import url('css/layout/responsive.css');
+@import url('css/components/buttons.css');
+@import url('css/components/cards.css');
+@import url('css/components/forms.css');
+@import url('css/components/modal.css');
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50; /* Azul escuro */
+    color: white;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    padding-left: 20px;
+    transition: width 0.3s ease;
+}
+
+.sidebar__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.sidebar__logo {
+    font-size: 30px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.sidebar__title {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.sidebar__nav {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar__nav li {
+    margin: 15px 0;
+}
+
+.sidebar__nav a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar__nav a:hover {
+    background-color: #34495e;
+    padding-left: 10px;
+    border-radius: 5px;
+}
+
+.sidebar__nav .badge {
+    background-color: #e74c3c;
+    color: white;
+    font-size: 12px;
+    padding: 5px;
+    border-radius: 50%;
+    margin-left: 5px;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 260px; /* Ajuste para o menu lateral */
+    padding: 20px;
+    background-color: #ecf0f1;
+    min-height: 100vh;
+}
+
+/* Header principal */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-title h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header-actions button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.header-actions button:hover {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+}
+
+.content-wrapper {
+    margin-top: 20px;
+}
+
+/* Cards */
+.card {
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f1f1f1;
+    padding-bottom: 10px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.novo-atendimento-badge {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.novo-atendimento-badge:hover {
+    background-color: #2980b9;
+}
+
+.card .form-group {
+    margin-bottom: 15px;
+}
+
+.filtros-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+table th {
+    background-color: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+table td {
+    background-color: #fff;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.status-pendente {
+    background: #ffeaa7;
+    color: #d35400;
+}
+
+.status-andamento {
+    background: #81ecec;
+    color: #00b894;
+}
+
+.status-concluido {
+    background: #55efc4;
+    color: #00b894;
+}
+
+.btn-action {
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    color: white;
+}
+
+.btn-editar {
+    background: #3498db;
+}
+
+.btn-visualizar {
+    background: #2ecc71;
+}
+
+.btn-excluir {
+    background: #e74c3c;
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .main-content {
+        margin-left: 220px;
+    }
+
+    .sidebar__title {
+        font-size: 18px;
+    }
+
+    .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions button {
+        margin-top: 10px;
+    }
+}

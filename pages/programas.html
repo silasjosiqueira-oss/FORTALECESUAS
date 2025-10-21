@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas - Sistema de Assistência Social</title>
+
+ <!-- CSS Structure -->
+    <link rel="stylesheet" href="../css/base/reset.css">
+    <link rel="stylesheet" href="../css/base/variables.css">
+    <link rel="stylesheet" href="../css/base/typography.css">
+    <link rel="stylesheet" href="../css/layout/sidebar.css">
+    <link rel="stylesheet" href="../css/layout/header.css">
+    <link rel="stylesheet" href="../css/layout/grid.css">
+    <link rel="stylesheet" href="../css/layout/responsive.css">
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/forms.css">
+    <link rel="stylesheet" href="../css/components/modal.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .stat-card p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .stat-card.positive h3 {
+            color: #059669;
+        }
+
+        .stat-card.warning h3 {
+            color: #d97706;
+        }
+
+        .stat-card.danger h3 {
+            color: #dc2626;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .chart-header h3 {
+            margin: 0;
+            color: #1e293b;
+            font-size: 1.25rem;
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chart-filters select,
+        .chart-filters input[type="date"] {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .chart-filters button {
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chart-filters button:hover {
+            background: #1d4ed8;
+        }
+
+        .chart-filters button.secondary {
+            background: #64748b;
+        }
+
+        .chart-filters button.secondary:hover {
+            background: #475569;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.positive {
+            background: #059669;
+        }
+
+        .progress-fill.warning {
+            background: #d97706;
+        }
+
+        .progress-fill.danger {
+            background: #dc2626;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stats-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .stats-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .export-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .export-buttons button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-pdf {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-excel {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-csv {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-print {
+            background: #64748b;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group select,
+        .form-group input[type="date"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .comparison-item:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .comparison-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .comparison-change.positive {
+            color: #059669;
+        }
+
+        .comparison-change.negative {
+            color: #dc2626;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Completa (igual ao index) -->
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">AS</div>
+                <h1 class="sidebar__title">Assistência Social</h1>
+            </div>
+
+            <nav class="sidebar__nav">
+                <ul>
+                    <li>
+                        <a href='/pages/'>
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>inivio</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/atendimento.html'>
+                            <i class="fas fa-users"></i>
+                            <span>Atendimentos</span>
+                            <span class="badge">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/beneficios.html'>
+                            <i class="fas fa-hand-holding-heart"></i>
+                            <span>Benefícios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/agenda.html'>
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Agenda</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/atividades.html'>
+                            <i class="fas fa-users-cog"></i>
+                            <span>Grupos/Atividades</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/programas.html'>
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Programas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/relatorios.html'>
+                            <i class="fas fa-file-alt"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/estatisticas.html'>
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Estatísticas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/cadastros'>
+                            <i class="fas fa-database"></i>
+                            <span>Cadastros</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/estoque'>
+                            <i class="fas fa-boxes"></i>
+                            <span>Estoque</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/pages/ferramentas.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Ferramentas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/pages/configuracoes.html">
+                            <i class="fas fa-cogs"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/pages/suporte.html">
+                            <i class="fas fa-life-ring"></i>
+                            <span>Suporte</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href='/pages/login.htm'>
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logoff</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Estatísticas - Sistema de Assistência Social</h2>
+                    <p class="header-subtitle">Análises e Indicadores do Sistema SUAS</p>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Filtros Gerais -->
+                <div class="chart-filters">
+                    <select id="filtroUnidade">
+                        <option value="">Todas as Unidades</option>
+                        <option value="CRAS">CRAS</option>
+                        <option value="CREAS">CREAS</option>
+                        <option value="SECRETARIA">Secretaria</option>
+                    </select>
+                    <select id="filtroProfissional">
+                        <option value="">Todos os Profissionais</option>
+                        <option value="assistente-social">Assistente Social</option>
+                        <option value="psicologo">Psicólogo</option>
+                        <option value="coordenador">Coordenador</option>
+                    </select>
+                    <input type="date" id="dataInicio" placeholder="Data início">
+                    <input type="date" id="dataFim" placeholder="Data fim">
+                    <button onclick="aplicarFiltros()">Filtrar</button>
+                    <button onclick="limparFiltros()" class="secondary">Limpar</button>
+                    <button onclick="openCustomReportModal()">Relatório Personalizado</button>
+                </div>
+
+                <!-- Tabs de Navegação -->
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+                    <div class="tab" onclick="switchTab('atendimentos')">Atendimentos</div>
+                    <div class="tab" onclick="switchTab('beneficios')">Benefícios</div>
+                    <div class="tab" onclick="switchTab('programas')">Programas</div>
+                    <div class="tab" onclick="switchTab('comparativos')">Comparativos</div>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content active">
+                    <!-- Estatísticas Principais -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="totalAtendimentos">1,248</h3>
+                            <p>Total de Atendimentos</p>
+                        </div>
+                        <div class="stat-card positive">
+                            <h3 id="atendimentosMes">156</h3>
+                            <p>Atendimentos este Mês</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <h3 id="aguardandoAtendimento">23</h3>
+                            <p>Aguardando Atendimento</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="totalBeneficios">892</h3>
+                            <p>Benefícios Ativos</p>
+                        </div>
+                        <div class="stat-card positive">
+                            <h3 id="oficinasAtivas">12</h3>
+                            <p>Oficinas Ativas</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="familiasCadastradas">634</h3>
+                            <p>Famílias Cadastradas</p>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Atendimentos por Mês -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Atendimentos por Mês</h3>
+                            <button onclick="exportChart('atendimentos-mes')">Exportar</button>
+                        </div>
+                        <div id="chartAtendimentosMes" style="height: 300px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                            Gráfico de Atendimentos por Mês
+                        </div>
+                    </div>
+
+                    <!-- Distribuição por Unidade -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Distribuição por Unidade</h3>
+                            <button onclick="exportChart('distribuicao-unidade')">Exportar</button>
+                        </div>
+                        <div class="stats-table-container">
+                            <table class="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Unidade</th>
+                                        <th>Atendimentos</th>
+                                        <th>Percentual</th>
+                                        <th>Status</th>
+                                        <th>Progresso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>CRAS Centro</td>
+                                        <td>487</td>
+                                        <td>39.0%</td>
+                                        <td><span class="badge success">Ativo</span></td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill positive" style="width: 39%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>CRAS Norte</td>
+                                        <td>364</td>
+                                        <td>29.2%</td>
+                                        <td><span class="badge success">Ativo</span></td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill positive" style="width: 29%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>CREAS</td>
+                                        <td>273</td>
+                                        <td>21.9%</td>
+                                        <td><span class="badge warning">Atenção</span></td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill warning" style="width: 22%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Secretaria</td>
+                                        <td>124</td>
+                                        <td>9.9%</td>
+                                        <td><span class="badge info">Normal</span></td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 10%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Atendimentos Tab -->
+                <div id="atendimentos-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>89</h3>
+                            <p>Atendimento Psicológico</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>67</h3>
+                            <p>Atendimento Social</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>45</h3>
+                            <p>Cadastro Único</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>32</h3>
+                            <p>Benefícios Eventuais</p>
+                        </div>
+                    </div>
+
+                    <!-- Motivos de Atendimento -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Principais Motivos de Atendimento</h3>
+                            <button onclick="exportChart('motivos-atendimento')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Motivo</th>
+                                    <th>Quantidade</th>
+                                    <th>Percentual</th>
+                                    <th>Tendência</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Atendimento Psicológico</td>
+                                    <td>89</td>
+                                    <td>28.5%</td>
+                                    <td><span class="comparison-change positive">+15%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Atendimento Social</td>
+                                    <td>67</td>
+                                    <td>21.5%</td>
+                                    <td><span class="comparison-change positive">+8%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Atualização Cadastro Único</td>
+                                    <td>45</td>
+                                    <td>14.4%</td>
+                                    <td><span class="comparison-change negative">-3%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Benefícios Eventuais</td>
+                                    <td>32</td>
+                                    <td>10.3%</td>
+                                    <td><span class="comparison-change positive">+12%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Doação Agasalhos</td>
+                                    <td>28</td>
+                                    <td>9.0%</td>
+                                    <td><span class="comparison-change positive">+25%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Por Profissional -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Atendimentos por Profissional</h3>
+                            <button onclick="exportChart('por-profissional')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Profissional</th>
+                                    <th>Cargo</th>
+                                    <th>Atendimentos</th>
+                                    <th>Meta Mensal</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Ana Silva</td>
+                                    <td>Psicóloga</td>
+                                    <td>89</td>
+                                    <td>80</td>
+                                    <td><span class="badge success">111%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Carlos Santos</td>
+                                    <td>Assistente Social</td>
+                                    <td>67</td>
+                                    <td>75</td>
+                                    <td><span class="badge warning">89%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Maria Costa</td>
+                                    <td>Coordenadora</td>
+                                    <td>45</td>
+                                    <td>50</td>
+                                    <td><span class="badge warning">90%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Benefícios Tab -->
+                <div id="beneficios-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card positive">
+                            <h3>456</h3>
+                            <p>Bolsa Família Ativa</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>123</h3>
+                            <p>BPC Ativos</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>89</h3>
+                            <p>Benefícios Eventuais</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <h3>34</h3>
+                            <p>Pendentes Renovação</p>
+                        </div>
+                    </div>
+
+                    <!-- Distribuição de Benefícios -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Distribuição de Benefícios por Tipo</h3>
+                            <button onclick="exportChart('beneficios-tipo')">Exportar</button>
+                        </div>
+                        <div id="chartBeneficios" style="height: 400px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                            Gráfico de Pizza - Distribuição de Benefícios
+                        </div>
+                    </div>
+
+                    <!-- Benefícios por Bairro -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Benefícios por Localidade</h3>
+                            <button onclick="exportChart('beneficios-bairro')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Bairro</th>
+                                    <th>Bolsa Família</th>
+                                    <th>BPC</th>
+                                    <th>Eventuais</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Centro</td>
+                                    <td>87</td>
+                                    <td>23</td>
+                                    <td>15</td>
+                                    <td><strong>125</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Vila Nova</td>
+                                    <td>156</td>
+                                    <td>34</td>
+                                    <td>28</td>
+                                    <td><strong>218</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Jardim Europa</td>
+                                    <td>123</td>
+                                    <td>28</td>
+                                    <td>19</td>
+                                    <td><strong>170</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>São José</td>
+                                    <td>90</td>
+                                    <td>38</td>
+                                    <td>27</td>
+                                    <td><strong>155</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Programas Tab -->
+                <div id="programas-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>12</h3>
+                            <p>Oficinas Ativas</p>
+                        </div>
+                        <div class="stat-card positive">
+                            <h3>284</h3>
+                            <p>Participantes PAIF</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>156</h3>
+                            <p>Participantes SCFV</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <h3>23</h3>
+                            <p>Acolhimentos Ativos</p>
+                        </div>
+                    </div>
+
+                    <!-- Oficinas e Atividades -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Participação em Oficinas</h3>
+                            <button onclick="exportChart('oficinas')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Oficina</th>
+                                    <th>Participantes</th>
+                                    <th>Capacidade</th>
+                                    <th>Taxa Ocupação</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Artesanato</td>
+                                    <td>18</td>
+                                    <td>20</td>
+                                    <td>90%</td>
+                                    <td><span class="badge success">Ativa</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Informática Básica</td>
+                                    <td>15</td>
+                                    <td>15</td>
+                                    <td>100%</td>
+                                    <td><span class="badge success">Lotada</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Culinária</td>
+                                    <td>12</td>
+                                    <td>16</td>
+                                    <td>75%</td>
+                                    <td><span class="badge info">Ativa</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Costura</td>
+                                    <td>8</td>
+                                    <td>12</td>
+                                    <td>67%</td>
+                                    <td><span class="badge warning">Baixa</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Acolhimentos -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Acolhimentos por Faixa Etária</h3>
+                            <button onclick="exportChart('acolhimentos')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Faixa Etária</th>
+                                    <th>Quantidade</th>
+                                    <th>Motivo Principal</th>
+                                    <th>Tempo Médio (dias)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0-5 anos</td>
+                                    <td>8</td>
+                                    <td>Negligência</td>
+                                    <td>45</td>
+                                </tr>
+                                <tr>
+                                    <td>6-12 anos</td>
+                                    <td>12</td>
+                                    <td>Violência Doméstica</td>
+                                    <td>67</td>
+                                </tr>
+                                <tr>
+                                    <td>13-17 anos</td>
+                                    <td>3</td>
+                                    <td>Situação de Rua</td>
+                                    <td>89</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Comparativos Tab -->
+                <div id="comparativos-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="comparison-card">
+                            <h3>Este Mês vs Mês Anterior</h3>
+                            <div class="comparison-item">
+                                <span>Atendimentos</span>
+                                <div>
+                                    <span class="comparison-value">156</span>
+                                    <span class="comparison-change positive">+23 (+17%)</span>
+                                </div>
+                            </div>
+                            <div class="comparison-item">
+                                <span>Benefícios Concedidos</span>
+                                <div>
+                                    <span class="comparison-value">89</span>
+                                    <span class="comparison-change positive">+12 (+15%)</span>
+                                </div>
+                            </div>
+                            <div class="comparison-item">
+                                <span>Novos Cadastros</span>
+                                <div>
+                                    <span class="comparison-value">34</span>
+                                    <span class="comparison-change negative">-8 (-19%)</span>
+                                </div>
+                            </div>
+                            <div class="comparison-item">
+                                <span>Oficinas Realizadas</span>
+                                <div>
+                                    <span class="comparison-value">48</span>
+                                    <span class="comparison-change positive">+6 (+14%)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card">
+                            <h3>Este Ano vs Ano Anterior</h3>
+                            <div class="comparison-item">
+                                <span>Total Atendimentos</span>
+                                <div>
+                                    <span class="comparison-value">1,248</span>
+                                    <span class="comparison-change positive">+156 (+14%)</span>
+                                </div>
+                            </div>
+                            <div class="comparison-item">
+                                <span>Famílias Atendidas</span>
+                                <div>
+                                    <span class="comparison-value">634</span>
+                                    <span class="comparison-change positive">+78 (+14%)</span>
+                                </div>
+                            </div>
+                            <div class="comparison-item">
+                                <span>Benefícios Ativos</span>
+                                <div>
+                                    <span class="comparison-value">892</span>
+                                    <span class="comparison-change positive">+89 (+11%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparativo entre Unidades -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Comparativo de Performance entre Unidades</h3>
+                            <button onclick="exportChart('comparativo-unidades')">Exportar</button>
+                        </div>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Meta Mensal</th>
+                                    <th>Realizado</th>
+                                    <th>Performance</th>
+                                    <th>Ranking</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>CRAS Centro</td>
+                                    <td>450</td>
+                                    <td>487</td>
+                                    <td><span class="badge success">108%</span></td>
+                                    <td>1º</td>
+                                </tr>
+                                <tr>
+                                    <td>CRAS Norte</td>
+                                    <td>400</td>
+                                    <td>364</td>
+                                    <td><span class="badge warning">91%</span></td>
+                                    <td>3º</td>
+                                </tr>
+                                <tr>
+                                    <td>CREAS</td>
+                                    <td>300</td>
+                                    <td>273</td>
+                                    <td><span class="badge warning">91%</span></td>
+                                    <td>2º</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Seção de Exportação -->
+                <div class="export-section">
+                    <h3>Exportar Relatórios</h3>
+                    <div class="export-buttons">
+                        <button onclick="exportToPDF()" class="btn-pdf">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
+                        <button onclick="exportToExcel()" class="btn-excel">
+                            <i class="fas fa-file-excel"></i> Exportar Excel
+                        </button>
+                        <button onclick="exportToCSV()" class="btn-csv">
+                            <i class="fas fa-file-csv"></i> Exportar CSV
+                        </button>
+                        <button onclick="printReport()" class="btn-print">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Relatório Personalizado -->
+    <div id="customReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Gerar Relatório Personalizado</h3>
+                <button class="close" onclick="closeModal('customReportModal')">&times;</button>
+            </div>
+            <form id="customReportForm">
+                <div class="form-group">
+                    <label for="reportTitle">Título do Relatório:</label>
+                    <input type="text" id="reportTitle" placeholder="Ex: Relatório Mensal de Atendimentos">
+                </div>
+
+                <div class="form-group">
+                    <label for="reportPeriod">Período:</label>
+                    <select id="reportPeriod">
+                        <option value="mes-atual">Mês Atual</option>
+                        <option value="mes-anterior">Mês Anterior</option>
+                        <option value="trimestre">Último Trimestre</option>
+                        <option value="semestre">Último Semestre</option>
+                        <option value="ano-atual">Ano Atual</option>
+                        <option value="personalizado">Período Personalizado</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="customPeriod" style="display: none;">
+                    <label>Data Início:</label>
+                    <input type="date" id="customStartDate">
+                    <label style="margin-top: 0.5rem;">Data Fim:</label>
+                    <input type="date" id="customEndDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Dados a Incluir:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-atendimentos" checked>
+                            <label for="incluir-atendimentos">Atendimentos</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-beneficios" checked>
+                            <label for="incluir-beneficios">Benefícios</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-programas">
+                            <label for="incluir-programas">Programas</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-oficinas">
+                            <label for="incluir-oficinas">Oficinas</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-acolhimentos">
+                            <label for="incluir-acolhimentos">Acolhimentos</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-estoque">
+                            <label for="incluir-estoque">Estoque</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-profissionais">
+                            <label for="incluir-profissionais">Performance Profissionais</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-unidades">
+                            <label for="incluir-unidades">Comparativo Unidades</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-graficos">
+                            <label for="incluir-graficos">Gráficos</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="incluir-detalhes">
+                            <label for="incluir-detalhes">Detalhes Individuais</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportFormat">Formato:</label>
+                    <select id="reportFormat">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="word">Word</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('customReportModal')" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Gerar Relatório</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        const API_BASE = window.location.origin;
+
+        // Dados simulados para estatísticas
+        let estatisticasData = {
+            totalAtendimentos: 1248,
+            atendimentosMes: 156,
+            aguardandoAtendimento: 23,
+            totalBeneficios: 892,
+            oficinasAtivas: 12,
+            familiasCadastradas: 634
+        };
+
+        // Função para alternar entre tabs
+        function switchTab(tabName) {
+            // Remove active de todas as tabs e conteúdos
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Adiciona active na tab e conteúdo selecionados
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const unidade = document.getElementById('filtroUnidade').value;
+            const profissional = document.getElementById('filtroProfissional').value;
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+
+            console.log('Aplicando filtros:', {
+                unidade,
+                profissional,
+                dataInicio,
+                dataFim
+            });
+
+            // Aqui você implementaria a lógica de filtro
+            // Por enquanto, apenas mostra uma mensagem
+            alert('Filtros aplicados! (Funcionalidade em desenvolvimento)');
+            atualizarEstatisticas();
+        }
+
+        // Limpar filtros
+        function limparFiltros() {
+            document.getElementById('filtroUnidade').value = '';
+            document.getElementById('filtroProfissional').value = '';
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            atualizarEstatisticas();
+        }
+
+        // Atualizar estatísticas com dados reais
+        async function atualizarEstatisticas() {
+            try {
+                const response = await fetch(`${API_BASE}/estatisticas/dashboard`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalAtendimentos').textContent = data.totalAtendimentos;
+                    document.getElementById('atendimentosMes').textContent = data.atendimentosMes;
+                    document.getElementById('aguardandoAtendimento').textContent = data.aguardandoAtendimento;
+                    document.getElementById('totalBeneficios').textContent = data.totalBeneficios;
+                    document.getElementById('oficinasAtivas').textContent = data.oficinasAtivas;
+                    document.getElementById('familiasCadastradas').textContent = data.familiasCadastradas;
+                } else {
+                    // Em caso de erro, usa dados simulados
+                    document.getElementById('totalAtendimentos').textContent = estatisticasData.totalAtendimentos;
+                    document.getElementById('atendimentosMes').textContent = estatisticasData.atendimentosMes;
+                    document.getElementById('aguardandoAtendimento').textContent = estatisticasData.aguardandoAtendimento;
+                    document.getElementById('totalBeneficios').textContent = estatisticasData.totalBeneficios;
+                    document.getElementById('oficinasAtivas').textContent = estatisticasData.oficinasAtivas;
+                    document.getElementById('familiasCadastradas').textContent = estatisticasData.familiasCadastradas;
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+                // Mantém dados simulados em caso de erro
+                document.getElementById('totalAtendimentos').textContent = estatisticasData.totalAtendimentos;
+                document.getElementById('atendimentosMes').textContent = estatisticasData.atendimentosMes;
+                document.getElementById('aguardandoAtendimento').textContent = estatisticasData.aguardandoAtendimento;
+                document.getElementById('totalBeneficios').textContent = estatisticasData.totalBeneficios;
+                document.getElementById('oficinasAtivas').textContent = estatisticasData.oficinasAtivas;
+                document.getElementById('familiasCadastradas').textContent = estatisticasData.familiasCadastradas;
+            }
+        }
+
+        // Abrir modal de relatório personalizado
+        function openCustomReportModal() {
+            document.getElementById('customReportModal').style.display = 'block';
+        }
+
+        // Fechar modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Exportar gráfico específico
+        function exportChart(chartType) {
+            alert(`Exportando gráfico: ${chartType} (Funcionalidade em desenvolvimento)`);
+        }
+
+        // Funções de exportação
+        function exportToPDF() {
+            alert('Exportando para PDF... (Funcionalidade em desenvolvimento)');
+        }
+
+        function exportToExcel() {
+            alert('Exportando para Excel... (Funcionalidade em desenvolvimento)');
+        }
+
+        function exportToCSV() {
+            alert('Exportando para CSV... (Funcionalidade em desenvolvimento)');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // Event Listeners
+        document.getElementById('customReportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const reportTitle = document.getElementById('reportTitle').value;
+            const reportPeriod = document.getElementById('reportPeriod').value;
+            const reportFormat = document.getElementById('reportFormat').value;
+
+            // Coletar dados selecionados
+            const dadosIncluidos = [];
+            document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked').forEach(checkbox => {
+                dadosIncluidos.push(checkbox.id.replace('incluir-', ''));
+            });
+
+            console.log('Gerando relatório personalizado:', {
+                titulo: reportTitle,
+                periodo: reportPeriod,
+                formato: reportFormat,
+                dados: dadosIncluidos
+            });
+
+            alert('Gerando relatório personalizado... (Funcionalidade em desenvolvimento)');
+            closeModal('customReportModal');
+        });
+
+        // Controle do período personalizado
+        document.getElementById('reportPeriod').addEventListener('change', function(e) {
+            const customPeriod = document.getElementById('customPeriod');
+            if (e.target.value === 'personalizado') {
+                customPeriod.style.display = 'block';
+            } else {
+                customPeriod.style.display = 'none';
+            }
+        });
+
+        // Fechar modal clicando fora
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarEstatisticas();
+        });
+
+        // Função para buscar dados reais da API (implementar quando necessário)
+        async function fetchEstatisticas() {
+            try {
+                // Implementar chamadas para as APIs
+                // const atendimentos = await fetch(`${API_BASE}/atendimentos/estatisticas`);
+                // const beneficios = await fetch(`${API_BASE}/beneficios/estatisticas`);
+                // etc...
+
+                console.log('Buscando estatísticas da API...');
+            } catch (error) {
+                console.error('Erro ao buscar estatísticas:', error);
+            }
+        }
+    </script>
+</body>
+</html>

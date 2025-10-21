@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento - Sistema CRAS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/base/reset.css">
+    <link rel="stylesheet" href="../css/base/variables.css">
+    <link rel="stylesheet" href="../css/base/typography.css">
+    <link rel="stylesheet" href="../css/layout/sidebar.css">
+    <link rel="stylesheet" href="../css/layout/header.css">
+    <link rel="stylesheet" href="../css/layout/grid.css">
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/forms.css">
+    <link rel="stylesheet" href="../css/components/modal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Abas */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #483D8B;
+        }
+
+        .tab.active {
+            color: #483D8B;
+            border-bottom-color: #483D8B;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #483D8B;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* Tabelas */
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-ativo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inativo {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-suspenso {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-trial {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-cancelado {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* Tenant Cards */
+        .tenant-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tenant-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tenant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .tenant-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .tenant-url {
+            color: #483D8B;
+            font-size: 0.9rem;
+        }
+
+        .tenant-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .expiring-soon {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .expired {
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #483D8B;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .nivel-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">FS</div>
+                <h1 class="sidebar__title">FORTALECE SUAS</h1>
+            </div>
+            <nav class="sidebar__nav">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Inicio</span></a></li>
+                    <li><a href="atendimento.html"><i class="fas fa-users"></i><span>Atendimentos</span></a></li>
+                    <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+                    <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+                    <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Atividades</span></a></li>
+                    <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+                    <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+                    <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+                    <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+                    <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+                    <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+                    <li><a href="usuarios.html" class="active"><i class="fas fa-user-cog"></i><span>Gerenciamento</span></a></li>
+                    <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+                    <li><a href="login.html"><i class="fas fa-sign-out-alt"></i><span>Logoff</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Gerenciamento do Sistema</h2>
+                    <p class="header-subtitle">Usuários e Organizações Multi-Tenant</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn--primary" id="btn-novo">
+                        <i class="fas fa-plus"></i> <span id="btn-novo-text">Novo</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Abas -->
+                <div class="tabs">
+                    <button class="tab active" onclick="mudarAba('usuarios')">
+                        <i class="fas fa-users"></i> Usuários
+                    </button>
+                    <button class="tab" onclick="mudarAba('tenants')">
+                        <i class="fas fa-network-wired"></i> Organizações (Multi-Tenant)
+                    </button>
+                </div>
+
+                <!-- ================================ -->
+                <!-- ABA USUÁRIOS -->
+                <!-- ================================ -->
+                <div id="tab-usuarios" class="tab-content active">
+                    <!-- Estatísticas Usuários -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-usuarios">0</div>
+                            <div class="stat-label">Total de Usuários</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="usuarios-ativos">0</div>
+                            <div class="stat-label">Ativos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="usuarios-inativos">0</div>
+                            <div class="stat-label">Inativos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="usuarios-suspensos">0</div>
+                            <div class="stat-label">Suspensos</div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Usuários -->
+                    <div class="filters">
+                        <h3 style="margin-bottom: 1rem;"><i class="fas fa-filter"></i> Filtros</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="filter-status-usuario">
+                                    <option value="">Todos</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nível de Acesso</label>
+                                <select class="form-select" id="filter-nivel">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pesquisar</label>
+                                <input type="text" class="form-input" id="search-input-usuario" placeholder="Nome, email ou CPF...">
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn--primary" id="btn-aplicar-filtros-usuario">
+                                <i class="fas fa-search"></i> Pesquisar
+                            </button>
+                            <button class="btn btn--outline" id="btn-limpar-filtros-usuario">
+                                <i class="fas fa-times"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Usuários -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Cargo</th>
+                                    <th>Nível de Acesso</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-usuarios">
+                                <!-- Usuários serão renderizados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ================================ -->
+                <!-- ABA TENANTS -->
+                <!-- ================================ -->
+                <div id="tab-tenants" class="tab-content">
+                    <!-- Estatísticas Tenants -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-tenants">0</div>
+                            <div class="stat-label">Total de Organizações</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="tenants-ativos">0</div>
+                            <div class="stat-label">Ativos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="tenants-trial">0</div>
+                            <div class="stat-label">Em Trial</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-usuarios-tenants">0</div>
+                            <div class="stat-label">Total de Usuários</div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Tenants -->
+                    <div class="filters">
+                        <h3 style="margin-bottom: 1rem;"><i class="fas fa-filter"></i> Filtros</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="filter-status-tenant">
+                                    <option value="">Todos</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="trial">Trial</option>
+                                    <option value="suspenso">Suspenso</option>
+                                    <option value="cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Plano</label>
+                                <select class="form-select" id="filter-plano">
+                                    <option value="">Todos</option>
+                                    <option value="basico">Básico</option>
+                                    <option value="profissional">Profissional</option>
+                                    <option value="empresarial">Empresarial</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pesquisar</label>
+                                <input type="text" class="form-input" id="search-input-tenant" placeholder="Nome ou subdomínio...">
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn--primary" onclick="aplicarFiltrosTenants()">
+                                <i class="fas fa-search"></i> Pesquisar
+                            </button>
+                            <button class="btn btn--outline" onclick="limparFiltrosTenants()">
+                                <i class="fas fa-times"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Tenants -->
+                    <div id="tenants-container"></div>
+                </div>
+
+                <!-- Modal de Usuário -->
+                <div id="modal-usuario" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modal-usuario-title">Novo Usuário</h3>
+                            <button class="modal-close" onclick="fecharModalUsuario()">&times;</button>
+                        </div>
+                        <form id="form-usuario" onsubmit="salvarUsuario(event)">
+                            <input type="hidden" id="usuario-id">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Nome Completo *</label>
+                                    <input type="text" class="form-input" id="usuario-nome" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" class="form-input" id="usuario-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">CPF</label>
+                                    <input type="text" class="form-input" id="usuario-cpf">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Telefone</label>
+                                    <input type="tel" class="form-input" id="usuario-telefone">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Cargo</label>
+                                    <input type="text" class="form-input" id="usuario-cargo">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Unidade</label>
+                                    <input type="text" class="form-input" id="usuario-unidade">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nível de Acesso *</label>
+                                    <select class="form-select" id="usuario-nivel" required>
+                                        <option value="">Selecione</option>
+                                    </select>
+                                </div>
+                                <div id="senha-fields" class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">Senha *</label>
+                                        <input type="password" class="form-input" id="usuario-senha" minlength="6" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Confirmar Senha *</label>
+                                        <input type="password" class="form-input" id="usuario-senha-confirmar" minlength="6" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="text-align: right; margin-top: 1.5rem;">
+                                <button type="button" class="btn btn--outline" onclick="fecharModalUsuario()">Cancelar</button>
+                                <button type="submit" class="btn btn--primary">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal de Tenant -->
+                <div id="modal-tenant" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modal-tenant-title">Nova Organização</h3>
+                            <button class="modal-close" onclick="fecharModalTenant()">&times;</button>
+                        </div>
+                        <form id="form-tenant" onsubmit="salvarTenant(event)">
+                            <input type="hidden" id="tenant-id">
+
+                            <div class="form-group">
+                                <label class="form-label">Nome da Organização *</label>
+                                <input type="text" class="form-input" id="tenant-nome" required>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Subdomínio *</label>
+                                    <input type="text" class="form-input" id="tenant-subdomain" required pattern="[a-z0-9-]+" placeholder="exemplo">
+                                    <small style="color: #64748b;">Somente letras minúsculas, números e hífen</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">CNPJ</label>
+                                    <input type="text" class="form-input" id="tenant-cnpj" placeholder="00.000.000/0000-00">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email de Contato *</label>
+                                <input type="email" class="form-input" id="tenant-email" required>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Plano *</label>
+                                    <select class="form-select" id="tenant-plano" required>
+                                        <option value="">Selecione</option>
+                                        <option value="basico">Básico</option>
+                                        <option value="profissional">Profissional</option>
+                                        <option value="empresarial">Empresarial</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Limite de Usuários</label>
+                                    <input type="number" class="form-input" id="tenant-limite" value="10" min="1">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Data de Vencimento</label>
+                                <input type="date" class="form-input" id="tenant-vencimento">
+                            </div>
+
+                            <div style="text-align: right; margin-top: 1.5rem;">
+                                <button type="button" class="btn btn--outline" onclick="fecharModalTenant()">Cancelar</button>
+                                <button type="submit" class="btn btn--primary">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ========================================
+        // VARIÁVEIS GLOBAIS
+        // ========================================
+        let usuarios = [];
+        let tenants = [];
+        let niveisAcesso = {};
+        let abaAtual = 'usuarios';
+
+        const API_USUARIOS = '/api/usuarios';
+        const API_TENANTS = '/api/admin/tenants';
+        const SUPER_ADMIN_KEY = 'CHAVE_SUPER_ADMIN_TEMPORARIA';
+
+        // ========================================
+        // CONTROLE DE ABAS
+        // ========================================
+        function mudarAba(aba) {
+            abaAtual = aba;
+
+            // Atualizar tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${aba === 'usuarios' ? 1 : 2})`).classList.add('active');
+
+            // Atualizar conteúdo
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${aba}`).classList.add('active');
+
+            // Atualizar botão "Novo"
+            const btnNovo = document.getElementById('btn-novo');
+            const btnNovoText = document.getElementById('btn-novo-text');
+
+            if (aba === 'usuarios') {
+                btnNovoText.textContent = 'Novo Usuário';
+                btnNovo.onclick = abrirModalNovoUsuario;
+                carregarUsuarios();
+            } else {
+                btnNovoText.textContent = 'Nova Organização';
+                btnNovo.onclick = abrirModalNovoTenant;
+                carregarTenants();
+            }
+        }
+
+        // ========================================
+        // HEADERS
+        // ========================================
+        function getHeaders() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                mostrarNotificacao('Faça login para continuar', 'error');
+                window.location.href = '/pages/login.html';
+                return {};
+            }
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function getHeadersSuperAdmin() {
+            return {
+                'X-Super-Admin-Key': SUPER_ADMIN_KEY,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // ========================================
+        // USUÁRIOS
+        // ========================================
+
+        async function carregarUsuarios() {
+            try {
+                const res = await fetch(API_USUARIOS, { headers: getHeaders() });
+                const data = await res.json();
+                if (data.sucesso) {
+                    usuarios = data.dados.map(u => ({ ...u, ativo: Boolean(u.ativo) }));
+                    renderizarUsuarios(usuarios);
+                    carregarEstatisticasUsuarios();
+                } else {
+                    mostrarNotificacao(data.mensagem || 'Erro ao carregar usuários', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                mostrarNotificacao('Erro de conexão', 'error');
+            }
+        }
+
+        async function carregarEstatisticasUsuarios() {
+            try {
+                const res = await fetch(`${API_USUARIOS}/meta/estatisticas`, { headers: getHeaders() });
+                const data = await res.json();
+                if (data.sucesso) {
+                    document.getElementById('total-usuarios').textContent = data.dados.total;
+                    document.getElementById('usuarios-ativos').textContent = data.dados.ativos;
+                    document.getElementById('usuarios-inativos').textContent = data.dados.inativos;
+                    document.getElementById('usuarios-suspensos').textContent = data.dados.suspensos || 0;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        async function carregarNiveisAcesso() {
+            try {
+                const res = await fetch(`${API_USUARIOS}/meta/niveis-acesso`, { headers: getHeaders() });
+                const data = await res.json();
+                if (data.sucesso) {
+                    niveisAcesso = data.dados.reduce((acc, n) => ({ ...acc, [n.codigo]: n }), {});
+                    const selectNivel = document.getElementById('filter-nivel');
+                    const selectUsuarioNivel = document.getElementById('usuario-nivel');
+                    [selectNivel, selectUsuarioNivel].forEach(select => {
+                        select.innerHTML = '<option value="">Todos/Selecione</option>';
+                        data.dados.forEach(n => {
+                            const option = document.createElement('option');
+                            option.value = n.codigo;
+                            option.textContent = n.nome;
+                            select.appendChild(option);
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar níveis:', error);
+            }
+        }
+
+        function renderizarUsuarios(usuariosList) {
+            const tbody = document.getElementById('tbody-usuarios');
+            if (!tbody) return;
+            tbody.innerHTML = usuariosList.map(u => `
+                <tr>
+                    <td>${u.nome}</td>
+                    <td>${u.email}</td>
+                    <td>${u.cargo || '-'}</td>
+                    <td><span class="nivel-badge">${u.nivel_nome || u.nivel_acesso_codigo}</span></td>
+                    <td><span class="status-badge status-${u.ativo ? 'ativo' : 'inativo'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td class="actions">
+                        <button class="btn btn-sm btn--outline" onclick="visualizarUsuario(${u.id})" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn--outline" onclick="editarUsuario(${u.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn--outline" onclick="alterarStatusUsuario(${u.id})" title="Alterar Status">
+                            <i class="fas fa-toggle-on"></i>
+                        </button>
+                        ${u.nivel_acesso_codigo !== 'admin' ? `
+                        <button class="btn btn-sm btn--outline" onclick="excluirUsuario(${u.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalNovoUsuario() {
+            document.getElementById('modal-usuario-title').textContent = 'Novo Usuário';
+            document.getElementById('form-usuario').reset();
+            document.getElementById('usuario-id').value = '';
+            document.getElementById('senha-fields').style.display = 'grid';
+            document.getElementById('usuario-senha').required = true;
+            document.getElementById('usuario-senha-confirmar').required = true;
+            document.getElementById('modal-usuario').style.display = 'flex';
+        }
+
+        async function editarUsuario(id) {
+            try {
+                const usuario = usuarios.find(u => u.id === id);
+                if (!usuario) return;
+
+                document.getElementById('modal-usuario-title').textContent = 'Editar Usuário';
+                document.getElementById('usuario-id').value = usuario.id;
+                document.getElementById('usuario-nome').value = usuario.nome;
+                document.getElementById('usuario-email').value = usuario.email;
+                document.getElementById('usuario-cpf').value = usuario.cpf || '';
+                document.getElementById('usuario-telefone').value = usuario.telefone || '';
+                document.getElementById('usuario-cargo').value = usuario.cargo || '';
+                document.getElementById('usuario-unidade').value = usuario.unidade || '';
+                document.getElementById('usuario-nivel').value = usuario.nivel_acesso_codigo;
+
+                document.getElementById('senha-fields').style.display = 'none';
+                document.getElementById('usuario-senha').required = false;
+                document.getElementById('usuario-senha-confirmar').required = false;
+
+                document.getElementById('modal-usuario').style.display = 'flex';
+            } catch (error) {
+                console.error('Erro ao editar usuário:', error);
+            }
+        }
+
+        async function salvarUsuario(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('usuario-id').value;
+            const dados = {
+                nome: document.getElementById('usuario-nome').value,
+                email: document.getElementById('usuario-email').value,
+                cpf: document.getElementById('usuario-cpf').value,
+                telefone: document.getElementById('usuario-telefone').value,
+                cargo: document.getElementById('usuario-cargo').value,
+                unidade: document.getElementById('usuario-unidade').value,
+                nivel_acesso_codigo: document.getElementById('usuario-nivel').value
+            };
+
+            if (!id) {
+                const senha = document.getElementById('usuario-senha').value;
+                const senhaConfirmar = document.getElementById('usuario-senha-confirmar').value;
+
+                if (senha !== senhaConfirmar) {
+                    mostrarNotificacao('As senhas não conferem', 'error');
+                    return;
+                }
+                dados.senha = senha;
+            }
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_USUARIOS}/${id}` : API_USUARIOS;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: getHeaders(),
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    fecharModalUsuario();
+                    carregarUsuarios();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar usuário:', error);
+                mostrarNotificacao('Erro ao salvar usuário', 'error');
+            }
+        }
+
+        function visualizarUsuario(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            if (!usuario) return;
+
+            const statusTexto = usuario.ativo ? 'ativo' : 'inativo';
+            const nivelNome = usuario.nivel_nome || niveisAcesso[usuario.nivel_acesso_codigo]?.nome || usuario.nivel_acesso_codigo;
+
+            alert(`Nome: ${usuario.nome}\nEmail: ${usuario.email}\nCPF: ${usuario.cpf || '-'}\nCargo: ${usuario.cargo || '-'}\nUnidade: ${usuario.unidade || '-'}\nNível: ${nivelNome}\nStatus: ${statusTexto}`);
+        }
+
+        async function alterarStatusUsuario(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            if (!usuario) return;
+
+            const statusAtual = usuario.ativo ? 'ativo' : 'inativo';
+            const novoAtivo = !usuario.ativo;
+
+            if (!confirm(`Status atual: ${statusAtual}\n\nDeseja alternar para ${novoAtivo ? 'ativo' : 'inativo'}?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_USUARIOS}/${id}/status`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ ativo: novoAtivo })
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarUsuarios();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar status:', error);
+                mostrarNotificacao('Erro ao alterar status', 'error');
+            }
+        }
+
+        async function excluirUsuario(id) {
+            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+
+            try {
+                const res = await fetch(`${API_USUARIOS}/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarUsuarios();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao excluir usuário:', error);
+                mostrarNotificacao('Erro ao excluir usuário', 'error');
+            }
+        }
+
+        function aplicarFiltrosUsuarios() {
+            const status = document.getElementById('filter-status-usuario').value;
+            const nivel = document.getElementById('filter-nivel').value;
+            const search = document.getElementById('search-input-usuario').value.toLowerCase();
+
+            let filtrados = usuarios;
+
+            if (status) {
+                const ativoFiltro = status === 'ativo';
+                filtrados = filtrados.filter(u => u.ativo === ativoFiltro);
+            }
+            if (nivel) {
+                filtrados = filtrados.filter(u => u.nivel_acesso_codigo === nivel);
+            }
+            if (search) {
+                filtrados = filtrados.filter(u =>
+                    u.nome.toLowerCase().includes(search) ||
+                    u.email.toLowerCase().includes(search) ||
+                    (u.cpf && u.cpf.includes(search))
+                );
+            }
+
+            renderizarUsuarios(filtrados);
+        }
+
+        function limparFiltrosUsuarios() {
+            document.getElementById('filter-status-usuario').value = '';
+            document.getElementById('filter-nivel').value = '';
+            document.getElementById('search-input-usuario').value = '';
+            renderizarUsuarios(usuarios);
+        }
+
+        function fecharModalUsuario() {
+            document.getElementById('modal-usuario').style.display = 'none';
+            document.getElementById('form-usuario').reset();
+        }
+
+        // ========================================
+        // TENANTS
+        // ========================================
+
+        async function carregarTenants() {
+            try {
+                const res = await fetch(API_TENANTS, {
+                    headers: getHeadersSuperAdmin()
+                });
+
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    tenants = data.dados;
+                    renderizarTenants(tenants);
+                    calcularEstatisticasTenants();
+                } else {
+                    mostrarNotificacao(data.mensagem || 'Erro ao carregar organizações', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar tenants:', error);
+                mostrarNotificacao('Erro de conexão', 'error');
+            }
+        }
+
+        function calcularEstatisticasTenants() {
+            const total = tenants.length;
+            const ativos = tenants.filter(t => t.status === 'ativo').length;
+            const trial = tenants.filter(t => t.plano === 'trial' || t.dias_restantes <= 30).length;
+            const totalUsuarios = tenants.reduce((sum, t) => sum + (t.usuarios_ativos || 0), 0);
+
+            document.getElementById('total-tenants').textContent = total;
+            document.getElementById('tenants-ativos').textContent = ativos;
+            document.getElementById('tenants-trial').textContent = trial;
+            document.getElementById('total-usuarios-tenants').textContent = totalUsuarios;
+        }
+
+        function renderizarTenants(lista) {
+            const container = document.getElementById('tenants-container');
+
+            if (lista.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #64748b;">
+                        <i class="fas fa-building" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>Nenhuma organização encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = lista.map(t => {
+                const statusClass = t.status === 'ativo' ? 'status-ativo' :
+                                  t.status === 'trial' ? 'status-trial' :
+                                  t.status === 'suspenso' ? 'status-suspenso' : 'status-cancelado';
+
+                const expiring = t.dias_restantes <= 7 && t.dias_restantes > 0;
+                const expired = t.dias_restantes < 0;
+                const cardClass = expired ? 'tenant-card expired' : expiring ? 'tenant-card expiring-soon' : 'tenant-card';
+
+                const url = `https://${t.subdomain}.fortalecesuas.com`;
+
+                return `
+                    <div class="${cardClass}">
+                        <div class="tenant-header">
+                            <div>
+                                <div class="tenant-title">${t.nome_organizacao}</div>
+                                <div class="tenant-url">
+                                    <i class="fas fa-link"></i>
+                                    <a href="${url}" target="_blank">${t.subdomain}.fortalecesuas.com</a>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${t.status}</span>
+                        </div>
+
+                        <div class="tenant-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Plano</span>
+                                <span class="detail-value">${t.plano}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Usuários Ativos</span>
+                                <span class="detail-value">${t.usuarios_ativos || 0} / ${t.limite_usuarios}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Vencimento</span>
+                                <span class="detail-value">${new Date(t.data_vencimento).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Dias Restantes</span>
+                                <span class="detail-value" style="color: ${expired ? '#ef4444' : expiring ? '#f59e0b' : '#166534'}">
+                                    ${t.dias_restantes} dias
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="btn btn-sm btn--outline" onclick="editarTenant(${t.id})" title="Editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="renovarTenant(${t.id})" title="Renovar">
+                                <i class="fas fa-calendar-plus"></i> Renovar
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="alterarStatusTenant(${t.id}, '${t.status}')" title="Alterar Status">
+                                <i class="fas fa-toggle-on"></i> Status
+                            </button>
+                            <button class="btn btn-sm btn--outline" onclick="visualizarTenant(${t.id})" title="Ver Detalhes">
+                                <i class="fas fa-eye"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function abrirModalNovoTenant() {
+            document.getElementById('modal-tenant-title').textContent = 'Nova Organização';
+            document.getElementById('form-tenant').reset();
+            document.getElementById('tenant-id').value = '';
+
+            const dataVencimento = new Date();
+            dataVencimento.setDate(dataVencimento.getDate() + 30);
+            document.getElementById('tenant-vencimento').value = dataVencimento.toISOString().split('T')[0];
+
+            document.getElementById('modal-tenant').style.display = 'flex';
+        }
+
+        function editarTenant(id) {
+            const tenant = tenants.find(t => t.id === id);
+            if (!tenant) return;
+
+            document.getElementById('modal-tenant-title').textContent = 'Editar Organização';
+            document.getElementById('tenant-id').value = tenant.id;
+            document.getElementById('tenant-nome').value = tenant.nome_organizacao;
+            document.getElementById('tenant-subdomain').value = tenant.subdomain;
+            document.getElementById('tenant-subdomain').disabled = true;
+            document.getElementById('tenant-cnpj').value = tenant.cnpj || '';
+            document.getElementById('tenant-email').value = tenant.email_contato;
+            document.getElementById('tenant-plano').value = tenant.plano;
+            document.getElementById('tenant-limite').value = tenant.limite_usuarios;
+            document.getElementById('tenant-vencimento').value = tenant.data_vencimento.split('T')[0];
+
+            document.getElementById('modal-tenant').style.display = 'flex';
+        }
+
+        async function salvarTenant(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('tenant-id').value;
+            const dados = {
+                subdomain: document.getElementById('tenant-subdomain').value.toLowerCase(),
+                nome_organizacao: document.getElementById('tenant-nome').value,
+                cnpj: document.getElementById('tenant-cnpj').value,
+                email_contato: document.getElementById('tenant-email').value,
+                plano: document.getElementById('tenant-plano').value,
+                limite_usuarios: parseInt(document.getElementById('tenant-limite').value),
+                data_vencimento: document.getElementById('tenant-vencimento').value
+            };
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_TENANTS}/${id}` : API_TENANTS;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: getHeadersSuperAdmin(),
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    fecharModalTenant();
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem || result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar tenant:', error);
+                mostrarNotificacao('Erro ao salvar organização', 'error');
+            }
+        }
+
+        async function renovarTenant(id) {
+            const dias = prompt('Quantos dias deseja adicionar?', '30');
+            if (!dias) return;
+
+            try {
+                const res = await fetch(`${API_TENANTS}/${id}/renovar`, {
+                    method: 'POST',
+                    headers: getHeadersSuperAdmin(),
+                    body: JSON.stringify({ dias: parseInt(dias) })
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao renovar:', error);
+                mostrarNotificacao('Erro ao renovar assinatura', 'error');
+            }
+        }
+
+        async function alterarStatusTenant(id, statusAtual) {
+            const opcoes = ['ativo', 'trial', 'suspenso', 'cancelado'];
+            const novoStatus = prompt(`Status atual: ${statusAtual}\nNovo status (${opcoes.join(', ')}):`, statusAtual);
+
+            if (!novoStatus || !opcoes.includes(novoStatus)) return;
+
+            try {
+                const res = await fetch(`${API_TENANTS}/${id}/status`, {
+                    method: 'PATCH',
+                    headers: getHeadersSuperAdmin(),
+                    body: JSON.stringify({ status: novoStatus })
+                });
+
+                const result = await res.json();
+
+                if (result.sucesso) {
+                    mostrarNotificacao(result.mensagem, 'success');
+                    carregarTenants();
+                } else {
+                    mostrarNotificacao(result.mensagem, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar status:', error);
+                mostrarNotificacao('Erro ao alterar status', 'error');
+            }
+        }
+
+        function visualizarTenant(id) {
+            const tenant = tenants.find(t => t.id === id);
+            if (!tenant) return;
+
+            const detalhes = `
+Nome: ${tenant.nome_organizacao}
+Subdomínio: ${tenant.subdomain}
+CNPJ: ${tenant.cnpj || '-'}
+Email: ${tenant.email_contato}
+Plano: ${tenant.plano}
+Status: ${tenant.status}
+Usuários: ${tenant.usuarios_ativos || 0} / ${tenant.limite_usuarios}
+Vencimento: ${new Date(tenant.data_vencimento).toLocaleDateString('pt-BR')}
+Dias Restantes: ${tenant.dias_restantes}
+Criado em: ${new Date(tenant.created_at).toLocaleDateString('pt-BR')}
+            `.trim();
+
+            alert(detalhes);
+        }
+
+        function aplicarFiltrosTenants() {
+            const status = document.getElementById('filter-status-tenant').value;
+            const plano = document.getElementById('filter-plano').value;
+            const search = document.getElementById('search-input-tenant').value.toLowerCase();
+
+            let filtrados = tenants;
+
+            if (status) {
+                filtrados = filtrados.filter(t => t.status === status);
+            }
+            if (plano) {
+                filtrados = filtrados.filter(t => t.plano === plano);
+            }
+            if (search) {
+                filtrados = filtrados.filter(t =>
+                    t.nome_organizacao.toLowerCase().includes(search) ||
+                    t.subdomain.toLowerCase().includes(search)
+                );
+            }
+
+            renderizarTenants(filtrados);
+        }
+
+        function limparFiltrosTenants() {
+            document.getElementById('filter-status-tenant').value = '';
+            document.getElementById('filter-plano').value = '';
+            document.getElementById('search-input-tenant').value = '';
+            renderizarTenants(tenants);
+        }
+
+        function fecharModalTenant() {
+            document.getElementById('modal-tenant').style.display = 'none';
+            document.getElementById('form-tenant').reset();
+            document.getElementById('tenant-subdomain').disabled = false;
+        }
+
+        // ========================================
+        // NOTIFICAÇÕES
+        // ========================================
+
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const cores = {
+                success: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0', icon: 'check-circle' },
+                error: { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca', icon: 'exclamation-circle' },
+                warning: { bg: '#fffbeb', color: '#d97706', border: '#fed7aa', icon: 'exclamation-triangle' },
+                info: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', icon: 'info-circle' }
+            };
+
+            const cor = cores[tipo] || cores.info;
+
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                min-width: 300px;
+                padding: 1rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: ${cor.bg};
+                color: ${cor.color};
+                border: 1px solid ${cor.border};
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            `;
+
+            notif.innerHTML = `
+                <i class="fas fa-${cor.icon}"></i>
+                <span>${mensagem}</span>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; margin-left: auto; cursor: pointer; font-size: 1.25rem; color: inherit;">&times;</button>
+            `;
+
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                if (notif.parentNode) notif.remove();
+            }, 5000);
+        }
+
+        // ========================================
+        // INICIALIZAÇÃO
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Event listeners usuários
+            document.getElementById('btn-aplicar-filtros-usuario').addEventListener('click', aplicarFiltrosUsuarios);
+            document.getElementById('btn-limpar-filtros-usuario').addEventListener('click', limparFiltrosUsuarios);
+            document.getElementById('search-input-usuario').addEventListener('input', aplicarFiltrosUsuarios);
+
+            // Carregar dados iniciais
+            carregarNiveisAcesso().then(carregarUsuarios);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - Sistema de Assistência Social</title>
+
+    <!-- CSS Structure -->
+        <link rel="stylesheet" href="../css/base/reset.css">
+    <link rel="stylesheet" href="../css/base/variables.css">
+    <link rel="stylesheet" href="../css/base/typography.css">
+    <link rel="stylesheet" href="../css/layout/sidebar.css">
+    <link rel="stylesheet" href="../css/layout/header.css">
+    <link rel="stylesheet" href="../css/layout/grid.css">
+    <link rel="stylesheet" href="../css/layout/responsive.css">
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/forms.css">
+    <link rel="stylesheet" href="../css/components/modal.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .estoque-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .estoque-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .estoque-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .estoque-card-header i {
+            font-size: 1.5rem;
+            color: #2563eb;
+        }
+
+        .estoque-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .estoque-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .estoque-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .estoque-actions button {
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .estoque-actions button:hover {
+            background: #1d4ed8;
+        }
+
+        .estoque-actions button.secondary {
+            background: #64748b;
+        }
+
+        .estoque-actions button.secondary:hover {
+            background: #475569;
+        }
+
+        .estoque-search {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .estoque-search input, .estoque-search select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .estoque-search button {
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .estoque-search button:hover {
+            background: #1d4ed8;
+        }
+
+        .estoque-search button.secondary {
+            background: #64748b;
+        }
+
+        .estoque-search button.secondary:hover {
+            background: #475569;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-disponivel {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-baixo {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-indisponivel {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">AS</div>
+                <h1 class="sidebar__title">Assistência Social</h1>
+            </div>
+
+            <nav class="sidebar__nav">
+                <ul>
+                   <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="atendimentos.html" class="fas fa-users"></i><span>Atendimentos</span></a></li>
+                    <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+                    <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+                    <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Grupos/Atividades</span></a></li>
+                    <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+                    <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+                    <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+                    <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+                    <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+                    <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+                    <li><a href="configuracoes.html"><i class="fas fa-cogs"></i><span>Configurações</span></a></li>
+                    <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+                    <li><a href="login.html"><i class="fas fa-sign-out-alt"></i><span>Logoff</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Estoque - Sistema de Assistência Social</h2>
+                    <p class="header-subtitle">Gestão de Itens e Movimentação de Estoque</p>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Estatísticas Resumo -->
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalItens">0</div>
+                        <div class="stat-label">Total de Itens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="itensDisponiveis">0</div>
+                        <div class="stat-label">Itens Disponíveis</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="estoquesBaixo">0</div>
+                        <div class="stat-label">Estoque Baixo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="movimentacoesMes">0</div>
+                        <div class="stat-label">Movimentações do Mês</div>
+                    </div>
+                </div>
+
+                <!-- Filtros de Pesquisa -->
+                <div class="estoque-search">
+                    <input type="text" id="estoqueSearch" placeholder="Pesquisar Itens no Estoque">
+                    <select id="filtroLocal">
+                        <option value="">Todos os Locais</option>
+                        <option value="CRAS">CRAS</option>
+                        <option value="CREAS">CREAS</option>
+                        <option value="SECRETARIA">Secretaria</option>
+                        <option value="ALMOXARIFADO">Almoxarifado</option>
+                    </select>
+                    <select id="filtroCategoria">
+                        <option value="">Todas as Categorias</option>
+                        <option value="AGASALHOS">Agasalhos</option>
+                        <option value="COBERTORES">Cobertores</option>
+                        <option value="UTENSILIOS">Utensílios Domésticos</option>
+                        <option value="ALIMENTACAO">Alimentação</option>
+                        <option value="MATERIAIS">Materiais de Escritório</option>
+                    </select>
+                    <select id="filtroStatus">
+                        <option value="">Todos os Status</option>
+                        <option value="DISPONIVEL">Disponível</option>
+                        <option value="BAIXO">Estoque Baixo</option>
+                        <option value="INDISPONIVEL">Indisponível</option>
+                    </select>
+                    <button onclick="searchItem()">Pesquisar</button>
+                    <button onclick="clearSearch()" class="secondary">Limpar</button>
+                    <button onclick="openNewItemModal()">Novo Item</button>
+                    <button onclick="generateReport()" class="secondary">Gerar Relatório</button>
+                </div>
+
+                <!-- Grid de Itens no Estoque -->
+                <div class="estoque-grid" id="estoqueGrid">
+                    <!-- Itens serão carregados dinamicamente -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Novo Item -->
+    <div id="newItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Novo Item</h3>
+                <button class="close" onclick="closeModal('newItemModal')">&times;</button>
+            </div>
+            <form id="newItemForm">
+                <div class="form-group">
+                    <label for="itemNome">Nome do Item:</label>
+                    <input type="text" id="itemNome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemCategoria">Categoria:</label>
+                    <select id="itemCategoria" name="categoria" required>
+                        <option value="">Selecionar categoria</option>
+                        <option value="AGASALHOS">Agasalhos</option>
+                        <option value="COBERTORES">Cobertores</option>
+                        <option value="UTENSILIOS">Utensílios Domésticos</option>
+                        <option value="ALIMENTACAO">Alimentação</option>
+                        <option value="MATERIAIS">Materiais de Escritório</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemLocal">Local de Armazenamento:</label>
+                    <select id="itemLocal" name="local" required>
+                        <option value="">Selecionar local</option>
+                        <option value="CRAS">CRAS</option>
+                        <option value="CREAS">CREAS</option>
+                        <option value="SECRETARIA">Secretaria</option>
+                        <option value="ALMOXARIFADO">Almoxarifado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemQuantidade">Quantidade Inicial:</label>
+                    <input type="number" id="itemQuantidade" name="quantidade" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemMinimo">Estoque Mínimo:</label>
+                    <input type="number" id="itemMinimo" name="minimo" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemDescricao">Descrição:</label>
+                    <textarea id="itemDescricao" name="descricao"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('newItemModal')" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Movimentação -->
+    <div id="movimentacaoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="movimentacaoTitle">Registrar Movimentação</h3>
+                <button class="close" onclick="closeModal('movimentacaoModal')">&times;</button>
+            </div>
+            <form id="movimentacaoForm">
+                <input type="hidden" id="movimentacaoItemId" name="itemId">
+                <div class="form-group">
+                    <label for="movimentacaoTipo">Tipo de Movimentação:</label>
+                    <select id="movimentacaoTipo" name="tipo" required>
+                        <option value="">Selecionar tipo</option>
+                        <option value="ENTRADA">Entrada</option>
+                        <option value="SAIDA">Saída</option>
+                        <option value="TRANSFERENCIA">Transferência</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="movimentacaoQuantidade">Quantidade:</label>
+                    <input type="number" id="movimentacaoQuantidade" name="quantidade" min="1" required>
+                </div>
+                <div class="form-group" id="destinoGroup" style="display: none;">
+                    <label for="movimentacaoDestino">Local de Destino:</label>
+                    <select id="movimentacaoDestino" name="destino">
+                        <option value="">Selecionar destino</option>
+                        <option value="CRAS">CRAS</option>
+                        <option value="CREAS">CREAS</option>
+                        <option value="SECRETARIA">Secretaria</option>
+                        <option value="ALMOXARIFADO">Almoxarifado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="movimentacaoResponsavel">Responsável:</label>
+                    <input type="text" id="movimentacaoResponsavel" name="responsavel" required>
+                </div>
+                <div class="form-group">
+                    <label for="movimentacaoObservacao">Observações:</label>
+                    <textarea id="movimentacaoObservacao" name="observacao"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('movimentacaoModal')" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Registrar Movimentação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes -->
+    <div id="detalhesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalhes do Item</h3>
+                <button class="close" onclick="closeModal('detalhesModal')">&times;</button>
+            </div>
+            <div id="detalhesContent">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeModal('detalhesModal')" class="btn-secondary">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let estoqueItems = [];
+        let movimentacoes = [];
+        const API_BASE = window.location.origin;
+
+        // Funções de API
+        async function fetchEstoque() {
+            try {
+                const response = await fetch(`${API_BASE}/estoque`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                console.error('Erro ao buscar estoque:', response.statusText);
+                return [];
+            } catch (error) {
+                console.error('Erro ao conectar com servidor:', error);
+                return [];
+            }
+        }
+
+        async function fetchMovimentacoes() {
+            try {
+                const response = await fetch(`${API_BASE}/estoque/movimentacoes`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                console.error('Erro ao buscar movimentações:', response.statusText);
+                return [];
+            } catch (error) {
+                console.error('Erro ao conectar com servidor:', error);
+                return [];
+            }
+        }
+
+        async function createItem(itemData) {
+            try {
+                const response = await fetch(`${API_BASE}/estoque`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Erro ao criar item');
+            } catch (error) {
+                console.error('Erro ao criar item:', error);
+                throw error;
+            }
+        }
+
+        async function createMovimentacao(movimentacaoData) {
+            try {
+                const response = await fetch(`${API_BASE}/estoque/movimentacoes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(movimentacaoData)
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Erro ao criar movimentação');
+            } catch (error) {
+                console.error('Erro ao criar movimentação:', error);
+                throw error;
+            }
+        }
+
+        // Função para inicializar dados
+        async function initializeData() {
+            estoqueItems = await fetchEstoque();
+            movimentacoes = await fetchMovimentacoes();
+            loadEstoque();
+        }
+
+        function loadEstoque() {
+            const grid = document.getElementById('estoqueGrid');
+            grid.innerHTML = '';
+
+            // Aplicar filtros
+            let filteredItems = estoqueItems;
+
+            const searchTerm = document.getElementById('estoqueSearch').value.toLowerCase();
+            const filtroLocal = document.getElementById('filtroLocal').value;
+            const filtroCategoria = document.getElementById('filtroCategoria').value;
+            const filtroStatus = document.getElementById('filtroStatus').value;
+
+            if (searchTerm) {
+                filteredItems = filteredItems.filter(item =>
+                    item.nome.toLowerCase().includes(searchTerm) ||
+                    item.descricao.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filtroLocal) {
+                filteredItems = filteredItems.filter(item => item.local === filtroLocal);
+            }
+
+            if (filtroCategoria) {
+                filteredItems = filteredItems.filter(item => item.categoria === filtroCategoria);
+            }
+
+            if (filtroStatus) {
+                filteredItems = filteredItems.filter(item => item.status === filtroStatus);
+            }
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'estoque-card';
+
+                const statusClass = `status-${item.status.toLowerCase()}`;
+                const statusText = item.status === 'DISPONIVEL' ? 'Disponível' :
+                                item.status === 'BAIXO' ? 'Estoque Baixo' : 'Indisponível';
+
+                card.innerHTML = `
+                    <div class="estoque-card-header">
+                        <div class="estoque-title">${item.nome}</div>
+                        <div><i class="fas fa-box"></i></div>
+                    </div>
+                    <div class="estoque-description">
+                        <strong>Categoria:</strong> ${item.categoria}<br>
+                        <strong>Local:</strong> ${item.local}<br>
+                        <strong>Quantidade:</strong> ${item.quantidade}<br>
+                        <strong>Mínimo:</strong> ${item.minimo}<br>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="estoque-actions">
+                        <button onclick="viewItemDetails(${item.id})">Ver Detalhes</button>
+                        <button onclick="openMovimentacaoModal(${item.id})" class="secondary">Movimentar</button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = estoqueItems.length;
+            const disponiveis = estoqueItems.filter(item => item.status === 'DISPONIVEL').length;
+            const baixo = estoqueItems.filter(item => item.status === 'BAIXO').length;
+            const movMes = movimentacoes.filter(mov => {
+                const today = new Date();
+                const movDate = new Date(mov.data);
+                return movDate.getMonth() === today.getMonth() && movDate.getFullYear() === today.getFullYear();
+            }).length;
+
+            document.getElementById('totalItens').textContent = total;
+            document.getElementById('itensDisponiveis').textContent = disponiveis;
+            document.getElementById('estoquesBaixo').textContent = baixo;
+            document.getElementById('movimentacoesMes').textContent = movMes;
+        }
+
+        function searchItem() {
+            loadEstoque();
+        }
+
+        function clearSearch() {
+            document.getElementById('estoqueSearch').value = "";
+            document.getElementById('filtroLocal').value = "";
+            document.getElementById('filtroCategoria').value = "";
+            document.getElementById('filtroStatus').value = "";
+            loadEstoque();
+        }
+
+        function openNewItemModal() {
+            document.getElementById('newItemModal').style.display = 'block';
+        }
+
+        function openMovimentacaoModal(itemId) {
+            const item = estoqueItems.find(i => i.id === itemId);
+            document.getElementById('movimentacaoItemId').value = itemId;
+            document.getElementById('movimentacaoTitle').textContent = `Movimentação - ${item.nome}`;
+            document.getElementById('movimentacaoModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function viewItemDetails(itemId) {
+            const item = estoqueItems.find(i => i.id === itemId);
+            const movimentacoesItem = movimentacoes.filter(m => m.itemId === itemId);
+
+            let histMov = '<h4>Histórico de Movimentações:</h4>';
+            if (movimentacoesItem.length === 0) {
+                histMov += '<p>Nenhuma movimentação registrada.</p>';
+            } else {
+                histMov += '<ul>';
+                movimentacoesItem.forEach(mov => {
+                    histMov += `<li><strong>${mov.tipo}</strong> - Qtd: ${mov.quantidade} - ${mov.data} - ${mov.responsavel}</li>`;
+                });
+                histMov += '</ul>';
+            }
+
+            const detalhes = `
+                <div>
+                    <h4>Informações do Item:</h4>
+                    <p><strong>Nome:</strong> ${item.nome}</p>
+                    <p><strong>Categoria:</strong> ${item.categoria}</p>
+                    <p><strong>Local:</strong> ${item.local}</p>
+                    <p><strong>Quantidade Atual:</strong> ${item.quantidade}</p>
+                    <p><strong>Estoque Mínimo:</strong> ${item.minimo}</p>
+                    <p><strong>Status:</strong> ${item.status}</p>
+                    <p><strong>Descrição:</strong> ${item.descricao}</p>
+                    <br>
+                    ${histMov}
+                </div>
+            `;
+
+            document.getElementById('detalhesContent').innerHTML = detalhes;
+            document.getElementById('detalhesModal').style.display = 'block';
+        }
+
+        function generateReport() {
+            alert("Gerando relatório de estoque... (Funcionalidade em desenvolvimento)");
+        }
+
+        // Event Listeners
+        document.getElementById('newItemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const newItemData = {
+                nome: formData.get('nome'),
+                categoria: formData.get('categoria'),
+                local: formData.get('local'),
+                quantidade: parseInt(formData.get('quantidade')),
+                minimo: parseInt(formData.get('minimo')),
+                descricao: formData.get('descricao')
+            };
+
+            try {
+                await createItem(newItemData);
+                await initializeData(); // Recarregar dados
+                closeModal('newItemModal');
+                e.target.reset();
+                alert('Item cadastrado com sucesso!');
+            } catch (error) {
+                alert('Erro ao cadastrar item: ' + error.message);
+            }
+        });
+
+        document.getElementById('movimentacaoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const itemId = parseInt(formData.get('itemId'));
+            const tipo = formData.get('tipo');
+            const quantidade = parseInt(formData.get('quantidade'));
+            const item = estoqueItems.find(i => i.id === itemId);
+
+            if (tipo === 'SAIDA' && quantidade > item.quantidade) {
+                alert('Quantidade insuficiente em estoque!');
+                return;
+            }
+
+            const movimentacaoData = {
+                itemId: itemId,
+                tipo: tipo,
+                quantidade: quantidade,
+                destino: formData.get('destino'),
+                responsavel: formData.get('responsavel'),
+                observacao: formData.get('observacao')
+            };
+
+            try {
+                await createMovimentacao(movimentacaoData);
+                await initializeData(); // Recarregar dados
+                closeModal('movimentacaoModal');
+                e.target.reset();
+                alert('Movimentação registrada com sucesso!');
+            } catch (error) {
+                alert('Erro ao registrar movimentação: ' + error.message);
+            }
+        });
+
+        document.getElementById('movimentacaoTipo').addEventListener('change', function(e) {
+            const destinoGroup = document.getElementById('destinoGroup');
+            if (e.target.value === 'TRANSFERENCIA') {
+                destinoGroup.style.display = 'block';
+                document.getElementById('movimentacaoDestino').required = true;
+            } else {
+                destinoGroup.style.display = 'none';
+                document.getElementById('movimentacaoDestino').required = false;
+            }
+        });
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+        });
+
+        // Fechar modal clicando fora
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

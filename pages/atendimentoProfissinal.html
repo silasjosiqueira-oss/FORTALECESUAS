@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo Sidebar Roxa</title>
+
+    <!-- BASE -->
+    <link rel="stylesheet" href="css/base/variables.css">
+    <link rel="stylesheet" href="css/base/reset.css">
+    <link rel="stylesheet" href="css/base/typography.css">
+
+    <!-- UTILITIES -->
+    <link rel="stylesheet" href="css/utilities/spacing.css">
+    <link rel="stylesheet" href="css/utilities/display.css">
+    <link rel="stylesheet" href="css/utilities/flexbox.css">
+    <link rel="stylesheet" href="css/utilities/colors.css">
+    <link rel="stylesheet" href="css/utilities/borders.css">
+
+    <!-- COMPONENTS -->
+    <link rel="stylesheet" href="css/components/sidebar.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/cards.css">
+</head>
+<body>
+    <!-- SIDEBAR ROXA -->
+    <aside class="sidebar sidebar-dark">
+        <!-- Header da Sidebar -->
+        <div class="sidebar-heading">
+            <a href="#" class="sidebar-logo">
+                <span style="font-size: 2.4rem;">🎨</span>
+                <span class="sidebar-logo-text">MeuSistema</span>
+            </a>
+        </div>
+
+        <!-- Menu Principal -->
+        <nav class="menu">
+            <ul class="list-group">
+                <!-- Dashboard -->
+                <li>
+                    <a href="#" class="list-group-item active">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Produtos -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>📦</span>
+                        <span>Produtos</span>
+                    </a>
+                </li>
+
+                <!-- Clientes -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>👥</span>
+                        <span>Clientes</span>
+                    </a>
+                </li>
+
+                <!-- Vendas -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>💰</span>
+                        <span>Vendas</span>
+                    </a>
+                </li>
+
+                <!-- Separador -->
+                <li class="adm-menu-type-separator">
+                    <span>Relatórios</span>
+                </li>
+
+                <!-- Financeiro -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>💳</span>
+                        <span>Financeiro</span>
+                    </a>
+                </li>
+
+                <!-- Estoque -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>📋</span>
+                        <span>Estoque</span>
+                    </a>
+                </li>
+
+                <!-- Analytics -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+
+                <!-- Separador -->
+                <li class="adm-menu-type-separator">
+                    <span>Sistema</span>
+                </li>
+
+                <!-- Configurações -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>⚙️</span>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+
+                <!-- Usuários -->
+                <li>
+                    <a href="#" class="list-group-item">
+                        <span>👤</span>
+                        <span>Usuários</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Footer da Sidebar -->
+        <div class="sidebar-footer">
+            <div class="d-flex align-center gap-2">
+                <div class="bg-white text-primary rounded-circle d-flex align-center justify-center" style="width: 4rem; height: 4rem; flex-shrink: 0;">
+                    JD
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium">João Da Silva</p>
+                    <p class="text-xs opacity-75">Administrador</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="content-with-sidebar">
+        <!-- Navbar -->
+        <nav class="bg-white border-bottom px-4 py-3 position-sticky top-0" style="z-index: 1020;">
+            <div class="d-flex justify-between align-center">
+                <div class="d-flex align-center gap-3">
+                    <button class="btn btn-ghost d-lg-none" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2 class="text-xl font-semibold">Dashboard</h2>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-ghost">
+                        <span>🔔</span>
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Conteúdo -->
+        <div class="p-4 p-lg-5">
+            <!-- Cards de Estatísticas -->
+            <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-5">
+                <div class="card dashboard-card card-primary">
+                    <div class="card-icon">
+                        <span style="font-size: 2.4rem;">📊</span>
+                    </div>
+                    <div class="card-value">1,234</div>
+                    <div class="card-label">Total de Vendas</div>
+                </div>
+
+                <div class="card dashboard-card card-success">
+                    <div class="card-icon">
+                        <span style="font-size: 2.4rem;">💰</span>
+                    </div>
+                    <div class="card-value">R$ 45.2k</div>
+                    <div class="card-label">Receita do Mês</div>
+                </div>
+
+                <div class="card dashboard-card card-warning">
+                    <div class="card-icon">
+                        <span style="font-size: 2.4rem;">👥</span>
+                    </div>
+                    <div class="card-value">567</div>
+                    <div class="card-label">Novos Clientes</div>
+                </div>
+
+                <div class="card dashboard-card card-danger">
+                    <div class="card-icon">
+                        <span style="font-size: 2.4rem;">⚠️</span>
+                    </div>
+                    <div class="card-value">12</div>
+                    <div class="card-label">Pendentes</div>
+                </div>
+            </div>
+
+            <!-- Card Principal -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-xl font-semibold">Exemplo de Sidebar Roxa</h3>
+                    <p class="text-sm text-muted mt-1">
+                        A sidebar está com o roxo (#6f42c1) aplicado corretamente!
+                    </p>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-lg font-medium mb-3">Características da Sidebar:</h4>
+                    <ul class="list-unstyled">
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Cor roxa (#6f42c1) com gradiente</span>
+                        </li>
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Texto branco para contraste</span>
+                        </li>
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Hover com fundo semi-transparente</span>
+                        </li>
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Item ativo com fundo azul (#007bff)</span>
+                        </li>
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Responsiva para mobile</span>
+                        </li>
+                        <li class="d-flex gap-2 mb-2">
+                            <span>✅</span>
+                            <span>Scrollbar customizada</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 p-4 bg-gray-100 rounded">
+                        <p class="text-sm font-medium mb-2">Variáveis CSS usadas:</p>
+                        <code class="text-sm">
+                            --sidebar-bg: #6f42c1<br>
+                            --sidebar-bg-gradient: linear-gradient(180deg, #6f42c1 0%, #5a32a3 100%)
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <script>
+        // Toggle Sidebar no Mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        // Fechar sidebar ao redimensionar para desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 992) {
+                document.querySelector('.sidebar').classList.remove('show');
+                document.querySelector('.sidebar-overlay').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

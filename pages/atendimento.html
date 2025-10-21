@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATENDIMENTO</title>
+
+  <!-- Mantidos os mesmos CSS do seu projeto -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/base/variables.css" />
+  <link rel="stylesheet" href="/css/base/reset.css" />
+  <link rel="stylesheet" href="/css/base/typography.css" />
+  <link rel="stylesheet" href="/css/layout/sidebar.css" />
+  <link rel="stylesheet" href="/css/layout/header.css" />
+  <link rel="stylesheet" href="/css/layout/grid.css" />
+  <link rel="stylesheet" href="/css/layout/responsive.css" />
+  <link rel="stylesheet" href="/css/components/buttons.css" />
+  <link rel="stylesheet" href="/css/components/cards.css" />
+  <link rel="stylesheet" href="/css/components/forms.css" />
+  <link rel="stylesheet" href="/css/components/modal.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+
+  <!--
+    SINAIS PARA O JS (sem alterar JS):
+    - Apontamos a base da API e o esquema de auth via <meta>.
+    - Seu JS pode ler isso (se já fizer) ou ignorar sem quebrar.
+  -->
+  <meta name="api-base" content="/api" />
+  <meta name="auth-scheme" content="Bearer" />
+
+  <style>
+    /* Mantidos e organizados estilos in-page do arquivo original */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; overflow-y:auto; }
+    .modal.active { display:flex; align-items:flex-start; justify-content:center; padding:2rem; }
+    .modal-content { background:#fff; border-radius:8px; padding:2rem; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; margin-top:2rem; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid #e2e8f0; }
+    .modal-title { font-size:1.5rem; font-weight:700; margin:0; }
+    .modal-footer { display:flex; gap:1rem; justify-content:flex-end; padding-top:1rem; border-top:1px solid #e2e8f0; margin-top:1.5rem; }
+    .btn-close { background:none; border:none; font-size:2rem; cursor:pointer; padding:.5rem; color:#6b7280; line-height:1; transition:color .2s; }
+    .btn-close:hover { color:#dc2626; }
+
+    .status-badge { padding:.25rem .75rem; border-radius:1rem; font-size:.75rem; font-weight:600; text-transform:uppercase; }
+    .status-aguardando { background:#fef3c7; color:#d97706; }
+    .status-em-andamento { background:#fffbeb; color:#6f42c1; }
+    .status-concluido { background:#f0fdf4; color:#166534; }
+    .status-cancelado { background:#fef2f2; color:#b91c1c; }
+    .status-agendado { background:#eff6ff; color:#1e40af; }
+    .status-info { background:#f0f9ff; color:#0369a1; }
+
+    .clickable { cursor:pointer; }
+    .clickable:hover { background:#f1f5f9; }
+
+    .loading { display:none; position:fixed; inset:0; background:rgba(255,255,255,.9); z-index:9999; align-items:center; justify-content:center; }
+    .spinner { width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #2563eb; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 1rem; }
+    @keyframes spin { to { transform:rotate(360deg) } }
+
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid #e2e8f0; }
+    .page-title { font-size:1.875rem; font-weight:700; margin:0; }
+    .page-subtitle { color:#64748b; margin:0; }
+
+    .card { background:#fff; border-radius:8px; padding:1.5rem; border:1px solid #e2e8f0; margin-bottom:1.5rem; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .card-header { margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+    .card-title { font-size:1.25rem; font-weight:600; margin:0; display:flex; align-items:center; gap:.5rem; }
+
+    .table-responsive { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.1); overflow:hidden; }
+    .table { width:100%; border-collapse:collapse; margin-bottom:0; }
+    .table thead th { background:#483D8B; color:#fff; border:none; font-weight:600; padding:1rem .75rem; text-align:left; }
+    .table tbody tr:hover { background:#f8fafc; }
+    .table tbody td { padding:.75rem; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+    .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+    .form-grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+
+    .form-group { margin-bottom:1rem; }
+    .form-label { display:block; margin-bottom:.5rem; font-weight:600; color:#1e293b; }
+    .form-control { width:100%; padding:.75rem; border:1px solid #d1d5db; border-radius:8px; font-size:1rem; box-sizing:border-box; background:#fff; }
+    .form-control:focus { border-color:#2563eb; outline:none; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+
+    .form-actions { display:flex; gap:.5rem; justify-content:flex-start; flex-wrap:wrap; }
+
+    .pagination { display:flex; justify-content:center; align-items:center; gap:.5rem; margin-top:1rem; }
+    .pagination button { padding:.5rem 1rem; border:1px solid #d1d5db; background:#fff; cursor:pointer; border-radius:4px; }
+    .pagination button.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .pagination button:disabled { opacity:.5; cursor:not-allowed; }
+
+    .record-count { text-align:center; color:#64748b; margin-bottom:1rem; }
+
+    .btn-sm { padding:.375rem .75rem; font-size:.875rem; }
+    .btn-xs { padding:.25rem .5rem; font-size:.75rem; }
+
+    .alert { padding:1rem; border-radius:8px; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+    .alert-info { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+    .alert-warning { background:#fffbeb; color:#d97706; border:1px solid #fed7aa; }
+    .alert-success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .alert-error { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+
+    .tab-navigation { display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .tab-button { padding:1rem 1.5rem; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; }
+    .tab-button.active { border-bottom-color:#2563eb; color:#2563eb; font-weight:600; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .sub-tabs { display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:1rem; }
+    .sub-tab-button { padding:.75rem 1rem; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; font-size:.875rem; }
+    .sub-tab-button.active { border-bottom-color:#2563eb; color:#2563eb; font-weight:600; }
+    .sub-tab-content { display:none; }
+    .sub-tab-content.active { display:block; }
+
+    #notifications-container { position:fixed; top:20px; right:20px; z-index:10000; }
+
+    @keyframes slideIn { from { transform:translateX(100%); opacity:0 } to { transform:translateX(0); opacity:1 } }
+    @keyframes slideOut { from { transform:translateX(0); opacity:1 } to { transform:translateX(100%); opacity:0 } }
+
+    @media (max-width: 768px) {
+      .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        <div class="sidebar__logo">FS</div>
+        <h1 class="sidebar__title">FORTALECE SUAS</h1>
+      </div>
+      <nav class="sidebar__nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Inicio</span></a></li>
+          <li><a href="atendimento.html" class="active"><i class="fas fa-users"></i><span>Atendimentos</span><span class="badge" id="badge-atendimentos"></span></a></li>
+          <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+          <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+          <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Grupos/Atividades</span></a></li>
+          <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+          <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+          <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+          <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+          <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+          <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+          <li><a href="configuracoes.html"><i class="fas fa-cogs"></i><span>Configurações</span></a></li>
+          <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+          <li><a href="login.html"><i class="fas fa-sign-out-alt"></i><span>Logoff</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="main-header">
+        <div class="header-title">
+          <h2>Sistema Fortalece - Assistência Social</h2>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn--icon"><i class="fas fa-bell"></i><span class="badge">3</span></button>
+          <button class="btn btn--icon"><i class="fas fa-cog"></i></button>
+          <button class="btn btn--secondary" onclick="location.href='login.html'"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        <!-- Navegação por abas -->
+        <div class="tab-navigation">
+          <button class="tab-button active" onclick="showTab('recepcao')"><i class="fas fa-door-open"></i> Recepção de Atendimentos</button>
+          <button class="tab-button" onclick="showTab('atendimentos-cadastrados')"><i class="fas fa-users"></i> Atendimentos Cadastrados</button>
+          <button class="tab-button" onclick="showTab('demanda-rede')"><i class="fas fa-network-wired"></i> Demanda Rede Proteção</button>
+          <button class="tab-button" onclick="showTab('acompanhamentos')"><i class="fas fa-user-friends"></i> Acompanhamentos SCFV</button>
+          <button class="tab-button" onclick="showTab('beneficios')"><i class="fas fa-hand-holding-heart"></i> Benefícios/Programas</button>
+          <button class="tab-button" onclick="showTab('atividades-equipe')"><i class="fas fa-users-cog"></i> Atividades Equipe</button>
+        </div>
+
+        <!-- Aba: Recepção -->
+        <div id="recepcao" class="tab-content active">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Recepção de Atendimentos</h1>
+              <p class="page-subtitle">Abertura e triagem de novos atendimentos</p>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn--warning" onclick="openModal('modalInformacaoRemota')"><i class="fas fa-phone"></i> Informação Remota</button>
+              <button class="btn btn--primary" onclick="abrirNovoAtendimento()"><i class="fas fa-plus"></i> Novo Atendimento</button>
+            </div>
+          </div>
+
+          <!-- Profissional Responsável -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-user-tie"></i> Profissional Responsável</h3>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label">Profissional</label>
+                <select class="form-control" id="profissionalResponsavel" onchange="updateProfissionalInfo()">
+                  <option value="">Selecione o profissional</option>
+                  <option value="1">Ana Costa - Assistente Social (CRESS: 12345/RS)</option>
+                  <option value="2">Carlos Santos - Psicólogo (CRP: 07/12345)</option>
+                  <option value="3">Maria Silva - Recepcionista</option>
+                  <option value="4">João Oliveira - Coordenador CRAS</option>
+                  <option value="5">Patricia Lima - Assistente Social (CRESS: 54321/RS)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Unidade</label>
+                <select class="form-control" id="unidadeAtendimento">
+                  <option value="">Selecione a unidade</option>
+                  <option value="cras-centro">CRAS Centro</option>
+                  <option value="cras-vila-nova">CRAS Vila Nova</option>
+                  <option value="creas">CREAS</option>
+                  <option value="secretaria">Secretaria de Assistência</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Formato do Atendimento</label>
+                <select class="form-control" id="formatoAtendimento">
+                  <option value="presencial">Presencial</option>
+                  <option value="virtual">Virtual</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">E-mail</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de Aguardando (tbody preenchido via JS) -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-clock"></i> Atendimentos Aguardando</h3>
+              <span class="status-badge status-aguardando" id="totalAguardandoBadge">0 aguardando</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Registro</th>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Motivo</th>
+                    <th>Prioridade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="atendimentosAguardando">
+                  <!-- EXEMPLO SEU HTML CORRETO (IDs numéricos) - pode ser removido se o JS renderizar tudo -->
+                  <tr data-atendimento-id="1">
+                    <td>#000001</td>
+                    <td>21/10/2025 09:00</td>
+                    <td>Maria de Souza</td>
+                    <td>Cadastro Único</td>
+                    <td>normal</td>
+                    <td><span class="status-badge status-aguardando">aguardando</span></td>
+                    <td>
+                      <button class="btn btn--success btn-xs btn-iniciar" data-atendimento-id="1" title="Iniciar"><i class="fas fa-play"></i></button>
+                      <button class="btn btn--info btn-xs btn-atualizar" data-atendimento-id="1" title="Atualizar"><i class="fas fa-sync"></i></button>
+                      <button class="btn btn--danger btn-xs btn-excluir" data-atendimento-id="1" title="Excluir"><i class="fas fa-trash"></i></button>
+                      <a class="btn btn--secondary btn-xs" href="/pages/atendimento-detalhe.html?id=1" title="Detalhes"><i class="fas fa-eye"></i></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="record-count">Total de atendimentos aguardando: <strong id="totalAguardando">0</strong></div>
+          </div>
+        </div>
+
+        <!-- Aba: Atendimentos Cadastrados -->
+        <div id="atendimentos-cadastrados" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Atendimentos Cadastrados</h1>
+              <p class="page-subtitle">Histórico completo de atendimentos realizados</p>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn--dark" onclick="gerarRelatorio()"><i class="fas fa-file-pdf"></i> Gerar Relatório</button>
+              <button class="btn btn--info" onclick="exportarDados()"><i class="fas fa-download"></i> Exportar Dados</button>
+              <button class="btn btn--primary" onclick="abrirNovoAtendimento()"><i class="fas fa-plus"></i> Novo Atendimento</button>
+            </div>
+          </div>
+
+          <!-- Filtros de Pesquisa -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-filter"></i> Filtros de Pesquisa</h3>
+            </div>
+            <form id="searchForm">
+              <div class="form-grid-4">
+                <div class="form-group">
+                  <label class="form-label">Nome do Usuário</label>
+                  <input type="text" class="form-control" id="nomeUsuario" placeholder="Nome do usuário" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Responsável Familiar</label>
+                  <input type="text" class="form-control" id="responsavelFamiliar" placeholder="Nome do responsável" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Período - Início</label>
+                  <input type="date" class="form-control" id="dataInicial" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Período - Fim</label>
+                  <input type="date" class="form-control" id="dataFinal" />
+                </div>
+              </div>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Técnico Responsável</label>
+                  <select class="form-control" id="tecnicoResponsavel">
+                    <option value="">Todos os técnicos</option>
+                    <option value="Ana Costa">Ana Costa - Assistente Social</option>
+                    <option value="Carlos Santos">Carlos Santos - Psicólogo</option>
+                    <option value="Maria Silva">Maria Silva - Recepcionista</option>
+                    <option value="João Oliveira">João Oliveira - Coordenador</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select class="form-control" id="statusAtendimento">
+                    <option value="">Todos os status</option>
+                    <option value="aguardando">Aguardando</option>
+                    <option value="em-andamento">Em Andamento</option>
+                    <option value="concluido">Concluído</option>
+                    <option value="cancelado">Cancelado</option>
+                    <option value="agendado">Agendado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Unidade</label>
+                  <select class="form-control" id="unidadeFiltro">
+                    <option value="">Todas as unidades</option>
+                    <option value="cras-centro">CRAS Centro</option>
+                    <option value="cras-vila-nova">CRAS Vila Nova</option>
+                    <option value="creas">CREAS</option>
+                    <option value="secretaria">Secretaria</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn--primary" onclick="buscarAtendimentos()"><i class="fas fa-search"></i> Pesquisar</button>
+                <button type="button" class="btn btn--secondary" onclick="limparBusca()"><i class="fas fa-times"></i> Limpar</button>
+                <button type="button" class="btn btn--warning" onclick="filtrosAvancados()"><i class="fas fa-filter"></i> Filtros Avançados</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Resultados -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Resultados da Pesquisa</h3>
+              <span class="status-badge status-em-andamento" id="totalRegistros">Total: 0 registros</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Registro</th>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Técnico Responsável</th>
+                    <th>Tipo de Atendimento</th>
+                    <th>Unidade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="atendimentosTable"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+
+        <!-- Demanda Rede de Proteção -->
+        <div id="demanda-rede" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Demanda Rede de Proteção</h1>
+              <p class="page-subtitle">Solicitações de outros órgãos e encaminhamentos</p>
+            </div>
+            <button class="btn btn--primary" onclick="openModal('modalDemandaRede')"><i class="fas fa-plus"></i> Nova Demanda</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-network-wired"></i> Demandas da Rede</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Data Recebida</th>
+                    <th>Órgão Expedidor</th>
+                    <th>Família/Pessoa</th>
+                    <th>Situação</th>
+                    <th>Prazo Execução</th>
+                    <th>Profissional</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="demandaRedeTable">
+                  <tr data-demanda-id="1">
+                    <td>07/09/2025</td>
+                    <td>Ministério Público</td>
+                    <td>João Oliveira Silva</td>
+                    <td>Violência Doméstica</td>
+                    <td>15/09/2025</td>
+                    <td>Ana Costa</td>
+                    <td><span class="status-badge status-em-andamento">Em Andamento</span></td>
+                    <td>
+                      <button class="btn btn--success btn-sm" onclick="editarDemanda(1)" title="Editar"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn--warning btn-sm" onclick="adicionarProvidencia(1)" title="Providências"><i class="fas fa-clipboard-check"></i></button>
+                      <button class="btn btn--info btn-sm" onclick="visualizarDemanda(1)" title="Visualizar"><i class="fas fa-eye"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acompanhamentos -->
+        <div id="acompanhamentos" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Acompanhamentos Sociofamiliares</h1>
+              <p class="page-subtitle">SCFV - Serviço de Convivência e Fortalecimento de Vínculos</p>
+            </div>
+            <button class="btn btn--primary" onclick="openModal('modalNovoAcompanhamento')"><i class="fas fa-plus"></i> Novo Acompanhamento</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-user-friends"></i> Acompanhamentos Ativos</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Data Início</th>
+                    <th>Família</th>
+                    <th>Demanda</th>
+                    <th>Porta de Entrada</th>
+                    <th>Profissional</th>
+                    <th>Última Intervenção</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="acompanhamentosTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Benefícios/Programas -->
+        <div id="beneficios" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Benefícios e Programas</h1>
+              <p class="page-subtitle">Gestão de benefícios, oficinas e programas sociais</p>
+            </div>
+          </div>
+
+          <div class="sub-tabs">
+            <button class="sub-tab-button active" onclick="showSubTab('beneficiarios')"><i class="fas fa-users"></i> Beneficiários</button>
+            <button class="sub-tab-button" onclick="showSubTab('oficinas')"><i class="fas fa-chalkboard-teacher"></i> Oficinas</button>
+            <button class="sub-tab-button" onclick="showSubTab('programas')"><i class="fas fa-clipboard-list"></i> Programas</button>
+            <button class="sub-tab-button" onclick="showSubTab('bolsa-familia')"><i class="fas fa-money-bill-wave"></i> Bolsa Família</button>
+            <button class="sub-tab-button" onclick="showSubTab('acolhimento')"><i class="fas fa-home"></i> Acolhimento/PIA</button>
+            <button class="sub-tab-button" onclick="showSubTab('bpc')"><i class="fas fa-wheelchair"></i> BPC</button>
+          </div>
+
+          <div id="beneficiarios" class="sub-tab-content active">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Lista de Beneficiários</h3>
+                <button class="btn btn--primary btn-sm" onclick="openModal('modalNovoBeneficiario')"><i class="fas fa-plus"></i> Novo Beneficiário</button>
+              </div>
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>CPF</th>
+                      <th>Benefício</th>
+                      <th>Valor</th>
+                      <th>Data Início</th>
+                      <th>Situação</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="beneficiariosTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="oficinas" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Oficinas e Cursos</h3>
+                <button class="btn btn--primary btn-sm" onclick="openModal('modalNovaOficina')"><i class="fas fa-plus"></i> Nova Oficina</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="programas" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Programas Sociais</h3>
+                <button class="btn btn--primary btn-sm" onclick="openModal('modalNovoPrograma')"><i class="fas fa-plus"></i> Novo Programa</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="bolsa-familia" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Bolsa Família</h3>
+                <div class="form-actions">
+                  <button class="btn btn--warning btn-sm" onclick="importarDadosSuas()"><i class="fas fa-download"></i> Importar do SUAS</button>
+                  <button class="btn btn--info btn-sm" onclick="atualizarBolsaFamilia()"><i class="fas fa-sync"></i> Atualizar Dados</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="acolhimento" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Acolhimento e PIA</h3>
+                <button class="btn btn--primary btn-sm" onclick="openModal('modalNovoAcolhimento')"><i class="fas fa-plus"></i> Novo Acolhimento</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="bpc" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Benefício de Prestação Continuada - BPC</h3>
+                <button class="btn btn--warning btn-sm" onclick="importarBPC()"><i class="fas fa-download"></i> Importar BPC</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Atividades Equipe -->
+        <div id="atividades-equipe" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Atividades da Equipe Interna</h1>
+              <p class="page-subtitle">Registro de atividades, reuniões e agenda institucional</p>
+            </div>
+            <button class="btn btn--primary" onclick="openModal('modalNovaAtividade')"><i class="fas fa-plus"></i> Nova Atividade</button>
+          </div>
+
+          <div class="sub-tabs">
+            <button class="sub-tab-button active" onclick="showSubTab('atividades-internas')"><i class="fas fa-tasks"></i> Atividades Internas</button>
+            <button class="sub-tab-button" onclick="showSubTab('agenda-institucional')"><i class="fas fa-calendar-alt"></i> Agenda Institucional</button>
+            <button class="sub-tab-button" onclick="showSubTab('registro-unidade')"><i class="fas fa-building"></i> Registro por Unidade</button>
+            <button class="sub-tab-button" onclick="showSubTab('agenda-usuario')"><i class="fas fa-calendar-check"></i> Agenda de Usuários</button>
+          </div>
+
+          <div id="atividades-internas" class="sub-tab-content active">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Atividades Internas da Equipe</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Horário</th>
+                      <th>Atividade</th>
+                      <th>Participantes</th>
+                      <th>Responsável</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="atividadesTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="agenda-institucional" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Agenda Institucional</h3>
+                <div class="form-actions">
+                  <button class="btn btn--primary btn-sm" onclick="gerarAgenda()"><i class="fas fa-calendar-plus"></i> Gerar Agenda</button>
+                  <button class="btn btn--dark btn-sm" onclick="exportarAgenda()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="registro-unidade" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Registro de Atividades por Unidade</h3>
+                <select class="form-control" style="width: 200px;" onchange="filtrarPorUnidade(this.value)">
+                  <option value="">Todas as unidades</option>
+                  <option value="cras-centro">CRAS Centro</option>
+                  <option value="cras-vila-nova">CRAS Vila Nova</option>
+                  <option value="creas">CREAS</option>
+                  <option value="secretaria">Secretaria</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="agenda-usuario" class="sub-tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Agenda de Usuários</h3>
+                <button class="btn btn--primary btn-sm" onclick="openModal('modalAgendamento')"><i class="fas fa-calendar-plus"></i> Novo Agendamento</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Demanda Rede de Proteção -->
+  <div id="modalDemandaRede" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Demanda Rede de Proteção</h3>
+        <button class="btn-close" onclick="closeModal('modalDemandaRede')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formDemandaRede">
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Órgão Expedidor</label>
+              <select class="form-control" name="orgaoExpedidor">
+                <option value="">Selecione</option>
+                <option value="mp">Ministério Público</option>
+                <option value="poder-judiciario">Poder Judiciário</option>
+                <option value="creas">CREAS</option>
+                <option value="educacao">Educação</option>
+                <option value="ct">Conselho Tutelar</option>
+                <option value="saude">Saúde</option>
+                <option value="policia">Polícia Civil/Militar</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data Recebida</label>
+              <input type="date" class="form-control" name="dataRecebida" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prazo Execução</label>
+              <input type="date" class="form-control" name="prazoExecucao" />
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Família/Pessoa</label>
+              <input type="text" class="form-control" name="familiaPessoa" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Situação</label>
+              <input type="text" class="form-control" name="situacao" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição do Motivo</label>
+            <textarea class="form-control" name="descricaoMotivo" rows="4"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" onclick="closeModal('modalDemandaRede')">Cancelar</button>
+        <button class="btn btn--primary" onclick="salvarDemandaRede()">Salvar Demanda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Informação Remota -->
+  <div id="modalInformacaoRemota" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Informação Remota</h3>
+        <button class="btn-close" onclick="closeModal('modalInformacaoRemota')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formInformacaoRemota">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Nome do Solicitante</label>
+              <input type="text" class="form-control" name="nomeSolicitante" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Formato do Contato</label>
+              <select class="form-control" name="formatoContato">
+                <option value="">Selecione</option>
+                <option value="telefone">Telefone</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="email">E-mail</option>
+                <option value="presencial">Presencial</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Telefone/Contato</label>
+              <input type="text" class="form-control" name="telefoneContato" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data/Hora do Contato</label>
+              <input type="datetime-local" class="form-control" name="dataHoraContato" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição da Solicitação</label>
+            <textarea class="form-control" name="descricaoSolicitacao" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resposta/Retorno</label>
+            <textarea class="form-control" name="respostaRetorno" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" onclick="closeModal('modalInformacaoRemota')">Cancelar</button>
+        <button class="btn btn--primary" onclick="salvarInformacaoRemota()">Salvar Informação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay de Carregamento -->
+  <div class="loading" id="loading-overlay">
+    <div style="text-align:center;">
+      <div class="spinner"></div>
+      <h4>Carregando...</h4>
+      <p id="loading-message">Aguarde enquanto processamos sua solicitação</p>
+    </div>
+  </div>
+
+  <div id="notifications-container"></div>
+
+  <!--
+    IMPORTANTE para evitar 500 por URL malformada:
+    - Qualquer botão/link que represente um atendimento deve usar somente valores numéricos em data-atendimento-id.
+    - Nunca use formatos como "1:1" ou "12:3".
+    - Se houver links, mantenha navegação por páginas (HTML) e deixe o JS fazer fetch para /api/atendimentos/{id}.
+  -->
+
+  <!-- Seu JS original -->
+  <script src="/src/js/atendimento.app.js"></script>
+</body>
+</html>

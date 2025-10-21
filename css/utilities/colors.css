@@ -1,0 +1,349 @@
+/* ============================================
+   UTILITIES - COLORS
+   Cores de texto e background
+   ============================================ */
+
+/* ============================================
+   CORES DE BACKGROUND
+   ============================================ */
+
+/* Cores Principais */
+.bg-primary {
+    background-color: var(--color-primary) !important;
+}
+
+.bg-primary-light {
+    background-color: var(--color-primary-light) !important;
+}
+
+.bg-primary-dark {
+    background-color: var(--color-primary-dark) !important;
+}
+
+.bg-secondary {
+    background-color: var(--color-secondary) !important;
+}
+
+/* Cores de Feedback */
+.bg-success {
+    background-color: var(--color-success) !important;
+}
+
+.bg-warning {
+    background-color: var(--color-warning) !important;
+}
+
+.bg-danger {
+    background-color: var(--color-danger) !important;
+}
+
+.bg-info {
+    background-color: var(--color-info) !important;
+}
+
+/* Escala de Cinzas */
+.bg-white {
+    background-color: var(--color-white) !important;
+}
+
+.bg-gray-50 {
+    background-color: var(--color-gray-50) !important;
+}
+
+.bg-gray-100 {
+    background-color: var(--color-gray-100) !important;
+}
+
+.bg-gray-200 {
+    background-color: var(--color-gray-200) !important;
+}
+
+.bg-gray-300 {
+    background-color: var(--color-gray-300) !important;
+}
+
+.bg-gray-400 {
+    background-color: var(--color-gray-400) !important;
+}
+
+.bg-gray-500 {
+    background-color: var(--color-gray-500) !important;
+}
+
+.bg-gray-600 {
+    background-color: var(--color-gray-600) !important;
+}
+
+.bg-gray-700 {
+    background-color: var(--color-gray-700) !important;
+}
+
+.bg-gray-800 {
+    background-color: var(--color-gray-800) !important;
+}
+
+.bg-gray-900 {
+    background-color: var(--color-gray-900) !important;
+}
+
+.bg-black {
+    background-color: var(--color-black) !important;
+}
+
+/* Background Transparente */
+.bg-transparent {
+    background-color: transparent !important;
+}
+
+/* ============================================
+   CORES DE TEXTO
+   ============================================ */
+
+/* Cores Principais */
+.text-primary {
+    color: var(--color-primary) !important;
+}
+
+.text-primary-light {
+    color: var(--color-primary-light) !important;
+}
+
+.text-primary-dark {
+    color: var(--color-primary-dark) !important;
+}
+
+.text-secondary {
+    color: var(--color-secondary) !important;
+}
+
+/* Cores de Feedback */
+.text-success {
+    color: var(--color-success) !important;
+}
+
+.text-warning {
+    color: var(--color-warning) !important;
+}
+
+.text-danger {
+    color: var(--color-danger) !important;
+}
+
+.text-info {
+    color: var(--color-info) !important;
+}
+
+/* Escala de Cinzas */
+.text-white {
+    color: var(--color-white) !important;
+}
+
+.text-gray-50 {
+    color: var(--color-gray-50) !important;
+}
+
+.text-gray-100 {
+    color: var(--color-gray-100) !important;
+}
+
+.text-gray-200 {
+    color: var(--color-gray-200) !important;
+}
+
+.text-gray-300 {
+    color: var(--color-gray-300) !important;
+}
+
+.text-gray-400 {
+    color: var(--color-gray-400) !important;
+}
+
+.text-gray-500 {
+    color: var(--color-gray-500) !important;
+}
+
+.text-gray-600 {
+    color: var(--color-gray-600) !important;
+}
+
+.text-gray-700 {
+    color: var(--color-gray-700) !important;
+}
+
+.text-gray-800 {
+    color: var(--color-gray-800) !important;
+}
+
+.text-gray-900 {
+    color: var(--color-gray-900) !important;
+}
+
+.text-black {
+    color: var(--color-black) !important;
+}
+
+.text-muted {
+    color: var(--admin-text-muted) !important;
+}
+
+/* ============================================
+   CORES DE BORDA
+   ============================================ */
+
+.border-primary {
+    border-color: var(--color-primary) !important;
+}
+
+.border-secondary {
+    border-color: var(--color-secondary) !important;
+}
+
+.border-success {
+    border-color: var(--color-success) !important;
+}
+
+.border-warning {
+    border-color: var(--color-warning) !important;
+}
+
+.border-danger {
+    border-color: var(--color-danger) !important;
+}
+
+.border-info {
+    border-color: var(--color-info) !important;
+}
+
+.border-white {
+    border-color: var(--color-white) !important;
+}
+
+.border-gray-100 {
+    border-color: var(--color-gray-100) !important;
+}
+
+.border-gray-200 {
+    border-color: var(--color-gray-200) !important;
+}
+
+.border-gray-300 {
+    border-color: var(--color-gray-300) !important;
+}
+
+.border-gray-400 {
+    border-color: var(--color-gray-400) !important;
+}
+
+.border-gray-500 {
+    border-color: var(--color-gray-500) !important;
+}
+
+/* ============================================
+   GRADIENT BACKGROUNDS
+   ============================================ */
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-light) 100%) !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%) !important;
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-light) 100%) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info-light) 100%) !important;
+}
+
+.bg-gradient-dark {
+    background: linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-900) 100%) !important;
+}
+
+/* ============================================
+   OPACITY
+   ============================================ */
+
+.opacity-0 {
+    opacity: 0 !important;
+}
+
+.opacity-25 {
+    opacity: 0.25 !important;
+}
+
+.opacity-50 {
+    opacity: 0.5 !important;
+}
+
+.opacity-75 {
+    opacity: 0.75 !important;
+}
+
+.opacity-100 {
+    opacity: 1 !important;
+}
+
+/* ============================================
+   HOVER STATES
+   ============================================ */
+
+.hover-bg-primary:hover {
+    background-color: var(--color-primary) !important;
+}
+
+.hover-bg-secondary:hover {
+    background-color: var(--color-secondary) !important;
+}
+
+.hover-bg-gray-100:hover {
+    background-color: var(--color-gray-100) !important;
+}
+
+.hover-bg-gray-200:hover {
+    background-color: var(--color-gray-200) !important;
+}
+
+.hover-text-primary:hover {
+    color: var(--color-primary) !important;
+}
+
+.hover-text-secondary:hover {
+    color: var(--color-secondary) !important;
+}
+
+.hover-opacity-75:hover {
+    opacity: 0.75 !important;
+}
+
+.hover-opacity-100:hover {
+    opacity: 1 !important;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    .dark-bg-dark {
+        background-color: var(--color-gray-900) !important;
+    }
+
+    .dark-bg-darker {
+        background-color: var(--color-black) !important;
+    }
+
+    .dark-text-light {
+        color: var(--color-gray-100) !important;
+    }
+
+    .dark-border-gray {
+        border-color: var(--color-gray-700) !important;
+    }
+}
