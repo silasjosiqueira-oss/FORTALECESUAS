@@ -26,7 +26,7 @@
   "author": "Sistema CRAS",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0",
+    "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "dependencies": {
@@ -97,15 +97,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/seu-usuario/sistema-cras"
+    "url": "https://github.com/silasjosiqueira-oss/FORTALECESUAS"
   },
   "bugs": {
-    "url": "https://github.com/seu-usuario/sistema-cras/issues"
+    "url": "https://github.com/silasjosiqueira-oss/FORTALECESUAS/issues"
   },
-  "homepage": "https://github.com/seu-usuario/sistema-cras#readme"
-}
-{
-  "scripts": {
-    "start": "node server.js"
-  }
+  "homepage": "https://github.com/silasjosiqueira-oss/FORTALECESUAS"
 }
