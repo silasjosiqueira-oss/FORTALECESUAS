@@ -104,3 +104,8 @@
   },
   "homepage": "https://github.com/seu-usuario/sistema-cras#readme"
 }
+{
+  "scripts": {
+    "start": "node server.js"
+  }
+}
