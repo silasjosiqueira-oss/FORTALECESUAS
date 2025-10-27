@@ -2,42 +2,45 @@
 
 <div align="center">
 
-![Node.js](https://img.shields.io/badge/node-%3E%3D18.0-brightgreen?style=for-the-badge&logo=node.js)
-![MySQL](https://img.shields.io/badge/mysql-8.0%2B-blue?style=for-the-badge&logo=mysql)
+![Node.js](https://img.shields.io/badge/node-%3E%3D16.0-brightgreen?style=for-the-badge&logo=node.js)
+![MySQL](https://img.shields.io/badge/mysql-8.0%2B-blue?style=for-the-badge&logo=mysql&logoColor=white)
 ![Express](https://img.shields.io/badge/express-4.x-lightgrey?style=for-the-badge&logo=express)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
 
-![CI/CD](https://img.shields.io/github/actions/workflow/status/silasjosiqueira-oss/FORTALECESUAS/ci.yml?style=for-the-badge&label=build)
-![Stars](https://img.shields.io/github/stars/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)
-![Forks](https://img.shields.io/github/forks/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)
-![Issues](https://img.shields.io/github/issues/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)
+[![GitHub Stars](https://img.shields.io/github/stars/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)](https://github.com/silasjosiqueira-oss/FORTALECESUAS/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)](https://github.com/silasjosiqueira-oss/FORTALECESUAS/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/silasjosiqueira-oss/FORTALECESUAS?style=for-the-badge)](https://github.com/silasjosiqueira-oss/FORTALECESUAS/issues)
 
 **Sistema completo de gestão para Centros de Referência de Assistência Social (CRAS)**
 
-[📖 Documentação](#documentação) •
-[🚀 Quick Start](#quick-start-com-docker) •
-[💻 Demo](#demo) •
-[🤝 Contribuir](#contribuindo)
+*Desenvolvido com Node.js, Express e MySQL | Arquitetura modular | Segurança robusta*
 
-</div>
-
----
-
-## 📸 Screenshots
-
-> **Nota:** Adicione suas screenshots aqui!
-
-<div align="center">
-  <img src="docs/images/dashboard.png" alt="Dashboard" width="400"/>
-  <img src="docs/images/atendimentos.png" alt="Atendimentos" width="400"/>
-</div>
+[🚀 Quick Start](#-quick-start-com-docker) •
+[📖 Documentação](#-documentação) •
+[🤝 Contribuir](#-contribuindo) •
+[📝 Changelog](CHANGELOG.md)
 
 ---
 
-## ⚡ Quick Start com Docker
+</div>
 
-A maneira mais rápida de rodar o projeto!
+## 📋 Sobre o Projeto
+
+Sistema de gestão completo para **Centros de Referência de Assistência Social (CRAS)**, desenvolvido em Node.js com arquitetura modular e foco em segurança, performance e escalabilidade.
+
+### ✨ Destaques
+
+- 🔐 **Segurança Robusta:** Autenticação JWT, rate limiting, validação de entrada e logs de segurança
+- 🏗️ **Arquitetura Modular:** Separação clara de responsabilidades com controllers, middleware e utilitários
+- 📊 **Dashboard Completo:** Estatísticas em tempo real e relatórios gerenciais
+- 👥 **Multi-tenant:** Suporte para múltiplas organizações
+- 🔄 **API RESTful:** Endpoints bem estruturados com paginação e filtros
+- 🐳 **Docker Ready:** Containerização completa com MySQL e phpMyAdmin
+
+---
+
+## 🚀 Quick Start com Docker
 
 ```bash
 # Clone o repositório
@@ -46,7 +49,7 @@ cd FORTALECESUAS
 
 # Configure variáveis de ambiente
 cp .env.example .env
-nano .env  # Edite com suas configurações
+# Edite o .env com suas configurações
 
 # Inicie com Docker
 docker-compose up -d
@@ -56,231 +59,129 @@ docker-compose up -d
 # phpMyAdmin: http://localhost:8080
 ```
 
-**Pronto! Sistema rodando em menos de 2 minutos!** 🎉
-
----
-
-## 📋 Índice
-
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Características](#características)
-- [Tecnologias](#tecnologias)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação)
-  - [Com Docker](#instalação-com-docker-recomendado)
-  - [Sem Docker](#instalação-tradicional)
-- [Configuração](#configuração)
-- [Uso](#uso)
-- [API](#api-endpoints)
-- [Testes](#testes)
-- [Deploy](#deploy)
-- [Segurança](#segurança)
-- [Contribuindo](#contribuindo)
-- [Licença](#licença)
-- [Contato](#contato)
-
----
-
-## 🎯 Sobre o Projeto
-
-Sistema de gestão completo para Centros de Referência de Assistência Social (CRAS), desenvolvido com foco em:
-
-- ✅ **Segurança:** Autenticação JWT, rate limiting, validação rigorosa
-- ✅ **Performance:** Pool de conexões, cache, otimizações
-- ✅ **Escalabilidade:** Arquitetura modular, containerização
-- ✅ **Manutenibilidade:** Código limpo, documentação completa
-- ✅ **Auditoria:** Sistema de logs detalhado
-
----
-
-## ✨ Características
-
-### Core Features
-- 🔐 **Autenticação JWT** com refresh tokens
-- 👥 **Multi-tenant** - Suporte para múltiplas organizações
-- 📊 **Dashboard** com estatísticas em tempo real
-- 📝 **Gestão de Atendimentos** completa
-- 👨‍💼 **Gestão de Usuários** com permissões granulares
-- 🎭 **Sistema de Permissões** baseado em cargo
-- 📅 **Agendamentos** e calendário integrado
-- 📦 **Controle de Estoque** de materiais
-
-### Segurança
-- 🛡️ Rate limiting inteligente por IP e usuário
-- 🔒 Validação e sanitização de dados
-- 🚨 Detecção de SQL Injection e XSS
-- 📋 Logs de segurança detalhados
-- 🔑 Refresh tokens seguros
-- 🌐 CORS configurável por ambiente
-
-### DevOps
-- 🐳 Docker e Docker Compose prontos
-- 🔄 CI/CD com GitHub Actions
-- 📊 Health checks e monitoring
-- 💾 Sistema de backup automatizado
-- 📝 Logs estruturados com Winston
+**Credenciais padrão:** admin / admin123 ⚠️ *Altere após primeiro acesso!*
 
 ---
 
 ## 🛠️ Tecnologias
 
-### Backend
-- **Node.js** 18+ - Runtime JavaScript
-- **Express.js** - Framework web
-- **MySQL** 8.0+ - Banco de dados relacional
-- **JWT** - Autenticação stateless
-- **bcryptjs** - Hash de senhas
+<div align="center">
 
-### Segurança
-- **Helmet** - Headers de segurança
-- **express-validator** - Validação de entrada
-- **rate-limiter-flexible** - Rate limiting
-- **cors** - Cross-Origin Resource Sharing
+| Backend | Database | Security | DevOps |
+|---------|----------|----------|--------|
+| Node.js 16+ | MySQL 8.0+ | JWT | Docker |
+| Express.js | Pool de Conexões | Helmet | GitHub Actions |
+| Winston | Indexes | CORS | PM2 |
 
-### DevOps & Tools
-- **Docker** - Containerização
-- **Winston** - Sistema de logging
-- **PM2** - Process manager
-- **GitHub Actions** - CI/CD
+</div>
+
+### Stack Completa
+
+**Backend:**
+- Node.js 16+ / Express.js
+- JWT (autenticação stateless)
+- bcryptjs (hash de senhas)
+- Winston (logging estruturado)
+
+**Banco de Dados:**
+- MySQL 8.0+
+- Pool de conexões otimizado
+- Migrations e seeds
+
+**Segurança:**
+- Helmet (headers seguros)
+- express-validator (validação)
+- rate-limiter-flexible (rate limiting)
+- CORS configurável
+
+**DevOps:**
+- Docker & Docker Compose
+- GitHub Actions (CI/CD)
+- PM2 (process manager)
+- Health checks
 
 ---
 
-## 📦 Pré-requisitos
+## 📦 Instalação
 
-### Sem Docker
-- Node.js 18.0.0 ou superior
-- MySQL 8.0 ou superior
-- npm 8.0.0 ou superior
-
-### Com Docker (Recomendado)
-- Docker 20.10+
-- Docker Compose 2.0+
-
----
-
-## 🚀 Instalação
-
-### Instalação com Docker (Recomendado)
+### Opção 1: Docker (Recomendado) 🐳
 
 ```bash
-# 1. Clone o repositório
+# 1. Clone e configure
 git clone https://github.com/silasjosiqueira-oss/FORTALECESUAS.git
 cd FORTALECESUAS
-
-# 2. Configure variáveis de ambiente
 cp .env.example .env
 
-# Edite o .env com suas configurações
-nano .env
+# 2. Edite as variáveis (gere chaves seguras)
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
-# 3. Inicie os containers
+# 3. Inicie
 docker-compose up -d
 
-# 4. Verifique os logs
+# 4. Verifique
 docker-compose logs -f app
-
-# 5. Acesse a aplicação
-# App: http://localhost:3000
-# phpMyAdmin: http://localhost:8080
 ```
 
-**Comandos úteis:**
-```bash
-# Parar containers
-docker-compose down
-
-# Ver logs
-docker-compose logs -f
-
-# Reiniciar aplicação
-docker-compose restart app
-
-# Rebuild após mudanças
-docker-compose up -d --build
-```
-
----
-
-### Instalação Tradicional
+### Opção 2: Instalação Manual
 
 ```bash
-# 1. Clone o repositório
+# 1. Pré-requisitos
+# - Node.js 16+
+# - MySQL 8.0+
+# - npm 8+
+
+# 2. Clone e instale
 git clone https://github.com/silasjosiqueira-oss/FORTALECESUAS.git
 cd FORTALECESUAS
-
-# 2. Instale dependências
 npm install
 
-# 3. Configure variáveis de ambiente
+# 3. Configure banco de dados
+mysql -u root -p
+CREATE DATABASE sistema_assistencia;
+CREATE USER 'cras_user'@'localhost' IDENTIFIED BY 'senha_segura';
+GRANT ALL PRIVILEGES ON sistema_assistencia.* TO 'cras_user'@'localhost';
+
+# 4. Configure .env
 cp .env.example .env
 nano .env
 
-# 4. Configure o banco de dados
-mysql -u root -p < database/schema.sql
-
-# 5. Crie diretórios necessários
-mkdir -p logs uploads backups tmp
-chmod 755 logs uploads backups tmp
-
-# 6. Inicie a aplicação
-npm start
+# 5. Inicie
+npm start  # Produção
+npm run dev  # Desenvolvimento
 ```
+
+📖 **Guia completo:** [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)
 
 ---
 
-## ⚙️ Configuração
+## 🎯 Funcionalidades
 
-### Variáveis de Ambiente Principais
+### Core
 
-```env
-# Banco de Dados
-DB_HOST=localhost
-DB_USER=cras_user
-DB_PASSWORD=senha_segura
-DB_NAME=sistema_assistencia
+- ✅ **Gestão de Atendimentos** - CRUD completo com histórico
+- ✅ **Gestão de Usuários** - Permissões granulares por cargo
+- ✅ **Dashboard** - Estatísticas e métricas em tempo real
+- ✅ **Sistema de Permissões** - 7 níveis de acesso
+- ✅ **Agendamentos** - Calendário integrado
+- ✅ **Controle de Estoque** - Gestão de materiais
 
-# JWT
-JWT_SECRET=chave_64_caracteres_aleatoria
-JWT_REFRESH_SECRET=outra_chave_64_caracteres
+### Segurança
 
-# Servidor
-PORT=3000
-NODE_ENV=production
-```
+- 🔐 Autenticação JWT com refresh tokens
+- 🛡️ Rate limiting por IP e usuário
+- ✅ Validação rigorosa de entrada
+- 🚫 Proteção contra XSS e SQL Injection
+- 📋 Logs de segurança detalhados
+- 🔒 CORS configurável por ambiente
 
-**Gerar chaves seguras:**
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
+### Sistema
 
-Ver [.env.example](.env.example) para todas as opções.
-
----
-
-## 💻 Uso
-
-### Desenvolvimento
-```bash
-npm run dev
-```
-
-### Produção
-```bash
-npm start
-```
-
-### Com PM2
-```bash
-pm2 start ecosystem.config.js --env production
-pm2 monit
-pm2 logs
-```
-
-### Credenciais Padrão
-- **Usuário:** `admin`
-- **Senha:** `admin123`
-
-⚠️ **Altere a senha padrão após o primeiro login!**
+- 📊 Logs estruturados (Winston)
+- ⚡ Pool de conexões otimizado
+- 🔄 Health checks
+- 📦 Backup automatizado
+- 🐳 Docker ready
+- 🔄 CI/CD com GitHub Actions
 
 ---
 
@@ -288,7 +189,7 @@ pm2 logs
 
 ### Autenticação
 ```http
-POST   /auth/login          # Login
+POST   /auth/login          # Login do usuário
 POST   /auth/logout         # Logout
 POST   /auth/refresh        # Renovar token
 GET    /auth/profile        # Perfil do usuário
@@ -296,17 +197,17 @@ GET    /auth/profile        # Perfil do usuário
 
 ### Atendimentos
 ```http
-GET    /api/atendimentos           # Listar
-POST   /api/atendimentos           # Criar
-GET    /api/atendimentos/:id       # Detalhes
+GET    /api/atendimentos           # Listar todos
+POST   /api/atendimentos           # Criar novo
+GET    /api/atendimentos/:id       # Buscar por ID
 PUT    /api/atendimentos/:id       # Atualizar
 DELETE /api/atendimentos/:id       # Excluir
 ```
 
 ### Usuários
 ```http
-GET    /api/usuarios               # Listar
-POST   /api/usuarios               # Criar
+GET    /api/usuarios               # Listar usuários
+POST   /api/usuarios               # Criar usuário
 PUT    /api/usuarios/:id           # Atualizar
 DELETE /api/usuarios/:id           # Excluir
 ```
@@ -317,21 +218,83 @@ GET    /health                     # Health check
 GET    /api/estatisticas/dashboard # Dashboard
 ```
 
-**Autenticação:**
-```bash
-Authorization: Bearer {TOKEN}
+**Autenticação:** `Authorization: Bearer {TOKEN}`
+
+📚 **Documentação completa da API:** Em desenvolvimento
+
+---
+
+## ⚙️ Configuração
+
+### Variáveis Essenciais
+
+```env
+# Banco de Dados
+DB_HOST=localhost
+DB_USER=cras_user
+DB_PASSWORD=sua_senha_segura
+DB_NAME=sistema_assistencia
+
+# JWT (gere com: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+JWT_SECRET=sua_chave_64_caracteres
+JWT_REFRESH_SECRET=outra_chave_64_caracteres
+CSRF_SECRET=chave_csrf_32_caracteres
+
+# Servidor
+PORT=3000
+NODE_ENV=production
+ALLOWED_ORIGINS=https://seu-dominio.com
 ```
 
-**Exemplo com curl:**
-```bash
-# Login
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"usuario": "admin", "senha": "admin123"}'
+Ver: [.env.example](.env.example) para todas as opções
 
-# Listar atendimentos
-curl http://localhost:3000/api/atendimentos \
-  -H "Authorization: Bearer {TOKEN}"
+---
+
+## 🔐 Segurança
+
+### Implementações
+
+- ✅ Autenticação JWT com refresh tokens
+- ✅ Rate limiting (5 tentativas de login / 15 min)
+- ✅ Validação rigorosa com express-validator
+- ✅ Sanitização contra XSS
+- ✅ Detecção de SQL Injection
+- ✅ Headers de segurança (Helmet)
+- ✅ CORS configurável
+- ✅ Logs de auditoria
+- ✅ Bloqueio automático após falhas
+
+### Boas Práticas
+
+- 🔒 Senhas hasheadas com bcrypt
+- 🔑 Tokens com expiração
+- 📋 Logs de todas as ações sensíveis
+- 🚫 Validação em todas as entradas
+- 🛡️ Princípio do menor privilégio
+
+**Reporte vulnerabilidades:** security@fortalecesuas.com.br
+
+---
+
+## 📊 Estrutura do Projeto
+
+```
+FORTALECESUAS/
+├── server.js                 # Servidor principal
+├── package.json              # Dependências
+├── docker-compose.yml        # Docker setup
+├── .env.example              # Configurações
+├── src/
+│   ├── config/
+│   │   ├── database.js       # Configuração DB
+│   │   └── index.js          # Config geral
+│   ├── controllers/          # Lógica de negócio
+│   ├── middleware/           # Middlewares
+│   ├── routes/               # Rotas da API
+│   └── utils/                # Utilitários
+├── pages/                    # Frontend HTML
+├── logs/                     # Logs do sistema
+└── docs/                     # Documentação
 ```
 
 ---
@@ -339,80 +302,46 @@ curl http://localhost:3000/api/atendimentos \
 ## 🧪 Testes
 
 ```bash
-# Executar todos os testes
-npm test
-
-# Testes em modo watch
-npm run test:watch
-
-# Coverage
-npm run test:coverage
+npm test              # Executar testes
+npm run test:watch    # Modo watch
+npm run test:coverage # Coverage report
+npm run lint          # Verificar código
 ```
+
+*Obs: Testes em desenvolvimento*
 
 ---
 
 ## 🚀 Deploy
 
-### Com Docker
+### Com Docker (Produção)
 
 ```bash
-# Build da imagem
-docker build -t fortalecesuas:latest .
+# Build
+docker-compose -f docker-compose.prod.yml up -d
 
-# Push para registry
-docker tag fortalecesuas:latest seu-usuario/fortalecesuas:latest
-docker push seu-usuario/fortalecesuas:latest
+# Logs
+docker-compose logs -f
+
+# Restart
+docker-compose restart app
 ```
 
-### Heroku
+### Com PM2
 
 ```bash
-heroku create fortalecesuas
-heroku config:set NODE_ENV=production
-heroku config:set JWT_SECRET=sua_chave
-git push heroku main
-```
+# Instalar PM2
+npm install -g pm2
 
-### VPS/Servidor
-
-```bash
-# Com PM2
+# Iniciar
 pm2 start ecosystem.config.js --env production
-pm2 save
+
+# Monitorar
+pm2 monit
+
+# Configurar startup
 pm2 startup
-```
-
----
-
-## 🔒 Segurança
-
-- ✅ Autenticação JWT com refresh tokens
-- ✅ Rate limiting por IP e usuário
-- ✅ Validação rigorosa de entrada
-- ✅ Sanitização contra XSS
-- ✅ Detecção de SQL Injection
-- ✅ Headers de segurança (Helmet)
-- ✅ CORS configurável
-- ✅ Logs de segurança
-- ✅ Bloqueio automático após tentativas falhadas
-
-**Reporte vulnerabilidades para:** security@fortalecesuas.com.br
-
----
-
-## 📊 Monitoramento
-
-### Logs
-```bash
-# Ver logs em tempo real
-tail -f logs/app.log
-tail -f logs/error.log
-tail -f logs/security.log
-```
-
-### Health Check
-```bash
-curl http://localhost:3000/health
+pm2 save
 ```
 
 ---
@@ -427,11 +356,12 @@ Contribuições são muito bem-vindas!
 4. Push para a branch (`git push origin feature/NovaFeature`)
 5. Abra um Pull Request
 
-**Padrões de código:**
+**Padrões:**
 - ESLint Standard
 - Commits semânticos
 - Testes para novas features
-- Documentação atualizada
+
+[📋 Guia de contribuição](CONTRIBUTING.md)
 
 ---
 
@@ -441,13 +371,30 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 ---
 
-## 📞 Contato
+## 👨‍💻 Autor
 
 **Silas Josiqueira**
 
-- GitHub: [@silasjosiqueira-oss](https://github.com/silasjosiqueira-oss)
-- Email: contato@fortalecesuas.com.br
-- LinkedIn: [Silas Josiqueira](https://linkedin.com/in/silasjosiqueira)
+[![GitHub](https://img.shields.io/badge/GitHub-silasjosiqueira--oss-181717?style=for-the-badge&logo=github)](https://github.com/silasjosiqueira-oss)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Silas_Josiqueira-0A66C2?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/silasjosiqueira)
+[![Email](https://img.shields.io/badge/Email-contato-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:contato@fortalecesuas.com.br)
+
+---
+
+## 📞 Suporte
+
+- 📖 [Documentação Completa](docs/)
+- 🐛 [Reportar Bug](https://github.com/silasjosiqueira-oss/FORTALECESUAS/issues)
+- 💡 [Solicitar Feature](https://github.com/silasjosiqueira-oss/FORTALECESUAS/issues)
+- 📧 Email: contato@fortalecesuas.com.br
+
+---
+
+## 📈 Status do Projeto
+
+![GitHub last commit](https://img.shields.io/github/last-commit/silasjosiqueira-oss/FORTALECESUAS)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/silasjosiqueira-oss/FORTALECESUAS)
+![GitHub repo size](https://img.shields.io/github/repo-size/silasjosiqueira-oss/FORTALECESUAS)
 
 ---
 
@@ -455,13 +402,15 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 - Comunidade Node.js
 - Contribuidores do projeto
-- Usuários e testers
+- Equipes de CRAS que inspiraram o projeto
 
 ---
 
 <div align="center">
 
 **⭐ Se este projeto foi útil, deixe uma estrela!**
+
+**Versão 2.0.0** | Última atualização: 2025
 
 Made with ❤️ by [Silas Josiqueira](https://github.com/silasjosiqueira-oss)
 
