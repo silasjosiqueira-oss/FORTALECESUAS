@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: fortalecesuas-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-sistema_assistencia}
+      MYSQL_USER: ${DB_USER:-cras_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-cras_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - cras-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: fortalecesuas-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-cras_user}
+      DB_PASSWORD: ${DB_PASSWORD:-cras_password}
+      DB_NAME: ${DB_NAME:-sistema_assistencia}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - cras-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: fortalecesuas-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USER:-cras_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-cras_password}
+      UPLOAD_LIMIT: 50M
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - cras-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  cras-network:
+    driver: bridge
