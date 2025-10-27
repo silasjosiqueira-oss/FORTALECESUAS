@@ -1,6 +1,6 @@
 /* ===========================
-   atendimento.app.js
-   Script completo para o sistema de atendimentos
+   atendimento_app.js - VERSÃO PARA SERVIDOR EXPRESS
+   Sistema de Atendimentos Multi-Tenant
    =========================== */
 
 // Configurações globais
@@ -23,9 +23,10 @@ const STATE = {
 // Funções Utilitárias
 // ===========================
 
-// Obter token de autenticação
+// CORRIGIDO: Obter token com o nome correto
 function getAuthToken() {
-    return localStorage.getItem('token') || '';
+    // Busca por ambos os nomes para compatibilidade
+    return localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
 }
 
 // Headers para requisições autenticadas
@@ -51,7 +52,8 @@ async function apiRequest(url, options = {}) {
             if (response.status === 401) {
                 showNotification('Sessão expirada. Faça login novamente.', 'error');
                 setTimeout(() => {
-                    window.location.href = '/login.html';
+                    // Redireciona para login (páginas servidas de /pages/)
+                    window.location.href = '/pages/login.html';
                 }, 2000);
                 return null;
             }
@@ -249,34 +251,12 @@ async function carregarAtendimentosAguardando() {
         const data = await apiRequest(CONFIG.API_BASE);
 
         if (data) {
-            const aguardando = data.filter(a =>
-                a.status === 'aguardando' || !a.status
-            );
-            renderAtendimentosAguardando(aguardando);
+            const aguardando = Array.isArray(data) ? data.filter(a => a.status === 'aguardando') : [];
+            renderRecepcaoTable(aguardando);
         }
     } catch (error) {
-        showNotification('Erro ao carregar fila de espera', 'error');
+        showNotification('Erro ao carregar fila', 'error');
         console.error(error);
-    } finally {
-        hideLoading();
-    }
-}
-
-async function buscarPorCPF(cpf) {
-    try {
-        const cpfLimpo = cleanCPF(cpf);
-        if (!cpfLimpo) return null;
-
-        showLoading('Buscando CPF...');
-        const data = await apiRequest(`${CONFIG.API_BASE}/buscar-cpf/${cpfLimpo}`);
-
-        if (data && data.encontrado) {
-            return data.dados;
-        }
-        return null;
-    } catch (error) {
-        console.error('Erro ao buscar CPF:', error);
-        return null;
     } finally {
         hideLoading();
     }
@@ -284,20 +264,25 @@ async function buscarPorCPF(cpf) {
 
 async function criarAtendimento(dados) {
     try {
-        showLoading('Salvando atendimento...');
-        const result = await apiRequest(CONFIG.API_BASE, {
+        showLoading('Criando atendimento...');
+        const response = await apiRequest(CONFIG.API_BASE, {
             method: 'POST',
             body: JSON.stringify(dados)
         });
 
-        if (result) {
+        if (response) {
             showNotification('Atendimento criado com sucesso!', 'success');
             closeModal('modalNovoAtendimento');
-            carregarAtendimentosAguardando();
-            return result;
+
+            // Recarregar lista
+            if (STATE.currentTab === 'recepcao') {
+                await carregarAtendimentosAguardando();
+            } else {
+                await carregarTodosAtendimentos();
+            }
         }
     } catch (error) {
-        showNotification('Erro ao criar atendimento', 'error');
+        showNotification('Erro ao criar atendimento: ' + error.message, 'error');
         console.error(error);
     } finally {
         hideLoading();
@@ -306,19 +291,24 @@ async function criarAtendimento(dados) {
 
 async function atualizarAtendimento(id, dados) {
     try {
-        showLoading('Atualizando atendimento...');
-        const result = await apiRequest(`${CONFIG.API_BASE}/${id}`, {
+        showLoading('Atualizando...');
+        const response = await apiRequest(`${CONFIG.API_BASE}/${id}`, {
             method: 'PUT',
             body: JSON.stringify(dados)
         });
 
-        if (result) {
+        if (response) {
             showNotification('Atendimento atualizado!', 'success');
-            carregarTodosAtendimentos();
-            return result;
+
+            // Recarregar lista
+            if (STATE.currentTab === 'recepcao') {
+                await carregarAtendimentosAguardando();
+            } else {
+                await carregarTodosAtendimentos();
+            }
         }
     } catch (error) {
-        showNotification('Erro ao atualizar atendimento', 'error');
+        showNotification('Erro ao atualizar: ' + error.message, 'error');
         console.error(error);
     } finally {
         hideLoading();
@@ -326,21 +316,40 @@ async function atualizarAtendimento(id, dados) {
 }
 
 async function excluirAtendimento(id) {
-    if (!confirm('Confirma a exclusão deste atendimento?')) return;
+    if (!confirm('Deseja realmente excluir este atendimento?')) return;
 
     try {
-        showLoading('Excluindo atendimento...');
+        showLoading('Excluindo...');
         await apiRequest(`${CONFIG.API_BASE}/${id}`, {
             method: 'DELETE'
         });
 
-        showNotification('Atendimento excluído', 'success');
-        carregarAtendimentosAguardando();
+        showNotification('Atendimento excluído!', 'success');
+
+        // Recarregar lista
+        if (STATE.currentTab === 'recepcao') {
+            await carregarAtendimentosAguardando();
+        } else {
+            await carregarTodosAtendimentos();
+        }
     } catch (error) {
-        showNotification('Erro ao excluir atendimento', 'error');
+        showNotification('Erro ao excluir: ' + error.message, 'error');
         console.error(error);
     } finally {
         hideLoading();
+    }
+}
+
+async function buscarPorCPF(cpf) {
+    try {
+        const cleanedCPF = cleanCPF(cpf);
+        if (cleanedCPF.length !== 11) return null;
+
+        const data = await apiRequest(`${CONFIG.API_BASE}?cpf=${cleanedCPF}`);
+        return data && data.length > 0 ? data[0] : null;
+    } catch (error) {
+        console.error('Erro ao buscar CPF:', error);
+        return null;
     }
 }
 
@@ -348,56 +357,33 @@ async function excluirAtendimento(id) {
 // Renderização - Tabelas
 // ===========================
 
-function renderAtendimentosAguardando(atendimentos) {
-    const tbody = document.getElementById('atendimentosAguardando');
-    const totalEl = document.getElementById('totalAguardando');
-    const badgeEl = document.getElementById('totalAguardandoBadge');
-
+function renderRecepcaoTable(atendimentos) {
+    const tbody = document.querySelector('#recepcao-table tbody');
     if (!tbody) return;
 
-    if (atendimentos.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">
-                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                    Nenhum atendimento aguardando
-                </td>
-            </tr>
-        `;
-    } else {
-        tbody.innerHTML = atendimentos.map(atendimento => `
-            <tr class="clickable" onclick="verDetalhesAtendimento(${atendimento.id})">
-                <td>${atendimento.registro || '#' + atendimento.id}</td>
-                <td>${formatDateTime(atendimento.dataHora)}</td>
-                <td>${atendimento.nomeCompleto || '-'}</td>
-                <td>${atendimento.motivoAtendimento || '-'}</td>
-                <td>
-                    <span class="status-badge ${getPrioridadeClass(atendimento.prioridade)}">
-                        ${atendimento.prioridade || 'Normal'}
-                    </span>
-                </td>
-                <td><span class="status-badge status-aguardando">Aguardando</span></td>
-                <td onclick="event.stopPropagation()">
-                    <button class="btn btn--success btn-xs" onclick="iniciarAtendimento(${atendimento.id})" title="Iniciar">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button class="btn btn--info btn-xs" onclick="verDetalhesAtendimento(${atendimento.id})" title="Visualizar">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn--danger btn-xs" onclick="excluirAtendimento(${atendimento.id})" title="Excluir">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+    if (!atendimentos || atendimentos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;">Nenhum atendimento aguardando</td></tr>';
+        return;
     }
 
-    if (totalEl) totalEl.textContent = atendimentos.length;
-    if (badgeEl) badgeEl.textContent = `${atendimentos.length} aguardando`;
+    tbody.innerHTML = atendimentos.map(a => `
+        <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
+            <td>${a.registro || '#' + a.id}</td>
+            <td>${a.nomeCompleto || '-'}</td>
+            <td>${formatCPF(a.cpf) || '-'}</td>
+            <td>${a.tipoAtendimento || '-'}</td>
+            <td>${formatDateTime(a.dataHora)}</td>
+            <td>
+                <button class="btn btn--primary btn-xs" onclick="event.stopPropagation(); iniciarAtendimento(${a.id})">
+                    <i class="fas fa-play"></i> Iniciar
+                </button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function renderAtendimentosTable() {
-    const tbody = document.getElementById('atendimentosTable');
+    const tbody = document.querySelector('#atendimentos-table tbody');
     if (!tbody) return;
 
     const start = (STATE.currentPage - 1) * CONFIG.PAGE_SIZE;
@@ -405,65 +391,57 @@ function renderAtendimentosTable() {
     const pageData = STATE.filteredAtendimentos.slice(start, end);
 
     if (pageData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">
-                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                    Nenhum registro encontrado
-                </td>
-            </tr>
-        `;
-    } else {
-        tbody.innerHTML = pageData.map(atendimento => `
-            <tr>
-                <td>${atendimento.registro || '#' + atendimento.id}</td>
-                <td>${formatDateTime(atendimento.dataHora)}</td>
-                <td>${atendimento.nomeCompleto || '-'}</td>
-                <td>${atendimento.tecnicoResponsavel || '-'}</td>
-                <td>${atendimento.tipoAtendimento || '-'}</td>
-                <td>${atendimento.unidade || '-'}</td>
-                <td><span class="status-badge ${getStatusClass(atendimento.status)}">${getStatusLabel(atendimento.status)}</span></td>
-                <td>
-                    <button class="btn btn--info btn-xs" onclick="verDetalhesAtendimento(${atendimento.id})" title="Visualizar">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn--warning btn-xs" onclick="editarAtendimento(${atendimento.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;">Nenhum atendimento encontrado</td></tr>';
+        return;
     }
 
-    renderPaginacao();
+    tbody.innerHTML = pageData.map(a => `
+        <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
+            <td>${a.registro || '#' + a.id}</td>
+            <td>${a.nomeCompleto || '-'}</td>
+            <td>${formatCPF(a.cpf) || '-'}</td>
+            <td>${a.tipoAtendimento || '-'}</td>
+            <td><span class="status-badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span></td>
+            <td>${a.tecnicoResponsavel || '-'}</td>
+            <td>${formatDateTime(a.dataHora)}</td>
+            <td onclick="event.stopPropagation()">
+                <button class="btn btn--warning btn-xs" onclick="editarAtendimento(${a.id})" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn--danger btn-xs" onclick="excluirAtendimento(${a.id})" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+
+    renderPagination();
 }
 
-function renderPaginacao() {
-    const paginationEl = document.getElementById('pagination');
+function renderPagination() {
+    const totalPages = Math.ceil(STATE.filteredAtendimentos.length / CONFIG.PAGE_SIZE);
+    const paginationEl = document.querySelector('.pagination');
     if (!paginationEl) return;
 
-    const totalPages = Math.ceil(STATE.filteredAtendimentos.length / CONFIG.PAGE_SIZE);
+    let html = `
+        <button ${STATE.currentPage === 1 ? 'disabled' : ''} onclick="mudarPagina(${STATE.currentPage - 1})">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
 
-    let html = '';
-
-    // Botão anterior
-    html += `<button ${STATE.currentPage === 1 ? 'disabled' : ''} onclick="mudarPagina(${STATE.currentPage - 1})">
-        <i class="fas fa-chevron-left"></i>
-    </button>`;
-
-    // Páginas
     for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= STATE.currentPage - 2 && i <= STATE.currentPage + 2)) {
-            html += `<button class="${i === STATE.currentPage ? 'active' : ''}" onclick="mudarPagina(${i})">${i}</button>`;
-        } else if (i === STATE.currentPage - 3 || i === STATE.currentPage + 3) {
-            html += '<span>...</span>';
-        }
+        html += `
+            <button class="${i === STATE.currentPage ? 'active' : ''}" onclick="mudarPagina(${i})">
+                ${i}
+            </button>
+        `;
     }
 
-    // Botão próximo
-    html += `<button ${STATE.currentPage === totalPages ? 'disabled' : ''} onclick="mudarPagina(${STATE.currentPage + 1})">
-        <i class="fas fa-chevron-right"></i>
-    </button>`;
+    html += `
+        <button ${STATE.currentPage === totalPages ? 'disabled' : ''} onclick="mudarPagina(${STATE.currentPage + 1})">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
 
     paginationEl.innerHTML = html;
 }
@@ -476,114 +454,53 @@ function mudarPagina(page) {
     renderAtendimentosTable();
 }
 
+function updateTotalRegistros() {
+    const recordCount = document.querySelector('.record-count');
+    if (recordCount) {
+        recordCount.textContent = `Mostrando ${STATE.filteredAtendimentos.length} de ${STATE.atendimentos.length} registros`;
+    }
+}
+
 // ===========================
-// Filtros e Busca
+// Busca e Filtros
 // ===========================
 
 function buscarAtendimentos() {
-    const nome = document.getElementById('nomeUsuario')?.value.toLowerCase() || '';
-    const responsavel = document.getElementById('responsavelFamiliar')?.value.toLowerCase() || '';
-    const dataInicial = document.getElementById('dataInicial')?.value || '';
-    const dataFinal = document.getElementById('dataFinal')?.value || '';
-    const tecnico = document.getElementById('tecnicoResponsavel')?.value || '';
-    const status = document.getElementById('statusAtendimento')?.value || '';
-    const unidade = document.getElementById('unidadeFiltro')?.value || '';
+    const busca = document.getElementById('busca-atendimento')?.value.toLowerCase() || '';
 
-    STATE.filteredAtendimentos = STATE.atendimentos.filter(atendimento => {
-        if (nome && !atendimento.nomeCompleto?.toLowerCase().includes(nome)) return false;
-        if (responsavel && !atendimento.responsavelFamiliar?.toLowerCase().includes(responsavel)) return false;
-        if (tecnico && atendimento.tecnicoResponsavel !== tecnico) return false;
-        if (status && atendimento.status !== status) return false;
-        if (unidade && atendimento.unidade !== unidade) return false;
-
-        if (dataInicial) {
-            const dataAtendimento = new Date(atendimento.dataHora);
-            const dataInicio = new Date(dataInicial);
-            if (dataAtendimento < dataInicio) return false;
-        }
-
-        if (dataFinal) {
-            const dataAtendimento = new Date(atendimento.dataHora);
-            const dataFim = new Date(dataFinal);
-            dataFim.setHours(23, 59, 59);
-            if (dataAtendimento > dataFim) return false;
-        }
-
-        return true;
-    });
+    if (!busca) {
+        STATE.filteredAtendimentos = STATE.atendimentos;
+    } else {
+        STATE.filteredAtendimentos = STATE.atendimentos.filter(a =>
+            (a.nomeCompleto?.toLowerCase().includes(busca)) ||
+            (a.cpf?.includes(busca)) ||
+            (a.registro?.toLowerCase().includes(busca))
+        );
+    }
 
     STATE.currentPage = 1;
     renderAtendimentosTable();
     updateTotalRegistros();
-
-    showNotification(`${STATE.filteredAtendimentos.length} registros encontrados`, 'info');
 }
 
 function limparBusca() {
-    document.getElementById('searchForm').reset();
+    const input = document.getElementById('busca-atendimento');
+    if (input) input.value = '';
+
     STATE.filteredAtendimentos = STATE.atendimentos;
     STATE.currentPage = 1;
     renderAtendimentosTable();
     updateTotalRegistros();
 }
 
-function updateTotalRegistros() {
-    const totalEl = document.getElementById('totalRegistros');
-    if (totalEl) {
-        totalEl.textContent = `Total: ${STATE.filteredAtendimentos.length} registros`;
-    }
-}
-
 // ===========================
-// Ações - Atendimentos
+// CORRIGIDO: Novo Atendimento (servidor Express)
 // ===========================
 
 function abrirNovoAtendimento() {
-    // Redirecionar para a página de novo atendimento
+    console.log('📝 Redirecionando para formulário de novo atendimento...');
+    // Ambos os HTMLs são servidos de /pages/
     window.location.href = '/pages/novo-atendimento.html';
-
-    // Remover modal existente se houver
-    const modalExistente = document.getElementById('modalNovoAtendimento');
-    if (modalExistente) modalExistente.remove();
-
-    // Adicionar novo modal
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    openModal('modalNovoAtendimento');
-}
-
-async function salvarNovoAtendimento() {
-    const nome = document.getElementById('novo-nome')?.value;
-
-    if (!nome) {
-        showNotification('Por favor, preencha o nome do usuário', 'warning');
-        return;
-    }
-
-    const dados = {
-        nomeCompleto: nome,
-        cpf: cleanCPF(document.getElementById('novo-cpf')?.value),
-        telefone: document.getElementById('novo-telefone')?.value,
-        tecnicoResponsavel: document.getElementById('novo-tecnico')?.value,
-        unidade: document.getElementById('novo-unidade')?.value,
-        tipoAtendimento: document.getElementById('novo-tipo')?.value,
-        motivoAtendimento: document.getElementById('novo-motivo')?.value,
-        prioridade: document.getElementById('novo-prioridade')?.value,
-        descricaoDemanda: document.getElementById('novo-descricao')?.value,
-        status: 'aguardando'
-    };
-
-    await criarAtendimento(dados);
-}
-
-async function buscarDadosCPF(cpf) {
-    if (!cpf) return;
-
-    const dados = await buscarPorCPF(cpf);
-    if (dados) {
-        document.getElementById('novo-nome').value = dados.nomeCompleto || '';
-        document.getElementById('novo-telefone').value = dados.telefone || '';
-        showNotification('Dados preenchidos automaticamente', 'info');
-    }
 }
 
 async function iniciarAtendimento(id) {
@@ -685,7 +602,6 @@ function mostrarModalDetalhes(atendimento) {
 }
 
 async function editarAtendimento(id) {
-    // Implementar edição
     showNotification('Função de edição em desenvolvimento', 'info');
 }
 
@@ -725,10 +641,32 @@ function getPrioridadeClass(prioridade) {
 }
 
 // ===========================
+// CORRIGIDO: Logout (servidor Express)
+// ===========================
+
+function fazerLogout() {
+    if (confirm('Deseja realmente sair do sistema?')) {
+        console.log('🚪 Fazendo logout...');
+
+        // Limpar TODOS os dados de autenticação
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('tenant_data');
+
+        showNotification('Logout realizado com sucesso!', 'success');
+
+        // Redireciona para login (servido de /pages/)
+        setTimeout(() => {
+            window.location.href = '/pages/login.html';
+        }, 1000);
+    }
+}
+
+// ===========================
 // Funções auxiliares globais
 // ===========================
 
-// Tornar funções disponíveis globalmente para onclick do HTML
 window.showTab = showTab;
 window.showSubTab = showSubTab;
 window.openModal = openModal;
@@ -740,11 +678,10 @@ window.verDetalhesAtendimento = verDetalhesAtendimento;
 window.editarAtendimento = editarAtendimento;
 window.iniciarAtendimento = iniciarAtendimento;
 window.excluirAtendimento = excluirAtendimento;
-window.salvarNovoAtendimento = salvarNovoAtendimento;
-window.buscarDadosCPF = buscarDadosCPF;
 window.mudarPagina = mudarPagina;
+window.fazerLogout = fazerLogout;
 
-// Funções stub para funcionalidades ainda não implementadas
+// Funções stub
 window.filtrosAvancados = () => showNotification('Filtros avançados em desenvolvimento', 'info');
 window.gerarRelatorio = () => showNotification('Geração de relatórios em desenvolvimento', 'info');
 window.exportarDados = () => showNotification('Exportação de dados em desenvolvimento', 'info');
@@ -757,31 +694,57 @@ window.salvarInformacaoRemota = () => showNotification('Função em desenvolvime
 // ===========================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Sistema de Atendimentos iniciando...');
+    console.log('='.repeat(60));
+    console.log('🚀 SISTEMA DE ATENDIMENTOS - INICIANDO');
+    console.log('🌐 Servidor: Express/Node.js Multi-Tenant');
+    console.log('📁 HTML: /pages/atendimento.html');
+    console.log('📜 JS: /src/js/atendimento_app.js');
+    console.log('='.repeat(60));
 
     // Verificar autenticação
     const token = getAuthToken();
+
     if (!token) {
+        console.warn('⚠️ Token não encontrado!');
+        console.warn('📍 Buscou: auth_token e token no localStorage');
+        console.warn('🔄 Redirecionando para login em 2 segundos...');
+
         showNotification('Por favor, faça login para continuar', 'warning');
+
         setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = '/pages/login.html';
         }, 2000);
         return;
     }
 
+    console.log('✅ Token encontrado!');
+    console.log('📋 Primeiros 20 caracteres:', token.substring(0, 20) + '...');
+
+    // Verificar dados do usuário
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+        const user = JSON.parse(userData);
+        console.log('👤 Usuário:', user.nome || 'Nome não encontrado');
+        console.log('🏢 Perfil:', user.perfil || 'Perfil não encontrado');
+    } else {
+        console.warn('⚠️ Dados do usuário não encontrados no localStorage');
+    }
+
     // Carregar dados iniciais
+    console.log('📊 Carregando dados iniciais da tab:', STATE.currentTab);
     if (STATE.currentTab === 'recepcao') {
         carregarAtendimentosAguardando();
     }
 
-    // Configurar intervalo para atualizar a cada 30 segundos
+    // Atualização automática a cada 30 segundos
     setInterval(() => {
-        if (!STATE.isLoading) {
-            if (STATE.currentTab === 'recepcao') {
-                carregarAtendimentosAguardando();
-            }
+        if (!STATE.isLoading && STATE.currentTab === 'recepcao') {
+            console.log('🔄 Atualizando lista automaticamente...');
+            carregarAtendimentosAguardando();
         }
     }, 30000);
 
-    console.log('✅ Sistema pronto!');
+    console.log('='.repeat(60));
+    console.log('✅ SISTEMA PRONTO!');
+    console.log('='.repeat(60));
 });
