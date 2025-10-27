@@ -228,11 +228,11 @@ app.use('/css', express.static(path.join(__dirname, 'css'), {
     }
 }));
 
+app.use('/src', express.static(path.join(__dirname, 'src')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/pages', express.static(path.join(__dirname, 'pages')));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/src', express.static(path.join(__dirname, 'src')));
 // Logging
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.path} - ${req.hostname}`);

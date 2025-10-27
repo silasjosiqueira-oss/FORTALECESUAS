@@ -1,1209 +1,338 @@
-const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
-const path = require('path');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-require('dotenv').config();
-
-// Importar módulos refatorados
-const { connectDatabase, getConnection } = require('./src/config/database');
-const logger = require('./src/utils/logger');
-
-// Importar rotas existentes
-const estoqueRoutes = require('./src/routes/estoque');
-const agendaRoutes = require('./src/routes/agenda');
-const adminRoutes = require('./src/routes/admin');
-
-const app = express();
-
-// ==========================================
-// MIDDLEWARE MULTI-TENANT
-// ==========================================
-
-// Middleware para identificar o Tenant pelo subdomínio
-const identifyTenant = async (req, res, next) => {
-    try {
-        const host = req.hostname || req.headers.host?.split(':')[0];
-
-        // Extrair subdomínio
-        const parts = host.split('.');
-        let subdomain = null;
-
-        // localhost:3000 ou IP direto = desenvolvimento
-        if (host === 'localhost' || host.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-            subdomain = 'demo'; // Tenant padrão para desenvolvimento
-            console.log('[DEV] Modo desenvolvimento - usando tenant "demo"');
-        }
-        // Subdomínio real: cliente.fortalecesuas.com
-        else if (parts.length >= 3) {
-            subdomain = parts[0];
-
-            // Ignorar www e domínio principal
-            if (subdomain === 'www' || subdomain === 'fortalecesuas') {
-                return res.redirect('https://fortalecesuas.com/cadastro');
-            }
-        }
-        // Domínio sem subdomínio
-        else {
-            return res.status(400).json({
-                error: 'Acesso inválido. Use: https://seucliente.fortalecesuas.com'
-            });
-        }
-
-        // Buscar tenant no banco
-        const connection = await getConnection();
-        const [tenants] = await connection.query(
-            `SELECT t.*,
-                    COUNT(u.id) as usuarios_ativos,
-                    DATEDIFF(t.data_vencimento, NOW()) as dias_restantes
-             FROM tenants t
-             LEFT JOIN usuarios u ON u.tenant_id = t.id AND u.ativo = TRUE
-             WHERE t.subdomain = ?
-             GROUP BY t.id`,
-            [subdomain]
-        );
-
-        if (tenants.length === 0) {
-            return res.status(404).json({
-                error: 'Organização não encontrada',
-                message: 'Entre em contato com o suporte ou verifique o endereço.'
-            });
-        }
-
-        const tenant = tenants[0];
-
-        // Verificar status do tenant
-        if (tenant.status === 'suspenso') {
-            return res.status(403).json({
-                error: 'Conta suspensa',
-                message: 'Entre em contato com o suporte para regularizar.'
-            });
-        }
-
-        if (tenant.status === 'cancelado') {
-            return res.status(403).json({
-                error: 'Conta cancelada',
-                message: 'Esta organização não possui mais acesso ao sistema.'
-            });
-        }
-
-        // Verificar vencimento
-        if (tenant.dias_restantes < 0) {
-            return res.status(402).json({
-                error: 'Assinatura vencida',
-                message: `Sua assinatura venceu há ${Math.abs(tenant.dias_restantes)} dias. Renove para continuar.`,
-                dias_vencidos: Math.abs(tenant.dias_restantes)
-            });
-        }
-
-        // Aviso de vencimento próximo
-        if (tenant.dias_restantes <= 7 && tenant.dias_restantes > 0) {
-            res.set('X-Aviso-Vencimento', `Sua assinatura vence em ${tenant.dias_restantes} dias`);
-        }
-
-        // Anexar tenant ao request
-        req.tenant = tenant;
-        req.tenantId = tenant.id;
-
-        console.log(`[OK] Tenant identificado: ${tenant.nome_organizacao} (${subdomain})`);
-        next();
-
-    } catch (error) {
-        console.error('[ERRO] Erro ao identificar tenant:', error);
-        res.status(500).json({
-            error: 'Erro interno do servidor',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-};
-
-// Middleware de autenticação JWT
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ error: 'Token não fornecido' });
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Teste de Caminhos - Servidor Web</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'sua_chave_secreta_muito_segura', (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ error: 'Token inválido ou expirado' });
-        }
-
-        // Verificar se o token pertence ao tenant correto
-        if (req.tenantId && decoded.tenantId !== req.tenantId) {
-            return res.status(403).json({ error: 'Token não pertence a esta organização' });
-        }
-
-        req.user = decoded;
-        next();
-    });
-};
-
-// Middleware Super Admin (para rotas de gerenciamento de tenants)
-const authenticateSuperAdmin = (req, res, next) => {
-    const superAdminKey = req.headers['x-super-admin-key'];
-
-    if (!superAdminKey || superAdminKey !== process.env.SUPER_ADMIN_KEY) {
-        return res.status(403).json({
-            sucesso: false,
-            mensagem: 'Acesso negado: credenciais de super admin inválidas'
-        });
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
-    next();
-};
-
-// Middleware para verificar permissões
-const checkPermission = (recurso, acao) => {
-    return async (req, res, next) => {
-        try {
-            if (!req.user) {
-                return res.status(401).json({ error: 'Usuário não autenticado' });
-            }
-
-            // Admin tem todas as permissões
-            if (req.user.perfil === 'admin') {
-                return next();
-            }
-
-            const connection = await getConnection();
-            const [permissoes] = await connection.query(
-                `SELECT p.* FROM permissoes p
-                 WHERE p.perfil = ? AND p.recurso = ? AND p.acao = ? AND p.permitido = TRUE`,
-                [req.user.perfil, recurso, acao]
-            );
-
-            if (permissoes.length === 0) {
-                return res.status(403).json({
-                    error: 'Sem permissão',
-                    message: `Você não tem permissão para ${acao} em ${recurso}`
-                });
-            }
-
-            next();
-        } catch (error) {
-            console.error('Erro ao verificar permissões:', error);
-            res.status(500).json({ error: 'Erro ao verificar permissões' });
-        }
-    };
-};
-
-// ==========================================
-// CONFIGURAÇÕES BÁSICAS
-// ==========================================
-
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-}));
-
-app.use(cors({
-    origin: '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'X-Super-Admin-Key']
-}));
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Logging
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path} - ${req.hostname}`);
-    next();
-});
-
-// Servir arquivos estáticos
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/pages', express.static(path.join(__dirname, 'pages')));
-app.use('/css', express.static(path.join(__dirname, 'css')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/img', express.static(path.join(__dirname, 'img')));
-
-// ==========================================
-// ROTAS PÚBLICAS (SEM TENANT)
-// ==========================================
-
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development',
-        multitenant: true
-    });
-});
-
-// Rota inicial
-app.get('/', (req, res) => {
-    res.redirect('/pages/login.html');
-});
-
-// ==========================================
-// FUNÇÃO DE LOGIN REUTILIZÁVEL
-// ==========================================
-
-const handleLogin = async (req, res) => {
-    try {
-        const { username, password, email } = req.body;
-        const tenantId = req.tenantId;
-
-        console.log('[LOGIN] Dados recebidos:', { username, email, password: password ? '***' : 'undefined', tenantId });
-
-        // Aceitar tanto username quanto email
-        const loginField = username || email;
-
-        if (!loginField || !password) {
-            console.log('[ERRO] Campos obrigatórios faltando');
-            return res.status(400).json({ error: 'Usuário/email e senha são obrigatórios' });
-        }
-
-        const connection = await getConnection();
-
-        console.log('[BUSCA] Buscando usuário:', loginField, 'no tenant:', tenantId);
-
-        // Buscar usuário por username OU email
-        const [users] = await connection.query(
-            `SELECT u.*, t.nome_organizacao, t.subdomain, t.plano
-             FROM usuarios u
-             JOIN tenants t ON t.id = u.tenant_id
-             WHERE u.tenant_id = ? AND (u.username = ? OR u.email = ?) AND u.ativo = TRUE`,
-            [tenantId, loginField, loginField]
-        );
-
-        console.log('[INFO] Usuários encontrados:', users.length);
-
-        if (users.length === 0) {
-            console.log('[ERRO] Nenhum usuário encontrado');
-            return res.status(401).json({ error: 'Usuário ou senha inválidos' });
-        }
-
-        const user = users[0];
-        console.log('[OK] Usuário encontrado:', {
-            id: user.id,
-            email: user.email,
-            username: user.username
-        });
-
-        // Verificar senha
-        console.log('[CHECK] Comparando senha...');
-        const passwordMatch = await bcrypt.compare(password, user.senha_hash);
-        console.log('[CHECK] Resultado da comparação:', passwordMatch);
-
-        if (!passwordMatch) {
-            console.log('[ERRO] Senha inválida');
-            return res.status(401).json({ error: 'Usuário ou senha inválidos' });
-        }
-
-        console.log('[OK] Senha correta! Gerando token...');
-
-        // Gerar token JWT
-        const token = jwt.sign(
-            {
-                userId: user.id,
-                tenantId: tenantId,
-                username: user.username,
-                perfil: user.perfil,
-                nomeCompleto: user.nome_completo
-            },
-            process.env.JWT_SECRET || 'sua_chave_secreta_muito_segura',
-            { expiresIn: '8h' }
-        );
-
-        // Atualizar último acesso
-        await connection.query(
-            'UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?',
-            [user.id]
-        );
-
-        console.log('[OK] Login bem-sucedido para:', user.email);
-
-        res.json({
-            sucesso: true,
-            token: token,
-            user: {
-                id: user.id,
-                username: user.username,
-                nome_completo: user.nome_completo,
-                email: user.email,
-                perfil: user.perfil,
-                cargo: user.cargo,
-                permissoes: user.perfil === 'admin' ? ['todas'] : []
-            },
-            tenant: {
-                id: tenantId,
-                nome: user.nome_organizacao,
-                subdomain: user.subdomain,
-                plano: user.plano
-            }
-        });
-
-    } catch (error) {
-        console.error('[ERRO] Erro no login:', error);
-        res.status(500).json({ error: 'Erro ao fazer login' });
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
     }
-};
 
-// ==========================================
-// ROTAS DE AUTENTICAÇÃO (COM TENANT)
-// ==========================================
-
-// Login - Rota padrão com /api
-app.post('/api/auth/login', identifyTenant, handleLogin);
-
-// Login - Rota de compatibilidade sem /api
-app.post('/auth/login', identifyTenant, handleLogin);
-
-// Verificar token
-app.get('/auth/verificar', identifyTenant, async (req, res) => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '');
-
-        if (!token) {
-            return res.status(401).json({
-                sucesso: false,
-                mensagem: 'Token não fornecido'
-            });
-        }
-
-        // Verificar token JWT
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET || 'sua_chave_secreta_muito_segura');
-        } catch (error) {
-            return res.status(401).json({
-                sucesso: false,
-                mensagem: 'Token inválido ou expirado'
-            });
-        }
-
-        // Buscar usuário no banco
-        const connection = await getConnection();
-        const [users] = await connection.query(
-            `SELECT u.*, t.nome_organizacao, t.subdomain
-             FROM usuarios u
-             JOIN tenants t ON t.id = u.tenant_id
-             WHERE u.id = ? AND u.tenant_id = ? AND u.ativo = TRUE`,
-            [decoded.userId, req.tenantId]
-        );
-
-        if (users.length === 0) {
-            return res.status(401).json({
-                sucesso: false,
-                mensagem: 'Sessão inválida'
-            });
-        }
-
-        const user = users[0];
-
-        res.json({
-            sucesso: true,
-            valido: true,
-            sessao: {
-                usuario_id: user.id,
-                nome: user.nome_completo,
-                email: user.email,
-                cargo: user.cargo || 'N/A',
-                unidade: user.unidade || 'N/A',
-                nivel_acesso: user.perfil,
-                permissoes: user.perfil === 'admin' ? ['todas'] : [],
-                login_em: new Date(decoded.iat * 1000).toISOString(),
-                expira_em: new Date(decoded.exp * 1000).toISOString()
-            }
-        });
-
-    } catch (error) {
-        console.error('Erro ao verificar token:', error);
-        res.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro ao verificar sessão'
-        });
+    .alert {
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      border-left: 5px solid;
     }
-});
 
-// Validar token
-app.get('/api/auth/validate', identifyTenant, authenticateToken, (req, res) => {
-    res.json({
-        valid: true,
-        user: req.user,
-        tenant: {
-            id: req.tenant.id,
-            nome: req.tenant.nome_organizacao,
-            plano: req.tenant.plano
-        }
-    });
-});
-
-// Logout
-app.post('/auth/logout', (req, res) => {
-    res.json({
-        sucesso: true,
-        mensagem: 'Logout realizado com sucesso'
-    });
-});
-
-// ==========================================
-// ROTAS DE USUÁRIOS (COM TENANT)
-// ==========================================
-
-// Listar usuários do tenant
-app.get('/api/usuarios', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [usuarios] = await connection.query(
-            `SELECT u.id, u.username, u.email, u.nome_completo as nome, u.cpf, u.telefone,
-                    u.cargo, u.unidade, u.perfil as nivel_acesso_codigo, u.ativo,
-                    u.ultimo_acesso, u.created_at,
-                    CASE u.perfil
-                        WHEN 'admin' THEN 'Administrador'
-                        WHEN 'coordenador' THEN 'Coordenador'
-                        WHEN 'tecnico' THEN 'Técnico'
-                        WHEN 'assistente' THEN 'Assistente'
-                        ELSE 'Visualizador'
-                    END as nivel_nome
-             FROM usuarios u
-             WHERE u.tenant_id = ?
-             ORDER BY u.nome_completo`,
-            [req.tenantId]
-        );
-
-        res.json({
-            sucesso: true,
-            dados: usuarios
-        });
-    } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao buscar usuários' });
+    .alert-info {
+      background: #e0f2fe;
+      border-color: #0ea5e9;
+      color: #0c4a6e;
     }
-});
 
-// Estatísticas de usuários
-app.get('/api/usuarios/meta/estatisticas', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [stats] = await connection.query(
-            `SELECT
-                COUNT(*) as total,
-                SUM(CASE WHEN ativo = TRUE THEN 1 ELSE 0 END) as ativos,
-                SUM(CASE WHEN ativo = FALSE THEN 1 ELSE 0 END) as inativos,
-                0 as suspensos
-             FROM usuarios
-             WHERE tenant_id = ?`,
-            [req.tenantId]
-        );
-
-        res.json({
-            sucesso: true,
-            dados: stats[0]
-        });
-    } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao buscar estatísticas' });
+    .alert-success {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
     }
-});
 
-// Níveis de acesso
-app.get('/api/usuarios/meta/niveis-acesso', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const niveis = [
-            { codigo: 'admin', nome: 'Administrador' },
-            { codigo: 'coordenador', nome: 'Coordenador' },
-            { codigo: 'tecnico', nome: 'Técnico' },
-            { codigo: 'assistente', nome: 'Assistente' },
-            { codigo: 'visualizador', nome: 'Visualizador' }
-        ];
-
-        res.json({
-            sucesso: true,
-            dados: niveis
-        });
-    } catch (error) {
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao buscar níveis' });
+    .alert-error {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
     }
-});
 
-// Criar usuário
-app.post('/api/usuarios', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const { nome, email, cpf, telefone, cargo, unidade, nivel_acesso_codigo, senha } = req.body;
-
-        if (!nome || !email || !senha) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'Nome, email e senha são obrigatórios'
-            });
-        }
-
-        const connection = await getConnection();
-        const senhaHash = await bcrypt.hash(senha, 10);
-
-        // Gerar username a partir do email
-        const username = email.split('@')[0].toLowerCase();
-
-        const [result] = await connection.query(
-            `INSERT INTO usuarios (tenant_id, username, email, senha_hash, nome_completo, cpf, telefone, cargo, unidade, perfil, ativo)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
-            [req.tenantId, username, email.toLowerCase(), senhaHash, nome, cpf, telefone, cargo, unidade, nivel_acesso_codigo || 'tecnico']
-        );
-
-        res.json({
-            sucesso: true,
-            mensagem: 'Usuário criado com sucesso',
-            dados: { id: result.insertId }
-        });
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ sucesso: false, mensagem: 'Email já cadastrado nesta organização' });
-        }
-        console.error('Erro ao criar usuário:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao criar usuário' });
+    .test-grid {
+      display: grid;
+      gap: 15px;
+      margin: 20px 0;
     }
-});
 
-// Atualizar usuário
-app.put('/api/usuarios/:id', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const { nome, email, cpf, telefone, cargo, unidade, nivel_acesso_codigo } = req.body;
-
-        const connection = await getConnection();
-
-        const [result] = await connection.query(
-            `UPDATE usuarios SET
-                nome_completo = ?, email = ?, cpf = ?, telefone = ?,
-                cargo = ?, unidade = ?, perfil = ?
-             WHERE id = ? AND tenant_id = ?`,
-            [nome, email.toLowerCase(), cpf, telefone, cargo, unidade, nivel_acesso_codigo, req.params.id, req.tenantId]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado' });
-        }
-
-        res.json({ sucesso: true, mensagem: 'Usuário atualizado com sucesso' });
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ sucesso: false, mensagem: 'Email já cadastrado' });
-        }
-        console.error('Erro ao atualizar usuário:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao atualizar usuário' });
+    .test-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 2px solid #e5e7eb;
+      transition: all 0.3s;
     }
-});
 
-// Alterar status do usuário
-app.patch('/api/usuarios/:id/status', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const { ativo } = req.body;
-        const connection = await getConnection();
-
-        // Impedir desativação do próprio usuário
-        if (parseInt(req.params.id) === req.user.userId) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'Você não pode desativar sua própria conta'
-            });
-        }
-
-        // Impedir desativação de admins por não-admins
-        if (req.user.perfil !== 'admin') {
-            const [targetUser] = await connection.query(
-                'SELECT perfil FROM usuarios WHERE id = ? AND tenant_id = ?',
-                [req.params.id, req.tenantId]
-            );
-
-            if (targetUser.length > 0 && targetUser[0].perfil === 'admin') {
-                return res.status(403).json({
-                    sucesso: false,
-                    mensagem: 'Apenas administradores podem alterar status de outros administradores'
-                });
-            }
-        }
-
-        const [result] = await connection.query(
-            'UPDATE usuarios SET ativo = ? WHERE id = ? AND tenant_id = ?',
-            [ativo, req.params.id, req.tenantId]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado' });
-        }
-
-        res.json({
-            sucesso: true,
-            mensagem: `Usuário ${ativo ? 'ativado' : 'desativado'} com sucesso`
-        });
-    } catch (error) {
-        console.error('Erro ao alterar status:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao alterar status' });
+    .test-item:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
-});
 
-// Deletar usuário
-app.delete('/api/usuarios/:id', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-
-        // Impedir exclusão do próprio usuário
-        if (parseInt(req.params.id) === req.user.userId) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'Você não pode excluir sua própria conta'
-            });
-        }
-
-        // Não permitir exclusão de admins
-        const [result] = await connection.query(
-            'DELETE FROM usuarios WHERE id = ? AND tenant_id = ? AND perfil != "admin"',
-            [req.params.id, req.tenantId]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                sucesso: false,
-                mensagem: 'Usuário não encontrado ou não pode ser excluído (administradores não podem ser excluídos)'
-            });
-        }
-
-        res.json({ sucesso: true, mensagem: 'Usuário excluído com sucesso' });
-    } catch (error) {
-        console.error('Erro ao deletar usuário:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao deletar usuário' });
+    .path {
+      font-family: 'Courier New', monospace;
+      background: #1e293b;
+      color: #10b981;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      flex: 1;
+      margin-right: 15px;
     }
-});
 
-// ==========================================
-// ROTAS DE TENANTS (SUPER ADMIN)
-// ==========================================
-
-// Listar todos os tenants
-app.get('/api/admin/tenants', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [tenants] = await connection.query(
-            `SELECT t.*,
-                    COUNT(DISTINCT u.id) as usuarios_ativos,
-                    DATEDIFF(t.data_vencimento, NOW()) as dias_restantes
-             FROM tenants t
-             LEFT JOIN usuarios u ON u.tenant_id = t.id AND u.ativo = TRUE
-             GROUP BY t.id
-             ORDER BY t.created_at DESC`
-        );
-
-        res.json({
-            sucesso: true,
-            dados: tenants
-        });
-    } catch (error) {
-        console.error('Erro ao buscar tenants:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao buscar organizações' });
+    .status {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      min-width: 100px;
+      text-align: center;
     }
-});
 
-// Criar novo tenant
-app.post('/api/admin/tenants', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const { subdomain, nome_organizacao, cnpj, email_contato, plano, limite_usuarios, data_vencimento } = req.body;
-
-        if (!subdomain || !nome_organizacao || !email_contato || !plano) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'Subdomínio, nome, email e plano são obrigatórios'
-            });
-        }
-
-        const connection = await getConnection();
-
-        // Verificar duplicidade
-        const [existing] = await connection.query(
-            'SELECT id FROM tenants WHERE subdomain = ?',
-            [subdomain.toLowerCase()]
-        );
-
-        if (existing.length > 0) {
-            return res.status(400).json({ sucesso: false, mensagem: 'Subdomínio já existe' });
-        }
-
-        // Data de vencimento padrão: 30 dias se não especificada
-        const vencimento = data_vencimento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-        const [result] = await connection.query(
-            `INSERT INTO tenants (subdomain, nome_organizacao, cnpj, email_contato, plano, limite_usuarios, data_vencimento, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'ativo')`,
-            [subdomain.toLowerCase(), nome_organizacao, cnpj, email_contato, plano, limite_usuarios || 10, vencimento]
-        );
-
-        res.json({
-            sucesso: true,
-            mensagem: 'Organização criada com sucesso',
-            dados: {
-                id: result.insertId,
-                url: `https://${subdomain.toLowerCase()}.fortalecesuas.com`
-            }
-        });
-    } catch (error) {
-        console.error('Erro ao criar tenant:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao criar organização' });
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
     }
-});
 
-// Atualizar tenant
-app.put('/api/admin/tenants/:id', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const { nome_organizacao, cnpj, email_contato, plano, limite_usuarios, data_vencimento } = req.body;
-
-        const connection = await getConnection();
-
-        const [result] = await connection.query(
-            `UPDATE tenants SET
-                nome_organizacao = ?, cnpj = ?, email_contato = ?,
-                plano = ?, limite_usuarios = ?, data_vencimento = ?
-             WHERE id = ?`,
-            [nome_organizacao, cnpj, email_contato, plano, limite_usuarios, data_vencimento, req.params.id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Organização não encontrada' });
-        }
-
-        res.json({ sucesso: true, mensagem: 'Organização atualizada com sucesso' });
-    } catch (error) {
-        console.error('Erro ao atualizar tenant:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao atualizar organização' });
+    .status-testing {
+      background: #dbeafe;
+      color: #1e40af;
+      animation: pulse 1.5s infinite;
     }
-});
 
-// Renovar tenant
-app.post('/api/admin/tenants/:id/renovar', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const { dias } = req.body;
-
-        if (!dias || dias < 1) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'Número de dias inválido'
-            });
-        }
-
-        const connection = await getConnection();
-
-        const [result] = await connection.query(
-            `UPDATE tenants SET
-                data_vencimento = DATE_ADD(GREATEST(data_vencimento, NOW()), INTERVAL ? DAY),
-                status = 'ativo'
-             WHERE id = ?`,
-            [dias, req.params.id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Organização não encontrada' });
-        }
-
-        res.json({
-            sucesso: true,
-            mensagem: `Assinatura renovada por ${dias} dias com sucesso`
-        });
-    } catch (error) {
-        console.error('Erro ao renovar tenant:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao renovar assinatura' });
+    .status-success {
+      background: #d1fae5;
+      color: #065f46;
     }
-});
 
-// Alterar status do tenant
-app.patch('/api/admin/tenants/:id/status', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const { status } = req.body;
-
-        const statusValidos = ['ativo', 'trial', 'suspenso', 'cancelado'];
-        if (!statusValidos.includes(status)) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: `Status inválido. Use: ${statusValidos.join(', ')}`
-            });
-        }
-
-        const connection = await getConnection();
-
-        const [result] = await connection.query(
-            'UPDATE tenants SET status = ? WHERE id = ?',
-            [status, req.params.id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Organização não encontrada' });
-        }
-
-        res.json({
-            sucesso: true,
-            mensagem: `Status alterado para "${status}" com sucesso`
-        });
-    } catch (error) {
-        console.error('Erro ao alterar status:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao alterar status' });
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
     }
-});
 
-// Deletar tenant (cuidado!)
-app.delete('/api/admin/tenants/:id', authenticateSuperAdmin, async (req, res) => {
-    try {
-        const connection = await getConnection();
-
-        // Primeiro, deletar todos os usuários do tenant
-        await connection.query('DELETE FROM usuarios WHERE tenant_id = ?', [req.params.id]);
-
-        // Depois deletar o tenant
-        const [result] = await connection.query('DELETE FROM tenants WHERE id = ?', [req.params.id]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ sucesso: false, mensagem: 'Organização não encontrada' });
-        }
-
-        res.json({
-            sucesso: true,
-            mensagem: 'Organização e todos os dados relacionados foram excluídos'
-        });
-    } catch (error) {
-        console.error('Erro ao deletar tenant:', error);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ao deletar organização' });
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
-});
 
-// ==========================================
-// ROTAS DE ATENDIMENTOS (COM TENANT)
-// ==========================================
-
-// Listar atendimentos
-app.get('/api/atendimentos', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [atendimentos] = await connection.query(
-            `SELECT * FROM atendimentos
-             WHERE tenant_id = ?
-             ORDER BY data_hora DESC
-             LIMIT 100`,
-            [req.tenantId]
-        );
-
-        res.json(atendimentos);
-    } catch (error) {
-        console.error('Erro ao buscar atendimentos:', error);
-        res.status(500).json({ error: 'Erro ao buscar atendimentos' });
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: all 0.3s;
+      margin: 10px 5px;
     }
-});
 
-// Buscar atendimento por ID
-app.get('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [atendimentos] = await connection.query(
-            'SELECT * FROM atendimentos WHERE id = ? AND tenant_id = ?',
-            [req.params.id, req.tenantId]
-        );
-
-        if (atendimentos.length === 0) {
-            return res.status(404).json({ error: 'Atendimento não encontrado' });
-        }
-
-        res.json(atendimentos[0]);
-    } catch (error) {
-        console.error('Erro ao buscar atendimento:', error);
-        res.status(500).json({ error: 'Erro ao buscar atendimento' });
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
-});
 
-// Criar atendimento
-app.post('/api/atendimentos', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const tenantId = req.tenantId;
-        const usuarioId = req.user.userId;
-        const dados = req.body;
-
-        const connection = await getConnection();
-
-        // Gerar número de registro único por tenant
-        const [lastRecord] = await connection.query(
-            'SELECT MAX(CAST(registro AS UNSIGNED)) as ultimo FROM atendimentos WHERE tenant_id = ?',
-            [tenantId]
-        );
-
-        let numeroRegistro = 1;
-        if (lastRecord[0]?.ultimo) {
-            numeroRegistro = lastRecord[0].ultimo + 1;
-        }
-
-        const registro = String(numeroRegistro).padStart(6, '0');
-
-        const [result] = await connection.query(
-            `INSERT INTO atendimentos (
-                tenant_id, usuario_id, registro, nome_completo, cpf, telefone,
-                tecnico_responsavel, tipo_atendimento, unidade, status, prioridade, dados_completos
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                tenantId,
-                usuarioId,
-                registro,
-                dados.nomeCompleto,
-                dados.cpf,
-                dados.telefone,
-                dados.tecnicoResponsavel,
-                dados.tipoAtendimento || 'Atendimento Geral',
-                dados.unidade || 'Secretaria',
-                dados.statusInicial || 'aguardando',
-                dados.prioridade || 'normal',
-                JSON.stringify(dados)
-            ]
-        );
-
-        res.json({
-            sucesso: true,
-            mensagem: 'Atendimento criado com sucesso',
-            id: result.insertId,
-            registro: registro
-        });
-
-    } catch (error) {
-        console.error('Erro ao criar atendimento:', error);
-        res.status(500).json({ error: 'Erro ao criar atendimento' });
+    .btn-success {
+      background: #10b981;
     }
-});
 
-// Atualizar atendimento
-app.put('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const dados = req.body;
-        const connection = await getConnection();
-
-        const [result] = await connection.query(
-            `UPDATE atendimentos SET
-                nome_completo = ?,
-                cpf = ?,
-                telefone = ?,
-                tecnico_responsavel = ?,
-                tipo_atendimento = ?,
-                unidade = ?,
-                status = ?,
-                prioridade = ?,
-                dados_completos = ?
-            WHERE id = ? AND tenant_id = ?`,
-            [
-                dados.nomeCompleto,
-                dados.cpf,
-                dados.telefone,
-                dados.tecnicoResponsavel,
-                dados.tipoAtendimento,
-                dados.unidade,
-                dados.status,
-                dados.prioridade,
-                JSON.stringify(dados),
-                req.params.id,
-                req.tenantId
-            ]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Atendimento não encontrado' });
-        }
-
-        res.json({ sucesso: true, mensagem: 'Atendimento atualizado' });
-
-    } catch (error) {
-        console.error('Erro ao atualizar:', error);
-        res.status(500).json({ error: 'Erro ao atualizar atendimento' });
+    .btn-success:hover {
+      background: #059669;
     }
-});
 
-// Deletar atendimento
-app.delete('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
-    try {
-        const connection = await getConnection();
-        const [result] = await connection.query(
-            'DELETE FROM atendimentos WHERE id = ? AND tenant_id = ?',
-            [req.params.id, req.tenantId]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Atendimento não encontrado' });
-        }
-
-        res.json({ sucesso: true, mensagem: 'Atendimento excluído' });
-
-    } catch (error) {
-        console.error('Erro ao deletar:', error);
-        res.status(500).json({ error: 'Erro ao deletar atendimento' });
+    .result-box {
+      margin-top: 30px;
+      padding: 25px;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      display: none;
     }
-});
 
-// ==========================================
-// ROTAS EXISTENTES (COM TENANT)
-// ==========================================
+    .result-box.show {
+      display: block;
+    }
 
-// Aplicar middleware de tenant e auth nas rotas existentes
-app.use('/api/estoque', identifyTenant, authenticateToken, estoqueRoutes);
-app.use('/api/agenda', identifyTenant, authenticateToken, agendaRoutes);
-app.use('/api/admin', identifyTenant, authenticateToken, adminRoutes);
+    .code {
+      background: #334155;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
 
-// Rotas legacy
-app.use('/estoque', identifyTenant, authenticateToken, estoqueRoutes);
-app.use('/eventos', identifyTenant, authenticateToken, agendaRoutes);
-app.use('/agendamentos', identifyTenant, authenticateToken, agendaRoutes);
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .warning { color: #f59e0b; }
+    .info { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Teste de Caminhos - Servidor Web</h1>
+    <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 30px;">
+      Vamos descobrir qual caminho funciona no seu servidor
+    </p>
 
-// Carregar outras rotas com tenant
-try {
-    const atividadesRoutes = require('./src/routes/atividades');
-    app.use('/api/atividades', identifyTenant, authenticateToken, atividadesRoutes);
-    console.log('[OK] Rota atividades carregada');
-} catch (e) {
-    console.log('[AVISO] Rota atividades não encontrada');
-}
+    <div class="alert alert-info">
+      <strong>🌐 Servidor Detectado:</strong><br>
+      <code id="server-url" style="background: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;"></code>
+    </div>
 
-try {
-    const permissoesRoutes = require('./src/routes/permissoes');
-    app.use('/api/permissoes', identifyTenant, authenticateToken, permissoesRoutes);
-    console.log('[OK] Rota permissões carregada');
-} catch (e) {
-    console.log('[AVISO] Rota permissões não encontrada');
-}
+    <div style="margin: 30px 0;">
+      <button class="btn" onclick="testarTodosCaminhos()">
+        🚀 Testar Todos os Caminhos
+      </button>
+      <button class="btn btn-success" onclick="abrirNavegador()">
+        🌐 Testar no Navegador
+      </button>
+    </div>
 
-try {
-    const profissionaisRoutes = require('./src/routes/profissionais');
-    app.use('/api/profissionais', identifyTenant, authenticateToken, profissionaisRoutes);
-    console.log('[OK] Rota profissionais carregada');
-} catch (e) {
-    console.log('[AVISO] Rota profissionais não encontrada');
-}
+    <div class="test-grid" id="test-results"></div>
 
-try {
-    const estatisticasRoutes = require('./src/routes/estatisticas');
-    app.use('/api/estatisticas', identifyTenant, authenticateToken, estatisticasRoutes);
-    console.log('[OK] Rota estatisticas carregada');
-} catch (e) {
-    console.log('[AVISO] Rota estatisticas não encontrada');
-}
+    <div class="result-box" id="resultado"></div>
+  </div>
 
-// ==========================================
-// TRATAMENTO DE ERROS
-// ==========================================
+  <script>
+    // Detectar URL do servidor
+    const baseURL = window.location.origin;
+    document.getElementById('server-url').textContent = baseURL;
 
-app.use((req, res) => {
-    res.status(404).json({
-        sucesso: false,
-        mensagem: 'Rota não encontrada',
-        path: req.path,
-        method: req.method
-    });
-});
+    // Lista de caminhos para testar (para servidor web)
+    const caminhosPossiveis = [
+      '/static/js/atendimento_app.js',
+      '/src/js/atendimento_app.js',
+      '/js/atendimento_app.js',
+      '/assets/js/atendimento_app.js',
+      '/public/js/atendimento_app.js',
+      '../src/js/atendimento_app.js',
+      './src/js/atendimento_app.js',
+      'src/js/atendimento_app.js',
+      '/atendimento_app.js'
+    ];
 
-app.use((err, req, res, next) => {
-    console.error('Erro:', err);
-    res.status(err.status || 500).json({
-        sucesso: false,
-        mensagem: 'Erro interno do servidor',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-});
+    async function testarCaminho(caminho) {
+      const url = baseURL + (caminho.startsWith('/') ? caminho : '/' + caminho);
 
-// ==========================================
-// INICIALIZAÇÃO
-// ==========================================
-
-async function startServer() {
-    try {
-        console.log('[INICIO] Inicializando Sistema CRAS Multi-Tenant...');
-        console.log('');
-
-        await connectDatabase();
-
-        const PORT = process.env.PORT || 3000;
-
-        const server = app.listen(PORT, '0.0.0.0', () => {
-            console.log('');
-            console.log('=================================================');
-            console.log('  [OK] SERVIDOR MULTI-TENANT RODANDO');
-            console.log('=================================================');
-            console.log('');
-            console.log('Porta: ' + PORT);
-            console.log('Sistema: Multi-Tenant (Subdomínios)');
-            console.log('Autenticação: JWT');
-            console.log('');
-            console.log('URLs de Exemplo:');
-            console.log('   • Demo: http://localhost:' + PORT);
-            console.log('   • Cliente: http://cliente.fortalecesuas.com');
-            console.log('   • Health: http://localhost:' + PORT + '/health');
-            console.log('');
-            console.log('API Endpoints - Autenticação:');
-            console.log('   • Login: POST /auth/login');
-            console.log('   • Verificar: GET /auth/verificar');
-            console.log('   • Validar: GET /api/auth/validate');
-            console.log('   • Logout: POST /auth/logout');
-            console.log('');
-            console.log('API Endpoints - Usuários (Com Tenant):');
-            console.log('   • Listar: GET /api/usuarios');
-            console.log('   • Criar: POST /api/usuarios');
-            console.log('   • Atualizar: PUT /api/usuarios/:id');
-            console.log('   • Status: PATCH /api/usuarios/:id/status');
-            console.log('   • Deletar: DELETE /api/usuarios/:id');
-            console.log('   • Estatísticas: GET /api/usuarios/meta/estatisticas');
-            console.log('   • Níveis: GET /api/usuarios/meta/niveis-acesso');
-            console.log('');
-            console.log('API Endpoints - Tenants (Super Admin):');
-            console.log('   • Listar: GET /api/admin/tenants');
-            console.log('   • Criar: POST /api/admin/tenants');
-            console.log('   • Atualizar: PUT /api/admin/tenants/:id');
-            console.log('   • Renovar: POST /api/admin/tenants/:id/renovar');
-            console.log('   • Status: PATCH /api/admin/tenants/:id/status');
-            console.log('   • Deletar: DELETE /api/admin/tenants/:id');
-            console.log('');
-            console.log('API Endpoints - Atendimentos (Com Tenant):');
-            console.log('   • Listar: GET /api/atendimentos');
-            console.log('   • Buscar: GET /api/atendimentos/:id');
-            console.log('   • Criar: POST /api/atendimentos');
-            console.log('   • Atualizar: PUT /api/atendimentos/:id');
-            console.log('   • Deletar: DELETE /api/atendimentos/:id');
-            console.log('');
-            console.log('IMPORTANTE:');
-            console.log('   • Rotas de tenants requerem header: X-Super-Admin-Key');
-            console.log('   • Rotas com tenant requerem: Authorization: Bearer <token>');
-            console.log('   • Configure SUPER_ADMIN_KEY no arquivo .env');
-            console.log('');
-            console.log('=================================================');
-        });
-
-        // Graceful shutdown
-        const gracefulShutdown = async (signal) => {
-            console.log(`\n[AVISO] Recebido sinal ${signal}, iniciando shutdown...`);
-            server.close(async () => {
-                console.log('[OK] Servidor HTTP fechado');
-                try {
-                    const { closeDatabase } = require('./src/config/database');
-                    await closeDatabase();
-                    console.log('[OK] Conexões do banco fechadas');
-                } catch (error) {
-                    console.error('[ERRO] Erro ao fechar conexões:', error);
-                }
-                console.log('[OK] Shutdown completo');
-                process.exit(0);
-            });
-
-            setTimeout(() => {
-                console.error('[AVISO] Forçando shutdown após timeout');
-                process.exit(1);
-            }, 10000);
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return {
+          caminho: caminho,
+          url: url,
+          status: response.status,
+          sucesso: response.ok,
+          contentType: response.headers.get('content-type')
         };
-
-        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-    } catch (error) {
-        console.error('[ERRO] Erro ao inicializar servidor:', error);
-        process.exit(1);
+      } catch (error) {
+        return {
+          caminho: caminho,
+          url: url,
+          status: 'ERRO',
+          sucesso: false,
+          erro: error.message
+        };
+      }
     }
-}
 
-if (require.main === module) {
-    startServer();
-}
+    async function testarTodosCaminhos() {
+      const resultsDiv = document.getElementById('test-results');
+      const resultadoDiv = document.getElementById('resultado');
 
-module.exports = app;
+      resultadoDiv.classList.add('show');
+      resultadoDiv.innerHTML = '<span class="info">🔄 Iniciando testes...</span><br><br>';
+
+      // Criar items de teste
+      resultsDiv.innerHTML = caminhosPossiveis.map((caminho, i) => `
+        <div class="test-item" id="test-${i}">
+          <div class="path">${caminho}</div>
+          <div class="status status-pending" id="status-${i}">Aguardando...</div>
+        </div>
+      `).join('');
+
+      const resultados = [];
+
+      // Testar cada caminho
+      for (let i = 0; i < caminhosPossiveis.length; i++) {
+        const caminho = caminhosPossiveis[i];
+        const statusEl = document.getElementById(`status-${i}`);
+
+        statusEl.className = 'status status-testing';
+        statusEl.textContent = 'Testando...';
+
+        resultadoDiv.innerHTML += `<span class="warning">🔍 Testando: ${caminho}</span><br>`;
+
+        const resultado = await testarCaminho(caminho);
+        resultados.push(resultado);
+
+        if (resultado.sucesso) {
+          statusEl.className = 'status status-success';
+          statusEl.textContent = `✅ ${resultado.status}`;
+          resultadoDiv.innerHTML += `<span class="success">✅ ENCONTRADO! Status: ${resultado.status}</span><br>`;
+          resultadoDiv.innerHTML += `<span class="info">   URL: ${resultado.url}</span><br><br>`;
+        } else {
+          statusEl.className = 'status status-error';
+          statusEl.textContent = `❌ ${resultado.status}`;
+          resultadoDiv.innerHTML += `<span class="error">❌ Não encontrado (${resultado.status})</span><br><br>`;
+        }
+
+        // Pequeno delay para não sobrecarregar
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Mostrar solução
+      const caminhosValidos = resultados.filter(r => r.sucesso);
+
+      resultadoDiv.innerHTML += '<br>' + '='.repeat(60) + '<br><br>';
+
+      if (caminhosValidos.length > 0) {
+        resultadoDiv.innerHTML += '<span class="success">🎉 CAMINHOS QUE FUNCIONAM:</span><br><br>';
+
+        caminhosValidos.forEach(r => {
+          resultadoDiv.innerHTML += `<span class="info">✅ ${r.caminho}</span><br>`;
+          resultadoDiv.innerHTML += `<span class="warning">   URL completa: ${r.url}</span><br><br>`;
+        });
+
+        const melhorCaminho = caminhosValidos[0].caminho;
+
+        resultadoDiv.innerHTML += '<br>' + '='.repeat(60) + '<br><br>';
+        resultadoDiv.innerHTML += '<span class="success">📋 USE ESTE CÓDIGO NO SEU HTML:</span><br><br>';
+        resultadoDiv.innerHTML += `<div class="code">&lt;script src="${melhorCaminho}"&gt;&lt;/script&gt;</div>`;
+
+      } else {
+        resultadoDiv.innerHTML += '<span class="error">❌ NENHUM CAMINHO FUNCIONOU!</span><br><br>';
+        resultadoDiv.innerHTML += '<span class="warning">Possíveis causas:</span><br>';
+        resultadoDiv.innerHTML += '<span class="info">1. O arquivo não existe no servidor</span><br>';
+        resultadoDiv.innerHTML += '<span class="info">2. Servidor não está configurado para servir arquivos estáticos</span><br>';
+        resultadoDiv.innerHTML += '<span class="info">3. Arquivo está em pasta não mapeada</span><br><br>';
+
+        resultadoDiv.innerHTML += '<span class="warning">🔧 SOLUÇÃO:</span><br>';
+        resultadoDiv.innerHTML += '<div class="code">1. Verifique se o arquivo existe em:<br>   C:\\Users\\admin\\PycharmProjects\\teste\\src\\js\\atendimento_app.js<br><br>';
+        resultadoDiv.innerHTML += '2. Se usar Flask, mova para:<br>   C:\\Users\\admin\\PycharmProjects\\teste\\static\\js\\<br>   E use: &lt;script src="/static/js/atendimento_app.js"&gt;&lt;/script&gt;</div>';
+      }
+    }
+
+    function abrirNavegador() {
+      const urls = [
+        baseURL + '/src/js/atendimento_app.js',
+        baseURL + '/static/js/atendimento_app.js',
+        baseURL + '/js/atendimento_app.js'
+      ];
+
+      alert('Vou abrir 3 URLs no navegador. Se alguma funcionar, use esse caminho!\n\n' + urls.join('\n'));
+
+      urls.forEach(url => window.open(url, '_blank'));
+    }
+  </script>
+</body>
+</html>
