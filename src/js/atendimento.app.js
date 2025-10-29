@@ -1,6 +1,6 @@
 /* ===========================
-   atendimento_app.js - VERSÃO PARA SERVIDOR EXPRESS
-   Sistema de Atendimentos Multi-Tenant
+   atendimento.app.js - VERSÃO COM DEBUG
+   Sistema de Atendimentos
    =========================== */
 
 // Configurações globais
@@ -20,16 +20,56 @@ const STATE = {
 };
 
 // ===========================
+// MAPEAMENTO DE CAMPOS
+// ===========================
+// Ajuste estes nomes se a API retornar campos diferentes
+const FIELD_MAPPING = {
+    // Nome do campo no código : nome do campo na API
+    nomeCompleto: 'nomeCompleto', // pode ser 'nome', 'nome_completo', etc
+    cpf: 'cpf',
+    telefone: 'telefone',
+    dataHora: 'dataHora', // pode ser 'data_hora', 'created_at', etc
+    tipoAtendimento: 'tipoAtendimento', // pode ser 'tipo', 'tipo_atendimento', etc
+    status: 'status',
+    tecnicoResponsavel: 'tecnicoResponsavel', // pode ser 'tecnico', 'responsavel', etc
+    unidade: 'unidade',
+    prioridade: 'prioridade',
+    registro: 'registro',
+    motivoAtendimento: 'motivoAtendimento',
+    descricaoDemanda: 'descricaoDemanda'
+};
+
+// Função helper para pegar valor do campo
+function getFieldValue(obj, fieldName) {
+    // Tenta pegar o valor usando o mapeamento
+    const mappedField = FIELD_MAPPING[fieldName];
+
+    // Tenta várias possibilidades de nome
+    const possibleFields = [
+        mappedField,
+        fieldName,
+        fieldName.toLowerCase(),
+        fieldName.replace(/([A-Z])/g, '_$1').toLowerCase(), // camelCase para snake_case
+        fieldName.replace(/_/g, '') // remove underscores
+    ];
+
+    for (const field of possibleFields) {
+        if (obj[field] !== undefined && obj[field] !== null) {
+            return obj[field];
+        }
+    }
+
+    return null;
+}
+
+// ===========================
 // Funções Utilitárias
 // ===========================
 
-// CORRIGIDO: Obter token com o nome correto
 function getAuthToken() {
-    // Busca por ambos os nomes para compatibilidade
     return localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
 }
 
-// Headers para requisições autenticadas
 function getHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -37,7 +77,6 @@ function getHeaders() {
     };
 }
 
-// Requisição genérica com tratamento de erro
 async function apiRequest(url, options = {}) {
     try {
         const response = await fetch(url, {
@@ -52,7 +91,6 @@ async function apiRequest(url, options = {}) {
             if (response.status === 401) {
                 showNotification('Sessão expirada. Faça login novamente.', 'error');
                 setTimeout(() => {
-                    // Redireciona para login (páginas servidas de /pages/)
                     window.location.href = '/pages/login.html';
                 }, 2000);
                 return null;
@@ -71,20 +109,23 @@ async function apiRequest(url, options = {}) {
     }
 }
 
-// Formatar data/hora
 function formatDateTime(dateString) {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        console.error('Erro ao formatar data:', dateString, e);
+        return '-';
+    }
 }
 
-// Formatar CPF
 function formatCPF(cpf) {
     if (!cpf) return '';
     const cleaned = cpf.replace(/\D/g, '');
@@ -92,7 +133,6 @@ function formatCPF(cpf) {
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
-// Limpar CPF
 function cleanCPF(cpf) {
     return cpf ? cpf.replace(/\D/g, '') : '';
 }
@@ -158,7 +198,6 @@ function hideLoading() {
 // ===========================
 
 function showTab(tabId) {
-    // Desativar todas as tabs
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -166,7 +205,6 @@ function showTab(tabId) {
         content.classList.remove('active');
     });
 
-    // Ativar tab selecionada
     const tabButton = Array.from(document.querySelectorAll('.tab-button')).find(btn =>
         btn.getAttribute('onclick')?.includes(tabId)
     );
@@ -177,7 +215,6 @@ function showTab(tabId) {
 
     STATE.currentTab = tabId;
 
-    // Carregar dados específicos da tab
     if (tabId === 'recepcao') {
         carregarAtendimentosAguardando();
     } else if (tabId === 'atendimentos-cadastrados') {
@@ -233,6 +270,14 @@ async function carregarTodosAtendimentos() {
 
         if (data) {
             STATE.atendimentos = Array.isArray(data) ? data : [];
+
+            // DEBUG: Mostrar estrutura do primeiro atendimento
+            if (STATE.atendimentos.length > 0) {
+                console.log('📋 ESTRUTURA DO ATENDIMENTO:');
+                console.log('Campos disponíveis:', Object.keys(STATE.atendimentos[0]));
+                console.log('Primeiro atendimento completo:', STATE.atendimentos[0]);
+            }
+
             STATE.filteredAtendimentos = STATE.atendimentos;
             renderAtendimentosTable();
             updateTotalRegistros();
@@ -251,38 +296,22 @@ async function carregarAtendimentosAguardando() {
         const data = await apiRequest(CONFIG.API_BASE);
 
         if (data) {
-            const aguardando = Array.isArray(data) ? data.filter(a => a.status === 'aguardando') : [];
+            const aguardando = Array.isArray(data) ? data.filter(a => {
+                const status = getFieldValue(a, 'status');
+                return status === 'aguardando';
+            }) : [];
+
+            // DEBUG: Mostrar estrutura
+            if (aguardando.length > 0) {
+                console.log('📋 ESTRUTURA DO ATENDIMENTO (Recepção):');
+                console.log('Campos:', Object.keys(aguardando[0]));
+                console.log('Exemplo:', aguardando[0]);
+            }
+
             renderRecepcaoTable(aguardando);
         }
     } catch (error) {
         showNotification('Erro ao carregar fila', 'error');
-        console.error(error);
-    } finally {
-        hideLoading();
-    }
-}
-
-async function criarAtendimento(dados) {
-    try {
-        showLoading('Criando atendimento...');
-        const response = await apiRequest(CONFIG.API_BASE, {
-            method: 'POST',
-            body: JSON.stringify(dados)
-        });
-
-        if (response) {
-            showNotification('Atendimento criado com sucesso!', 'success');
-            closeModal('modalNovoAtendimento');
-
-            // Recarregar lista
-            if (STATE.currentTab === 'recepcao') {
-                await carregarAtendimentosAguardando();
-            } else {
-                await carregarTodosAtendimentos();
-            }
-        }
-    } catch (error) {
-        showNotification('Erro ao criar atendimento: ' + error.message, 'error');
         console.error(error);
     } finally {
         hideLoading();
@@ -300,7 +329,6 @@ async function atualizarAtendimento(id, dados) {
         if (response) {
             showNotification('Atendimento atualizado!', 'success');
 
-            // Recarregar lista
             if (STATE.currentTab === 'recepcao') {
                 await carregarAtendimentosAguardando();
             } else {
@@ -326,7 +354,6 @@ async function excluirAtendimento(id) {
 
         showNotification('Atendimento excluído!', 'success');
 
-        // Recarregar lista
         if (STATE.currentTab === 'recepcao') {
             await carregarAtendimentosAguardando();
         } else {
@@ -337,19 +364,6 @@ async function excluirAtendimento(id) {
         console.error(error);
     } finally {
         hideLoading();
-    }
-}
-
-async function buscarPorCPF(cpf) {
-    try {
-        const cleanedCPF = cleanCPF(cpf);
-        if (cleanedCPF.length !== 11) return null;
-
-        const data = await apiRequest(`${CONFIG.API_BASE}?cpf=${cleanedCPF}`);
-        return data && data.length > 0 ? data[0] : null;
-    } catch (error) {
-        console.error('Erro ao buscar CPF:', error);
-        return null;
     }
 }
 
@@ -366,20 +380,31 @@ function renderRecepcaoTable(atendimentos) {
         return;
     }
 
-    tbody.innerHTML = atendimentos.map(a => `
-        <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
-            <td>${a.registro || '#' + a.id}</td>
-            <td>${a.nomeCompleto || '-'}</td>
-            <td>${formatCPF(a.cpf) || '-'}</td>
-            <td>${a.tipoAtendimento || '-'}</td>
-            <td>${formatDateTime(a.dataHora)}</td>
-            <td>
-                <button class="btn btn--primary btn-xs" onclick="event.stopPropagation(); iniciarAtendimento(${a.id})">
-                    <i class="fas fa-play"></i> Iniciar
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = atendimentos.map(a => {
+        // Pegar valores usando o helper
+        const registro = getFieldValue(a, 'registro') || `#${a.id}`;
+        const nome = getFieldValue(a, 'nomeCompleto') || '-';
+        const cpf = getFieldValue(a, 'cpf') || '';
+        const tipo = getFieldValue(a, 'tipoAtendimento') || '-';
+        const dataHora = getFieldValue(a, 'dataHora') || '';
+
+        console.log(`Renderizando linha - ID: ${a.id}, Nome: ${nome}, CPF: ${cpf}, Tipo: ${tipo}`);
+
+        return `
+            <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
+                <td>${registro}</td>
+                <td>${nome}</td>
+                <td>${formatCPF(cpf)}</td>
+                <td>${tipo}</td>
+                <td>${formatDateTime(dataHora)}</td>
+                <td>
+                    <button class="btn btn--primary btn-xs" onclick="event.stopPropagation(); iniciarAtendimento(${a.id})">
+                        <i class="fas fa-play"></i> Iniciar
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderAtendimentosTable() {
@@ -395,25 +420,38 @@ function renderAtendimentosTable() {
         return;
     }
 
-    tbody.innerHTML = pageData.map(a => `
-        <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
-            <td>${a.registro || '#' + a.id}</td>
-            <td>${a.nomeCompleto || '-'}</td>
-            <td>${formatCPF(a.cpf) || '-'}</td>
-            <td>${a.tipoAtendimento || '-'}</td>
-            <td><span class="status-badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span></td>
-            <td>${a.tecnicoResponsavel || '-'}</td>
-            <td>${formatDateTime(a.dataHora)}</td>
-            <td onclick="event.stopPropagation()">
-                <button class="btn btn--warning btn-xs" onclick="editarAtendimento(${a.id})" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn--danger btn-xs" onclick="excluirAtendimento(${a.id})" title="Excluir">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = pageData.map(a => {
+        // Pegar valores usando o helper
+        const registro = getFieldValue(a, 'registro') || `#${a.id}`;
+        const nome = getFieldValue(a, 'nomeCompleto') || '-';
+        const cpf = getFieldValue(a, 'cpf') || '';
+        const tipo = getFieldValue(a, 'tipoAtendimento') || '-';
+        const status = getFieldValue(a, 'status') || 'aguardando';
+        const tecnico = getFieldValue(a, 'tecnicoResponsavel') || '-';
+        const dataHora = getFieldValue(a, 'dataHora') || '';
+
+        console.log(`Renderizando - ID: ${a.id}, Nome: ${nome}, Tipo: ${tipo}, Status: ${status}`);
+
+        return `
+            <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
+                <td>${registro}</td>
+                <td>${nome}</td>
+                <td>${formatCPF(cpf)}</td>
+                <td>${tipo}</td>
+                <td><span class="status-badge ${getStatusClass(status)}">${getStatusLabel(status)}</span></td>
+                <td>${tecnico}</td>
+                <td>${formatDateTime(dataHora)}</td>
+                <td onclick="event.stopPropagation()">
+                    <button class="btn btn--warning btn-xs" onclick="editarAtendimento(${a.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn--danger btn-xs" onclick="excluirAtendimento(${a.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     renderPagination();
 }
@@ -471,11 +509,15 @@ function buscarAtendimentos() {
     if (!busca) {
         STATE.filteredAtendimentos = STATE.atendimentos;
     } else {
-        STATE.filteredAtendimentos = STATE.atendimentos.filter(a =>
-            (a.nomeCompleto?.toLowerCase().includes(busca)) ||
-            (a.cpf?.includes(busca)) ||
-            (a.registro?.toLowerCase().includes(busca))
-        );
+        STATE.filteredAtendimentos = STATE.atendimentos.filter(a => {
+            const nome = getFieldValue(a, 'nomeCompleto') || '';
+            const cpf = getFieldValue(a, 'cpf') || '';
+            const registro = getFieldValue(a, 'registro') || '';
+
+            return nome.toLowerCase().includes(busca) ||
+                   cpf.includes(busca) ||
+                   registro.toLowerCase().includes(busca);
+        });
     }
 
     STATE.currentPage = 1;
@@ -494,13 +536,17 @@ function limparBusca() {
 }
 
 // ===========================
-// CORRIGIDO: Novo Atendimento (servidor Express)
+// Ações de Atendimento
 // ===========================
 
 function abrirNovoAtendimento() {
-    console.log('📝 Redirecionando para formulário de novo atendimento...');
-    // Ambos os HTMLs são servidos de /pages/
+    console.log('📝 Abrindo formulário de novo atendimento...');
     window.location.href = '/pages/novo-atendimento.html';
+}
+
+function editarAtendimento(id) {
+    console.log('✏️ Redirecionando para edição do atendimento:', id);
+    window.location.href = `/pages/novo-atendimento.html?id=${id}`;
 }
 
 async function iniciarAtendimento(id) {
@@ -514,6 +560,7 @@ async function verDetalhesAtendimento(id) {
         const atendimento = await apiRequest(`${CONFIG.API_BASE}/${id}`);
 
         if (atendimento) {
+            console.log('📄 Detalhes do atendimento:', atendimento);
             mostrarModalDetalhes(atendimento);
         }
     } catch (error) {
@@ -525,6 +572,20 @@ async function verDetalhesAtendimento(id) {
 }
 
 function mostrarModalDetalhes(atendimento) {
+    // Usar helper para pegar valores
+    const registro = getFieldValue(atendimento, 'registro') || `#${atendimento.id}`;
+    const status = getFieldValue(atendimento, 'status') || 'aguardando';
+    const nome = getFieldValue(atendimento, 'nomeCompleto') || '-';
+    const cpf = getFieldValue(atendimento, 'cpf') || '';
+    const telefone = getFieldValue(atendimento, 'telefone') || '-';
+    const dataHora = getFieldValue(atendimento, 'dataHora') || '';
+    const tecnico = getFieldValue(atendimento, 'tecnicoResponsavel') || '-';
+    const unidade = getFieldValue(atendimento, 'unidade') || '-';
+    const tipo = getFieldValue(atendimento, 'tipoAtendimento') || '-';
+    const prioridade = getFieldValue(atendimento, 'prioridade') || 'Normal';
+    const motivo = getFieldValue(atendimento, 'motivoAtendimento') || '-';
+    const descricao = getFieldValue(atendimento, 'descricaoDemanda') || '-';
+
     const modalHtml = `
         <div id="modalDetalhes" class="modal">
             <div class="modal-content">
@@ -535,58 +596,58 @@ function mostrarModalDetalhes(atendimento) {
                 <div class="modal-body">
                     <div class="form-grid-2">
                         <div>
-                            <strong>Registro:</strong> ${atendimento.registro || '#' + atendimento.id}
+                            <strong>Registro:</strong> ${registro}
                         </div>
                         <div>
                             <strong>Status:</strong>
-                            <span class="status-badge ${getStatusClass(atendimento.status)}">
-                                ${getStatusLabel(atendimento.status)}
+                            <span class="status-badge ${getStatusClass(status)}">
+                                ${getStatusLabel(status)}
                             </span>
                         </div>
                     </div>
                     <hr style="margin: 1rem 0;">
                     <div class="form-grid-2">
                         <div>
-                            <strong>Nome:</strong> ${atendimento.nomeCompleto || '-'}
+                            <strong>Nome:</strong> ${nome}
                         </div>
                         <div>
-                            <strong>CPF:</strong> ${formatCPF(atendimento.cpf) || '-'}
+                            <strong>CPF:</strong> ${formatCPF(cpf)}
                         </div>
                         <div>
-                            <strong>Telefone:</strong> ${atendimento.telefone || '-'}
+                            <strong>Telefone:</strong> ${telefone}
                         </div>
                         <div>
-                            <strong>Data/Hora:</strong> ${formatDateTime(atendimento.dataHora)}
+                            <strong>Data/Hora:</strong> ${formatDateTime(dataHora)}
                         </div>
                     </div>
                     <hr style="margin: 1rem 0;">
                     <div class="form-grid-2">
                         <div>
-                            <strong>Técnico:</strong> ${atendimento.tecnicoResponsavel || '-'}
+                            <strong>Técnico:</strong> ${tecnico}
                         </div>
                         <div>
-                            <strong>Unidade:</strong> ${atendimento.unidade || '-'}
+                            <strong>Unidade:</strong> ${unidade}
                         </div>
                         <div>
-                            <strong>Tipo:</strong> ${atendimento.tipoAtendimento || '-'}
+                            <strong>Tipo:</strong> ${tipo}
                         </div>
                         <div>
-                            <strong>Prioridade:</strong> ${atendimento.prioridade || 'Normal'}
+                            <strong>Prioridade:</strong> ${prioridade}
                         </div>
                     </div>
                     <hr style="margin: 1rem 0;">
                     <div>
                         <strong>Motivo:</strong><br>
-                        ${atendimento.motivoAtendimento || '-'}
+                        ${motivo}
                     </div>
                     <div style="margin-top: 1rem;">
                         <strong>Descrição:</strong><br>
-                        ${atendimento.descricaoDemanda || '-'}
+                        ${descricao}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn--secondary" onclick="closeModal('modalDetalhes')">Fechar</button>
-                    <button class="btn btn--warning" onclick="editarAtendimento(${atendimento.id})">
+                    <button class="btn btn--warning" onclick="closeModal('modalDetalhes'); editarAtendimento(${atendimento.id})">
                         <i class="fas fa-edit"></i> Editar
                     </button>
                 </div>
@@ -599,10 +660,6 @@ function mostrarModalDetalhes(atendimento) {
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     openModal('modalDetalhes');
-}
-
-async function editarAtendimento(id) {
-    showNotification('Função de edição em desenvolvimento', 'info');
 }
 
 // ===========================
@@ -641,14 +698,13 @@ function getPrioridadeClass(prioridade) {
 }
 
 // ===========================
-// CORRIGIDO: Logout (servidor Express)
+// Logout
 // ===========================
 
 function fazerLogout() {
     if (confirm('Deseja realmente sair do sistema?')) {
         console.log('🚪 Fazendo logout...');
 
-        // Limpar TODOS os dados de autenticação
         localStorage.removeItem('auth_token');
         localStorage.removeItem('token');
         localStorage.removeItem('user_data');
@@ -656,7 +712,6 @@ function fazerLogout() {
 
         showNotification('Logout realizado com sucesso!', 'success');
 
-        // Redireciona para login (servido de /pages/)
         setTimeout(() => {
             window.location.href = '/pages/login.html';
         }, 1000);
@@ -698,19 +753,14 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 SISTEMA DE ATENDIMENTOS - INICIANDO');
     console.log('🌐 Servidor: Express/Node.js Multi-Tenant');
     console.log('📁 HTML: /pages/atendimento.html');
-    console.log('📜 JS: /src/js/atendimento_app.js');
+    console.log('📜 JS: /src/js/atendimento.app.js');
     console.log('='.repeat(60));
 
-    // Verificar autenticação
     const token = getAuthToken();
 
     if (!token) {
         console.warn('⚠️ Token não encontrado!');
-        console.warn('📍 Buscou: auth_token e token no localStorage');
-        console.warn('🔄 Redirecionando para login em 2 segundos...');
-
         showNotification('Por favor, faça login para continuar', 'warning');
-
         setTimeout(() => {
             window.location.href = '/pages/login.html';
         }, 2000);
@@ -718,25 +768,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     console.log('✅ Token encontrado!');
-    console.log('📋 Primeiros 20 caracteres:', token.substring(0, 20) + '...');
 
-    // Verificar dados do usuário
     const userData = localStorage.getItem('user_data');
     if (userData) {
-        const user = JSON.parse(userData);
-        console.log('👤 Usuário:', user.nome || 'Nome não encontrado');
-        console.log('🏢 Perfil:', user.perfil || 'Perfil não encontrado');
-    } else {
-        console.warn('⚠️ Dados do usuário não encontrados no localStorage');
+        try {
+            const user = JSON.parse(userData);
+            console.log('👤 Usuário:', user.nome || 'Nome não encontrado');
+            console.log('🏢 Perfil:', user.perfil || 'Perfil não encontrado');
+        } catch (e) {
+            console.warn('⚠️ Erro ao parsear dados do usuário');
+        }
     }
 
-    // Carregar dados iniciais
     console.log('📊 Carregando dados iniciais da tab:', STATE.currentTab);
     if (STATE.currentTab === 'recepcao') {
         carregarAtendimentosAguardando();
     }
 
-    // Atualização automática a cada 30 segundos
     setInterval(() => {
         if (!STATE.isLoading && STATE.currentTab === 'recepcao') {
             console.log('🔄 Atualizando lista automaticamente...');

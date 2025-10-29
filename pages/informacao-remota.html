@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informação Remota - FORTALECE SUAS</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/base/variables.css" />
+  <link rel="stylesheet" href="/css/base/reset.css" />
+  <link rel="stylesheet" href="/css/base/typography.css" />
+  <link rel="stylesheet" href="/css/layout/sidebar.css" />
+  <link rel="stylesheet" href="/css/layout/header.css" />
+  <link rel="stylesheet" href="/css/layout/grid.css" />
+  <link rel="stylesheet" href="/css/layout/responsive.css" />
+  <link rel="stylesheet" href="/css/components/buttons.css" />
+  <link rel="stylesheet" href="/css/components/cards.css" />
+  <link rel="stylesheet" href="/css/components/forms.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+
+  <style>
+    /* Estilos específicos da página */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .page-subtitle {
+      color: #64748b;
+      margin: 0.5rem 0 0 0;
+      font-size: 1rem;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .breadcrumb a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #1e293b;
+    }
+
+    .card-title i {
+      color: #2563eb;
+    }
+
+    .card-description {
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Formulários */
+    .form-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title i {
+      color: #2563eb;
+      font-size: 1.25rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.875rem;
+    }
+
+    .form-label.required::after {
+      content: " *";
+      color: #dc2626;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      border-color: #2563eb;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control:disabled {
+      background: #f1f5f9;
+      cursor: not-allowed;
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    /* Seleção de Profissional */
+    .profissional-select-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .profissional-select-card:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .profissional-select-card.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .profissional-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .profissional-info {
+      flex: 1;
+    }
+
+    .profissional-nome {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .profissional-cargo {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .profissional-check {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .profissional-select-card.selected .profissional-check {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status-badge.pendente {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .status-badge.em-andamento {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-badge.concluido {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.cancelado {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    /* Botões de Ação */
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 2rem;
+      border-top: 2px solid #e2e8f0;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .btn--primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn--primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn--secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn--secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn--success {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn--success:hover {
+      background: #15803d;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
+    }
+
+    .btn--danger {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .btn--danger:hover {
+      background: #b91c1c;
+    }
+
+    /* Alert */
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border: 1px solid;
+    }
+
+    .alert i {
+      font-size: 1.25rem;
+      margin-top: 0.125rem;
+    }
+
+    .alert-info {
+      background: #eff6ff;
+      color: #1e40af;
+      border-color: #bfdbfe;
+    }
+
+    .alert-warning {
+      background: #fffbeb;
+      color: #d97706;
+      border-color: #fed7aa;
+    }
+
+    .alert-success {
+      background: #f0fdf4;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    /* Info Box */
+    .info-box {
+      background: #f8fafc;
+      border-left: 4px solid #2563eb;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box-title {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-box-content {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Contador de Caracteres */
+    .char-counter {
+      text-align: right;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .char-counter.warning {
+      color: #d97706;
+    }
+
+    .char-counter.danger {
+      color: #dc2626;
+    }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+      .form-grid-2,
+      .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+    }
+
+    /* Timeline de Acompanhamento */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0.5rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e2e8f0;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .timeline-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: -1.5rem;
+      width: 1rem;
+      height: 1rem;
+      background: #2563eb;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #e2e8f0;
+    }
+
+    .timeline-content {
+      padding-left: 0.5rem;
+    }
+
+    .timeline-date {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-text {
+      color: #1e293b;
+      font-size: 0.875rem;
+    }
+
+    .timeline-author {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        <div class="sidebar__logo">FS</div>
+        <h1 class="sidebar__title">FORTALECE SUAS</h1>
+      </div>
+      <nav class="sidebar__nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Início</span></a></li>
+          <li><a href="atendimento.html" class="active"><i class="fas fa-users"></i><span>Atendimentos</span></a></li>
+          <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+          <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+          <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Grupos/Atividades</span></a></li>
+          <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+          <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+          <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+          <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+          <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+          <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+          <li><a href="configuracoes.html"><i class="fas fa-cogs"></i><span>Configurações</span></a></li>
+          <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+          <li><a href="#" onclick="fazerLogout(); return false;"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="main-header">
+        <div class="header-title">
+          <h1>Informação Remota</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <span id="userName">Usuário</span>
+            <i class="fas fa-user-circle"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="index.html"><i class="fas fa-home"></i> Início</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="atendimento.html">Atendimentos</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Informação Remota</span>
+      </div>
+
+      <!-- Header da Página -->
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">
+            <i class="fas fa-phone-alt"></i>
+            Nova Informação Remota
+          </h2>
+          <p class="page-subtitle">Registre contatos realizados por telefone, WhatsApp, e-mail ou outros meios remotos</p>
+        </div>
+        <div>
+          <button class="btn btn--secondary" onclick="voltarParaAtendimentos()">
+            <i class="fas fa-arrow-left"></i>
+            Voltar
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert Informativo -->
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Informação Remota:</strong> Use este formulário para registrar contatos feitos via telefone, WhatsApp, e-mail ou outros meios, onde o cidadão solicita informações ou serviços sem estar presencialmente na unidade.
+        </div>
+      </div>
+
+      <!-- Formulário -->
+      <div class="card">
+        <form id="formInformacaoRemota">
+
+          <!-- SEÇÃO 1: DADOS DO CONTATO -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-address-card"></i>
+              Dados do Contato
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label required">Nome do Solicitante</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="nomeSolicitante"
+                  id="nomeSolicitante"
+                  placeholder="Nome completo do cidadão"
+                  required
+                />
+                <span class="form-hint">Nome da pessoa que realizou o contato</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">CPF/NIS</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="cpfNis"
+                  id="cpfNis"
+                  placeholder="000.000.000-00 ou NIS"
+                />
+                <span class="form-hint">CPF ou NIS do solicitante (opcional)</span>
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label required">Formato do Contato</label>
+                <select class="form-control" name="formatoContato" id="formatoContato" required>
+                  <option value="">Selecione</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">E-mail</option>
+                  <option value="presencial-rapido">Presencial (Rápido)</option>
+                  <option value="chat">Chat/Mensagem</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Telefone/E-mail de Contato</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="telefoneContato"
+                  id="telefoneContato"
+                  placeholder="(00) 00000-0000 ou email@exemplo.com"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Data e Hora do Contato</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  name="dataHoraContato"
+                  id="dataHoraContato"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Unidade de Atendimento</label>
+              <select class="form-control" name="unidadeAtendimento" id="unidadeAtendimento">
+                <option value="">Selecione</option>
+                <option value="cras-centro">CRAS Centro</option>
+                <option value="cras-vila-nova">CRAS Vila Nova</option>
+                <option value="creas">CREAS</option>
+                <option value="secretaria">Secretaria de Assistência Social</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- SEÇÃO 2: DESCRIÇÃO DA SOLICITAÇÃO -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-comment-dots"></i>
+              Descrição da Solicitação
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Tipo de Solicitação</label>
+              <select class="form-control" name="tipoSolicitacao" id="tipoSolicitacao" required>
+                <option value="">Selecione</option>
+                <option value="informacao-cadastro-unico">Informação sobre Cadastro Único</option>
+                <option value="informacao-bolsa-familia">Informação sobre Bolsa Família</option>
+                <option value="informacao-bpc">Informação sobre BPC</option>
+                <option value="informacao-beneficio-eventual">Informação sobre Benefício Eventual</option>
+                <option value="agendamento">Solicitação de Agendamento</option>
+                <option value="documentacao">Dúvida sobre Documentação</option>
+                <option value="encaminhamento">Solicitação de Encaminhamento</option>
+                <option value="atualizacao-cadastral">Atualização Cadastral</option>
+                <option value="reclamacao">Reclamação</option>
+                <option value="sugestao">Sugestão</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Descrição Detalhada da Solicitação</label>
+              <textarea
+                class="form-control"
+                name="descricaoSolicitacao"
+                id="descricaoSolicitacao"
+                rows="6"
+                placeholder="Descreva em detalhes a solicitação feita pelo cidadão, incluindo contexto, dúvidas apresentadas e informações relevantes..."
+                maxlength="2000"
+                required
+              ></textarea>
+              <div class="char-counter" id="charCounter">0 / 2000 caracteres</div>
+            </div>
+          </div>
+
+          <!-- SEÇÃO 3: RESPOSTA E ACOMPANHAMENTO -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-reply"></i>
+              Resposta e Acompanhamento
+            </div>
+
+            <div class="info-box">
+              <div class="info-box-title">
+                <i class="fas fa-lightbulb"></i>
+                Orientação
+              </div>
+              <div class="info-box-content">
+                Registre a resposta fornecida ao cidadão ou as providências que serão tomadas. Se a demanda necessitar de acompanhamento posterior, defina o profissional responsável.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Status da Solicitação</label>
+              <select class="form-control" name="statusSolicitacao" id="statusSolicitacao" required>
+                <option value="">Selecione</option>
+                <option value="respondida-imediatamente">Respondida Imediatamente</option>
+                <option value="pendente-resposta">Pendente de Resposta</option>
+                <option value="encaminhada">Encaminhada para Serviço</option>
+                <option value="agendamento-realizado">Agendamento Realizado</option>
+                <option value="requer-acompanhamento">Requer Acompanhamento</option>
+                <option value="nao-resolvida">Não Resolvida</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Resposta/Retorno Fornecido</label>
+              <textarea
+                class="form-control"
+                name="respostaRetorno"
+                id="respostaRetorno"
+                rows="6"
+                placeholder="Descreva a resposta fornecida ao cidadão, orientações dadas, encaminhamentos realizados ou próximas providências..."
+                maxlength="2000"
+                required
+              ></textarea>
+              <div class="char-counter" id="charCounterResposta">0 / 2000 caracteres</div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Data Prevista para Retorno</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="dataPrevistaRetorno"
+                  id="dataPrevistaRetorno"
+                />
+                <span class="form-hint">Se aplicável, defina quando o retorno será dado</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Necessita Contato Posterior?</label>
+                <select class="form-control" name="necessitaContatoPosterior" id="necessitaContatoPosterior">
+                  <option value="nao">Não</option>
+                  <option value="sim">Sim</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" id="grupoEncaminhamento" style="display: none;">
+              <label class="form-label">Encaminhado Para</label>
+              <select class="form-control" name="encaminhadoPara" id="encaminhadoPara">
+                <option value="">Selecione</option>
+                <option value="assistente-social">Assistente Social</option>
+                <option value="psicologo">Psicólogo</option>
+                <option value="coordenacao">Coordenação</option>
+                <option value="cadastro-unico">Setor Cadastro Único</option>
+                <option value="beneficios">Setor de Benefícios</option>
+                <option value="creas">CREAS</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Profissional Responsável pelo Atendimento</label>
+              <div id="listaProfissionaisResponsaveis">
+                <!-- Será populado via JavaScript -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Observações Adicionais</label>
+              <textarea
+                class="form-control"
+                name="observacoes"
+                id="observacoes"
+                rows="4"
+                placeholder="Observações complementares, particularidades do caso, informações relevantes..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="form-actions">
+            <button type="button" class="btn btn--secondary" onclick="voltarParaAtendimentos()">
+              <i class="fas fa-times"></i>
+              Cancelar
+            </button>
+            <button type="button" class="btn btn--secondary" id="btnSalvarRascunho">
+              <i class="fas fa-save"></i>
+              Salvar Rascunho
+            </button>
+            <button type="submit" class="btn btn--success">
+              <i class="fas fa-check"></i>
+              Finalizar e Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Card de Histórico (Opcional - aparece ao editar) -->
+      <div class="card" id="cardHistorico" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-history"></i>
+            Histórico de Acompanhamento
+          </h3>
+        </div>
+        <div class="timeline" id="timelineHistorico">
+          <!-- Será populado via JavaScript -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading" id="loadingOverlay">
+    <div style="text-align: center;">
+      <div class="spinner"></div>
+      <h4 style="margin-bottom: 0.5rem;">Processando...</h4>
+      <p id="loadingMessage" style="color: #64748b;">Aguarde enquanto salvamos a informação</p>
+    </div>
+  </div>
+
+  <!-- Container de Notificações -->
+  <div id="notifications-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
+
+  <!-- JavaScript Externo -->
+  <script src="/src/js/informacao.remota.app.js"></script>
+</body>
+</html>

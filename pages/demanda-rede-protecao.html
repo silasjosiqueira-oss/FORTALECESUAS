@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demanda Rede de Proteção - FORTALECE SUAS</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/base/variables.css" />
+  <link rel="stylesheet" href="/css/base/reset.css" />
+  <link rel="stylesheet" href="/css/base/typography.css" />
+  <link rel="stylesheet" href="/css/layout/sidebar.css" />
+  <link rel="stylesheet" href="/css/layout/header.css" />
+  <link rel="stylesheet" href="/css/layout/grid.css" />
+  <link rel="stylesheet" href="/css/layout/responsive.css" />
+  <link rel="stylesheet" href="/css/components/buttons.css" />
+  <link rel="stylesheet" href="/css/components/cards.css" />
+  <link rel="stylesheet" href="/css/components/forms.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+
+  <style>
+    /* Estilos específicos da página */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .page-subtitle {
+      color: #64748b;
+      margin: 0.5rem 0 0 0;
+      font-size: 1rem;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .breadcrumb a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #1e293b;
+    }
+
+    .card-title i {
+      color: #2563eb;
+    }
+
+    /* Sistema de Abas */
+    .tab-navigation {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: #f8fafc;
+      padding: 0.5rem;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab-button {
+      padding: 1rem 1.5rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-weight: 500;
+      color: #64748b;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab-button:hover {
+      background: #fff;
+      color: #2563eb;
+    }
+
+    .tab-button.active {
+      border-bottom-color: #2563eb;
+      color: #2563eb;
+      font-weight: 600;
+      background: #fff;
+    }
+
+    .tab-button i {
+      font-size: 1.1rem;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Formulários */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.875rem;
+    }
+
+    .form-label.required::after {
+      content: " *";
+      color: #dc2626;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      border-color: #2563eb;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control:disabled {
+      background: #f1f5f9;
+      cursor: not-allowed;
+    }
+
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    /* Checkbox Grid */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-item:hover {
+      background: #f8fafc;
+      border-color: #2563eb;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      cursor: pointer;
+      margin: 0;
+      font-size: 0.875rem;
+      color: #475569;
+      flex: 1;
+    }
+
+    /* Seleção de Profissionais */
+    .profissionais-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .profissional-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .profissional-item:hover {
+      border-color: #2563eb;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .profissional-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profissional-info {
+      flex: 1;
+    }
+
+    .profissional-nome {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .profissional-cargo {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    /* Upload de Anexos */
+    .upload-area {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-area:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .upload-area.dragover {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+    }
+
+    .upload-text {
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .anexos-list {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .anexo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .anexo-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .anexo-icon {
+      font-size: 1.5rem;
+      color: #2563eb;
+    }
+
+    .anexo-details {
+      flex: 1;
+    }
+
+    .anexo-nome {
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .anexo-tamanho {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .btn-remove-anexo {
+      padding: 0.5rem 0.75rem;
+      background: #fee;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-remove-anexo:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    /* Botões de Ação */
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 2rem;
+      border-top: 2px solid #e2e8f0;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .btn--primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn--primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn--secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn--secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn--success {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn--success:hover {
+      background: #15803d;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
+    }
+
+    .btn--danger {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .btn--danger:hover {
+      background: #b91c1c;
+    }
+
+    /* Alert */
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border: 1px solid;
+    }
+
+    .alert i {
+      font-size: 1.25rem;
+      margin-top: 0.125rem;
+    }
+
+    .alert-info {
+      background: #eff6ff;
+      color: #1e40af;
+      border-color: #bfdbfe;
+    }
+
+    .alert-warning {
+      background: #fffbeb;
+      color: #d97706;
+      border-color: #fed7aa;
+    }
+
+    .alert-success {
+      background: #f0fdf4;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+      .form-grid-2,
+      .form-grid-3,
+      .form-grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .tab-navigation {
+        overflow-x: auto;
+      }
+    }
+
+    /* Indicador de Aba Completa */
+    .tab-button .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #10b981;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .tab-button:not(.completed) .badge {
+      background: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        <div class="sidebar__logo">FS</div>
+        <h1 class="sidebar__title">FORTALECE SUAS</h1>
+      </div>
+      <nav class="sidebar__nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-tachometer-alt"></i><span>Início</span></a></li>
+          <li><a href="atendimento.html" class="active"><i class="fas fa-users"></i><span>Atendimentos</span></a></li>
+          <li><a href="beneficios.html"><i class="fas fa-hand-holding-heart"></i><span>Benefícios</span></a></li>
+          <li><a href="agenda.html"><i class="fas fa-calendar-alt"></i><span>Agenda</span></a></li>
+          <li><a href="atividades.html"><i class="fas fa-users-cog"></i><span>Grupos/Atividades</span></a></li>
+          <li><a href="programas.html"><i class="fas fa-clipboard-list"></i><span>Programas</span></a></li>
+          <li><a href="relatorios.html"><i class="fas fa-file-alt"></i><span>Relatórios</span></a></li>
+          <li><a href="estatisticas.html"><i class="fas fa-chart-bar"></i><span>Estatísticas</span></a></li>
+          <li><a href="cadastros.html"><i class="fas fa-database"></i><span>Cadastros</span></a></li>
+          <li><a href="estoque.html"><i class="fas fa-boxes"></i><span>Estoque</span></a></li>
+          <li><a href="ferramentas.html"><i class="fas fa-tools"></i><span>Ferramentas</span></a></li>
+          <li><a href="configuracoes.html"><i class="fas fa-cogs"></i><span>Configurações</span></a></li>
+          <li><a href="suporte.html"><i class="fas fa-life-ring"></i><span>Suporte</span></a></li>
+          <li><a href="#" onclick="fazerLogout(); return false;"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="main-header">
+        <div class="header-title">
+          <h1>Demanda Rede de Proteção</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <span id="userName">Usuário</span>
+            <i class="fas fa-user-circle"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="index.html"><i class="fas fa-home"></i> Início</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="atendimento.html">Atendimentos</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Demanda Rede de Proteção</span>
+      </div>
+
+      <!-- Header da Página -->
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">
+            <i class="fas fa-shield-alt"></i>
+            Nova Demanda Rede de Proteção
+          </h2>
+          <p class="page-subtitle">Preencha todos os campos obrigatórios para registrar a demanda</p>
+        </div>
+        <div>
+          <button class="btn btn--secondary" onclick="voltarParaAtendimentos()">
+            <i class="fas fa-arrow-left"></i>
+            Voltar
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert Informativo -->
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Atenção:</strong> Este formulário é para registrar demandas recebidas de órgãos da rede de proteção (MP, Poder Judiciário, CREAS, Educação, Conselho Tutelar, etc.)
+        </div>
+      </div>
+
+      <!-- Formulário com Abas -->
+      <div class="card">
+        <!-- Navegação das Abas -->
+        <div class="tab-navigation">
+          <button class="tab-button active" data-tab="aba-dados-gerais">
+            <i class="fas fa-file-alt"></i>
+            Dados Gerais
+          </button>
+          <button class="tab-button" data-tab="aba-motivo">
+            <i class="fas fa-clipboard-list"></i>
+            Motivo e Situação
+          </button>
+          <button class="tab-button" data-tab="aba-providencias">
+            <i class="fas fa-tasks"></i>
+            Providências
+          </button>
+          <button class="tab-button" data-tab="aba-encaminhamentos">
+            <i class="fas fa-share-square"></i>
+            Encaminhamentos
+          </button>
+          <button class="tab-button" data-tab="aba-profissionais">
+            <i class="fas fa-user-friends"></i>
+            Profissionais e Anexos
+          </button>
+        </div>
+
+        <form id="formDemandaRede">
+          <!-- ABA 1: DADOS GERAIS -->
+          <div id="aba-dados-gerais" class="tab-content active">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-file-alt"></i>
+                Informações Básicas da Demanda
+              </h3>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label required">Órgão Expedidor</label>
+                <select class="form-control" name="orgaoExpedidor" required>
+                  <option value="">Selecione o órgão</option>
+                  <option value="mp">Ministério Público</option>
+                  <option value="poder-judiciario">Poder Judiciário (PJ)</option>
+                  <option value="creas">CREAS</option>
+                  <option value="educacao">Educação</option>
+                  <option value="ct">Conselho Tutelar</option>
+                  <option value="saude">Saúde</option>
+                  <option value="policia-civil">Polícia Civil</option>
+                  <option value="policia-militar">Polícia Militar</option>
+                  <option value="defensoria">Defensoria Pública</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Porta de Entrada</label>
+                <select class="form-control" name="portaEntrada" required>
+                  <option value="">Selecione</option>
+                  <option value="oficio">Ofício</option>
+                  <option value="email">E-mail</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="presencial">Presencial</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="sistema">Sistema</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Número do Documento/Ofício</label>
+                <input type="text" class="form-control" name="numeroDocumento" placeholder="Ex: Of. 123/2025" />
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label required">Nome do Responsável pelo Encaminhamento</label>
+                <input type="text" class="form-control" name="nomeResponsavel" placeholder="Nome completo" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Cargo/Função</label>
+                <input type="text" class="form-control" name="cargoResponsavel" placeholder="Ex: Promotor, Assistente Social" />
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label">Telefone de Contato</label>
+                <input type="tel" class="form-control" name="telefoneResponsavel" placeholder="(00) 00000-0000" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input type="email" class="form-control" name="emailResponsavel" placeholder="email@exemplo.com" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Unidade Responsável</label>
+                <select class="form-control" name="unidadeResponsavel" required>
+                  <option value="">Selecione</option>
+                  <option value="cras-centro">CRAS Centro</option>
+                  <option value="cras-vila-nova">CRAS Vila Nova</option>
+                  <option value="creas">CREAS</option>
+                  <option value="secretaria">Secretaria de Assistência</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label required">Data de Recebimento</label>
+                <input type="date" class="form-control" name="dataRecebida" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Prazo para Execução</label>
+                <input type="date" class="form-control" name="prazoExecucao" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 2: MOTIVO E SITUAÇÃO -->
+          <div id="aba-motivo" class="tab-content">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-clipboard-list"></i>
+                Dados da Família/Pessoa e Situação
+              </h3>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label required">Nome da Família/Responsável Familiar</label>
+                <input type="text" class="form-control" name="nomeFamilia" placeholder="Nome completo do responsável" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">NIS / Cadastro Único</label>
+                <input type="text" class="form-control" name="nisFamilia" placeholder="Número do NIS" />
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label">Nome do Cidadão (se específico)</label>
+                <input type="text" class="form-control" name="nomeCidadao" placeholder="Nome da pessoa atendida" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">CPF</label>
+                <input type="text" class="form-control" name="cpfCidadao" placeholder="000.000.000-00" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Data de Nascimento</label>
+                <input type="date" class="form-control" name="dataNascimentoCidadao" />
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Endereço Completo</label>
+                <input type="text" class="form-control" name="endereco" placeholder="Rua, número, complemento" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Bairro/Localidade</label>
+                <input type="text" class="form-control" name="bairro" placeholder="Bairro" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Situação Identificada</label>
+              <input type="text" class="form-control" name="situacao" placeholder="Ex: Vulnerabilidade social, violência doméstica, abandono" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Descrição Detalhada do Motivo</label>
+              <textarea class="form-control" name="descricaoMotivo" rows="6" placeholder="Descreva detalhadamente o motivo da demanda, contexto familiar, situação de vulnerabilidade e outras informações relevantes..." required></textarea>
+            </div>
+          </div>
+
+          <!-- ABA 3: PROVIDÊNCIAS -->
+          <div id="aba-providencias" class="tab-content">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-tasks"></i>
+                Providências a Serem Tomadas
+              </h3>
+            </div>
+
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i>
+              <div>Descreva todas as providências que serão ou já foram tomadas em relação a esta demanda.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Providências Tomadas / A Tomar</label>
+              <textarea class="form-control" name="providenciasTomadas" rows="8" placeholder="Liste e descreva as providências:&#10;&#10;1. Visita domiciliar agendada para...&#10;2. Encaminhamento para...&#10;3. Articulação com a rede...&#10;4. Acompanhamento familiar..." required></textarea>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Data Prevista para Início</label>
+                <input type="date" class="form-control" name="dataInicioProvidencias" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Prazo Interno para Conclusão</label>
+                <input type="date" class="form-control" name="prazoInternoProvidencias" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Observações Adicionais</label>
+              <textarea class="form-control" name="observacoesProvidencias" rows="4" placeholder="Observações, dificuldades encontradas, articulações necessárias..."></textarea>
+            </div>
+          </div>
+
+          <!-- ABA 4: ENCAMINHAMENTOS -->
+          <div id="aba-encaminhamentos" class="tab-content">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-share-square"></i>
+                Encaminhamentos para a Rede
+              </h3>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>Marque todos os encaminhamentos necessários para o acompanhamento desta demanda.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Selecione os Encaminhamentos</label>
+              <div class="checkbox-grid">
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="saude" id="enc-saude" />
+                  <label for="enc-saude">Saúde (UBS/ESF)</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="educacao" id="enc-educacao" />
+                  <label for="enc-educacao">Educação</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="conselho-tutelar" id="enc-ct" />
+                  <label for="enc-ct">Conselho Tutelar</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="creas" id="enc-creas" />
+                  <label for="enc-creas">CREAS</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="caps" id="enc-caps" />
+                  <label for="enc-caps">CAPS</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="cras" id="enc-cras" />
+                  <label for="enc-cras">CRAS</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="defensoria" id="enc-defensoria" />
+                  <label for="enc-defensoria">Defensoria Pública</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="mp" id="enc-mp" />
+                  <label for="enc-mp">Ministério Público</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="inss" id="enc-inss" />
+                  <label for="enc-inss">INSS (BPC/Benefícios)</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="cadastro-unico" id="enc-cadunico" />
+                  <label for="enc-cadunico">Cadastro Único</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="bolsa-familia" id="enc-bf" />
+                  <label for="enc-bf">Bolsa Família</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="habitacao" id="enc-habitacao" />
+                  <label for="enc-habitacao">Habitação</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="trabalho-emprego" id="enc-trabalho" />
+                  <label for="enc-trabalho">Trabalho e Emprego</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="documentacao" id="enc-doc" />
+                  <label for="enc-doc">Documentação Civil</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="juridico" id="enc-juridico" />
+                  <label for="enc-juridico">Atendimento Jurídico</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="encaminhamentos[]" value="outros" id="enc-outros" />
+                  <label for="enc-outros">Outros</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Detalhamento dos Encaminhamentos</label>
+              <textarea class="form-control" name="detalheEncaminhamentos" rows="5" placeholder="Descreva os encaminhamentos realizados, contatos feitos, documentos enviados, prazos acordados..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Conclusão (Parcial ou Geral)</label>
+              <select class="form-control" name="tipoConclusao">
+                <option value="">Selecione</option>
+                <option value="parcial">Conclusão Parcial</option>
+                <option value="geral">Conclusão Geral</option>
+                <option value="em-andamento">Em Andamento</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Descrição da Conclusão</label>
+              <textarea class="form-control" name="descricaoConclusao" rows="6" placeholder="Descreva os resultados obtidos, encaminhamentos efetivados, situação atual da família/pessoa, próximos passos..."></textarea>
+            </div>
+          </div>
+
+          <!-- ABA 5: PROFISSIONAIS E ANEXOS -->
+          <div id="aba-profissionais" class="tab-content">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user-friends"></i>
+                Profissionais Responsáveis
+              </h3>
+            </div>
+
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i>
+              <div>Selecione os profissionais que irão atuar nesta demanda. Eles terão acesso aos dados e poderão fazer atualizações.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Profissionais que irão atuar nesta demanda</label>
+              <div class="profissionais-list" id="listaProfissionais">
+                <!-- Lista será populada via JavaScript -->
+                <div class="profissional-item">
+                  <input type="checkbox" name="profissionais[]" value="1" id="prof-1" />
+                  <div class="profissional-info">
+                    <div class="profissional-nome">Maria Silva Santos</div>
+                    <div class="profissional-cargo">Assistente Social - CRAS Centro</div>
+                  </div>
+                </div>
+
+                <div class="profissional-item">
+                  <input type="checkbox" name="profissionais[]" value="2" id="prof-2" />
+                  <div class="profissional-info">
+                    <div class="profissional-nome">João Pedro Oliveira</div>
+                    <div class="profissional-cargo">Psicólogo - CREAS</div>
+                  </div>
+                </div>
+
+                <div class="profissional-item">
+                  <input type="checkbox" name="profissionais[]" value="3" id="prof-3" />
+                  <div class="profissional-info">
+                    <div class="profissional-nome">Ana Paula Costa</div>
+                    <div class="profissional-cargo">Assistente Social - CREAS</div>
+                  </div>
+                </div>
+
+                <div class="profissional-item">
+                  <input type="checkbox" name="profissionais[]" value="4" id="prof-4" />
+                  <div class="profissional-info">
+                    <div class="profissional-nome">Carlos Eduardo Lima</div>
+                    <div class="profissional-cargo">Coordenador - CRAS Vila Nova</div>
+                  </div>
+                </div>
+
+                <div class="profissional-item">
+                  <input type="checkbox" name="profissionais[]" value="5" id="prof-5" />
+                  <div class="profissional-info">
+                    <div class="profissional-nome">Fernanda Alves Rocha</div>
+                    <div class="profissional-cargo">Psicóloga - CRAS Centro</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr style="margin: 2rem 0; border: none; border-top: 2px solid #e2e8f0;" />
+
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-paperclip"></i>
+                Anexos e Documentos
+              </h3>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>Anexe o ofício, e-mail, documentos relacionados ou qualquer outro arquivo relevante à demanda.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Upload de Arquivos</label>
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                  <strong>Clique para selecionar</strong> ou arraste os arquivos aqui
+                </div>
+                <div class="upload-hint">
+                  PDF, DOC, DOCX, JPG, PNG (máx. 10MB por arquivo)
+                </div>
+                <input type="file" id="inputArquivos" name="arquivos[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;" />
+              </div>
+
+              <div class="anexos-list" id="listaAnexos">
+                <!-- Anexos serão listados aqui via JavaScript -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Observações sobre os Anexos</label>
+              <textarea class="form-control" name="observacoesAnexos" rows="3" placeholder="Descreva os documentos anexados ou informações adicionais relevantes..."></textarea>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="form-actions">
+            <button type="button" class="btn btn--secondary" onclick="voltarParaAtendimentos()">
+              <i class="fas fa-times"></i>
+              Cancelar
+            </button>
+            <button type="button" class="btn btn--secondary" onclick="salvarRascunho()">
+              <i class="fas fa-save"></i>
+              Salvar Rascunho
+            </button>
+            <button type="submit" class="btn btn--success">
+              <i class="fas fa-check"></i>
+              Finalizar e Enviar Demanda
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading" id="loadingOverlay">
+    <div style="text-align: center;">
+      <div class="spinner"></div>
+      <h4 style="margin-bottom: 0.5rem;">Processando...</h4>
+      <p id="loadingMessage" style="color: #64748b;">Aguarde enquanto salvamos a demanda</p>
+    </div>
+  </div>
+
+  <!-- Container de Notificações -->
+  <div id="notifications-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
+
+  <!-- JavaScript Externo -->
+  <script src="/src/js/demanda.rede.app.js"></script>
+</body>
+</html>

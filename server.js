@@ -510,7 +510,119 @@ app.post('/api/admin/usuarios', identifyTenant, authenticateToken, checkPermissi
         res.status(500).json({ error: 'Erro ao criar usuário' });
     }
 });
+app.get('/api/atendimentos/buscar-cpf/:cpf', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const { cpf } = req.params;
+        const cpfLimpo = cpf.replace(/\D/g, ''); // Remove pontos e traços
+        const tenantId = req.tenantId;
 
+        console.log(`🔍 [${req.tenant?.nome_organizacao || 'Demo'}] Buscando CPF:`, cpfLimpo);
+
+        const connection = await getConnection();
+
+        // Buscar último atendimento do CPF no banco
+        const [rows] = await connection.query(`
+            SELECT * FROM atendimentos
+            WHERE tenant_id = ? AND (cpf LIKE ? OR cpf = ?)
+            ORDER BY data_hora DESC
+            LIMIT 1
+        `, [tenantId, `%${cpfLimpo}%`, cpfLimpo]);
+
+        if (rows.length > 0) {
+            const atendimento = rows[0];
+
+            // Parse do JSON de dados completos
+            let dadosCompletos = {};
+            try {
+                dadosCompletos = atendimento.dados_completos ?
+                    JSON.parse(atendimento.dados_completos) : {};
+            } catch (e) {
+                console.warn('⚠️ Não foi possível parsear dados_completos');
+            }
+
+            console.log(`✅ CPF encontrado! Último atendimento: ${atendimento.registro}`);
+
+            res.json({
+                encontrado: true,
+                dados: {
+                    // Dados básicos do banco
+                    nomeCompleto: atendimento.nome_completo,
+                    cpf: atendimento.cpf,
+                    telefone: atendimento.telefone,
+
+                    // Dados completos do JSON (se existirem)
+                    nomeSocial: dadosCompletos.nomeSocial || '',
+                    rg: dadosCompletos.rg || '',
+                    nis: dadosCompletos.nis || '',
+                    cadUnico: dadosCompletos.cadUnico || '',
+                    dataNascimento: dadosCompletos.dataNascimento || '',
+                    estadoCivil: dadosCompletos.estadoCivil || '',
+                    corRaca: dadosCompletos.corRaca || '',
+                    sexo: dadosCompletos.sexo || '',
+                    identidadeGenero: dadosCompletos.identidadeGenero || '',
+                    orientacaoSexual: dadosCompletos.orientacaoSexual || '',
+                    filiacao1: dadosCompletos.filiacao1 || '',
+                    filiacao2: dadosCompletos.filiacao2 || '',
+                    naturalidade: dadosCompletos.naturalidade || '',
+                    nacionalidade: dadosCompletos.nacionalidade || '',
+
+                    // Contato
+                    email: dadosCompletos.email || '',
+                    endereco: dadosCompletos.endereco || '',
+                    bairro: dadosCompletos.bairro || '',
+                    cep: dadosCompletos.cep || '',
+                    cidade: dadosCompletos.cidade || '',
+                    estado: dadosCompletos.estado || '',
+
+                    // Religião e especificidades
+                    religiao: dadosCompletos.religiao || '',
+                    situacoesEspecificas: dadosCompletos.situacoesEspecificas || [],
+
+                    // Documentação
+                    dataEmissaoRg: dadosCompletos.dataEmissaoRg || '',
+                    orgaoEmissor: dadosCompletos.orgaoEmissor || '',
+                    carteiraTrabalho: dadosCompletos.carteiraTrabalho || '',
+                    tituloEleitor: dadosCompletos.tituloEleitor || '',
+                    cartaoSus: dadosCompletos.cartaoSus || '',
+
+                    // Saúde
+                    observacoesSaude: dadosCompletos.observacoesSaude || '',
+                    possuiDeficiencia: dadosCompletos.possuiDeficiencia || 'nao',
+                    tipoDeficiencia: dadosCompletos.tipoDeficiencia || '',
+
+                    // Renda
+                    possuiRemuneracao: dadosCompletos.possuiRemuneracao || 'nao',
+                    frequenciaRemuneracao: dadosCompletos.frequenciaRemuneracao || '',
+                    valorRemuneracao: dadosCompletos.valorRemuneracao || '',
+                    situacaoMoradia: dadosCompletos.situacaoMoradia || '',
+
+                    // Composição familiar
+                    responsavelFamilia: dadosCompletos.responsavelFamilia || '',
+                    composicaoFamiliar: dadosCompletos.composicaoFamiliar || [],
+
+                    // Info do último atendimento (para referência)
+                    ultimoAtendimento: atendimento.data_hora,
+                    ultimoTecnico: atendimento.tecnico_responsavel,
+                    ultimaUnidade: atendimento.unidade,
+                    ultimoRegistro: atendimento.registro
+                }
+            });
+        } else {
+            console.log('ℹ️ CPF não encontrado no banco:', cpfLimpo);
+            res.json({
+                encontrado: false,
+                mensagem: 'Nenhum cadastro encontrado para este CPF'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao buscar CPF:', error);
+        res.status(500).json({
+            error: 'Erro ao buscar cadastro',
+            mensagem: error.message,
+            detalhes: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+});
 // ==========================================
 // ROTAS DE ATENDIMENTOS (COM TENANT)
 // ==========================================
