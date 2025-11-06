@@ -362,8 +362,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        email: email,
-                        password: senha
+                        usuario: email,  // ✅ CORRIGIDO: era "email"
+                        senha: senha     // ✅ CORRIGIDO: era "password"
                     })
                 });
 
@@ -378,14 +378,15 @@
                     throw new Error(data.error || data.mensagem || 'Erro ao fazer login');
                 }
 
-                if (data.sucesso && data.token && data.user) {
+                // ✅ CORRIGIDO: Aceitar tanto "sucesso" quanto "usuario"
+                if (data.sucesso && data.token && data.usuario) {
                     console.log('✅ Login bem-sucedido!');
 
                     tentativasLogin = 0;
                     localStorage.removeItem('bloqueado_ate');
 
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('usuario', JSON.stringify(data.user));
+                    localStorage.setItem('usuario', JSON.stringify(data.usuario)); // ✅ CORRIGIDO: era "user"
 
                     if (data.tenant) {
                         localStorage.setItem('tenant', JSON.stringify(data.tenant));

@@ -255,19 +255,67 @@
             border: 1px solid #fecaca;
         }
 
-        .btn--info {
-            background: #3b82f6;
-            color: white;
+        .btn, .btn--info, .btn--secondary, .btn--danger, .btn--success, .btn--primary {
             border: none;
             padding: 0.5rem 1rem;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
             transition: background-color 0.2s;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.813rem;
+        }
+
+        .btn--primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn--primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn--info {
+            background: #3b82f6;
+            color: white;
         }
 
         .btn--info:hover {
             background: #2563eb;
+        }
+
+        .btn--secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn--secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn--danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn--danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn--success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn--success:hover {
+            background: #059669;
         }
 
         .info-box {
@@ -432,15 +480,19 @@
                                        placeholder="Se for continuação">
                             </div>
                         </div>
-                        <div class="form-grid-3">
+                        <div class="form-grid-4">
                             <div class="form-group">
                                 <label class="form-label required">Recepcionista</label>
                                 <select class="form-control" name="recepcionista" required>
                                     <option value="">Selecione</option>
-                                    <option value="maria-silva">Maria Silva</option>
-                                    <option value="joao-santos">João Santos</option>
-                                    <option value="ana-costa">Ana Costa</option>
+                                    <option value="maria-silva" data-codigo="REC001">Maria Silva</option>
+                                    <option value="joao-santos" data-codigo="REC002">João Santos</option>
+                                    <option value="ana-costa" data-codigo="REC003">Ana Costa</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Código Recepcionista</label>
+                                <input type="text" class="form-control" name="codigoRecepcionista" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Porta de Entrada</label>
@@ -460,7 +512,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
 
                     <!-- Dados de Identificação -->
                     <div class="form-section">
@@ -1086,8 +1137,9 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Status do Atendimento</label>
-                                <select class="form-control" name="status">
+                                <label class="form-label">Status do Atendimento *</label>
+                                <select class="form-control" name="status" required>
+                                    <option value="">Selecione o status</option>
                                     <option value="aguardando">Aguardando Atendimento</option>
                                     <option value="em-andamento">Em Andamento</option>
                                     <option value="agendado">Agendado</option>
@@ -1154,6 +1206,64 @@
                             <small class="form-text text-muted">Formatos aceitos: PDF, JPG, PNG, DOC, DOCX</small>
                         </div>
                     </div>
+
+                    <!-- Conclusão do Atendimento -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-check-circle"></i> Conclusão do Atendimento
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Conclusão</label>
+                            <select class="form-control" name="tipoConclusao">
+                                <option value="">Selecione</option>
+                                <option value="parcial">Conclusão Parcial</option>
+                                <option value="final">Conclusão Final</option>
+                                <option value="em-andamento">Em Andamento</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descrição da Conclusão</label>
+                            <textarea class="form-control" name="descricaoConclusao" rows="4"
+                                      placeholder="Descreva a conclusão do atendimento, resultados obtidos, encaminhamentos finalizados..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Controle de Fluxo -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-exchange-alt"></i> Controle de Fluxo
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Ação</label>
+                                <select class="form-control" name="acaoFluxo">
+                                    <option value="">Selecione uma ação</option>
+                                    <option value="finalizar">Finalizar Atendimento</option>
+                                    <option value="devolver-recepcao">Devolver para Recepção</option>
+                                    <option value="reencaminhar">Reencaminhar para Outro Serviço</option>
+                                    <option value="aguardar-retorno">Aguardar Retorno do Usuário</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reencaminhar Para</label>
+                                <select class="form-control" name="reencaminharPara">
+                                    <option value="">Não se aplica</option>
+                                    <option value="psicologo">Psicólogo</option>
+                                    <option value="assistente-social">Assistente Social</option>
+                                    <option value="coordenacao">Coordenação</option>
+                                    <option value="creas">CREAS</option>
+                                    <option value="saude">Secretaria de Saúde</option>
+                                    <option value="educacao">Secretaria de Educação</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações sobre o Fluxo</label>
+                            <textarea class="form-control" name="observacoesFluxo" rows="2"
+                                      placeholder="Descreva o motivo do reencaminhamento ou devolução..."></textarea>
+                        </div>
+                    </div>
                 </form>
 
                 <!-- Botões de Ação -->
@@ -1182,772 +1292,7 @@
     <!-- Notifications Container -->
     <div id="notifications-container"></div>
 
-    <script>
-// ==========================================
-// VARIÁVEIS GLOBAIS
-// ==========================================
-let familyMemberCount = 1;
-let autoSaveInterval;
-
-// ==========================================
-// VERIFICAÇÃO DE AUTENTICAÇÃO AO CARREGAR
-// ==========================================
-window.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Iniciando formulário de atendimento...');
-
-    // Verificar se está autenticado
-    const token = localStorage.getItem('token');
-    if (!token) {
-        showNotification('Você precisa fazer login primeiro', 'warning');
-        setTimeout(() => {
-            window.location.href = '/pages/login.html';
-        }, 2000);
-        return;
-    }
-
-    // Definir data e hora atual
-    const now = new Date();
-    document.querySelector('input[name="dataAtendimento"]').value = now.toISOString().split('T')[0];
-    document.querySelector('input[name="horaAtendimento"]').value = now.toTimeString().slice(0,5);
-
-    // Aplicar máscaras
-    const cpfInput = document.querySelector('input[name="cpf"]');
-    if (cpfInput) {
-        cpfInput.addEventListener('input', maskCPF);
-        cpfInput.addEventListener('blur', function() {
-            const cpfValido = validarCPF(this.value);
-            if (this.value && !cpfValido) {
-                showNotification('CPF inválido!', 'error', 3000);
-                this.style.borderColor = '#dc2626';
-            } else if (cpfValido) {
-                this.style.borderColor = '#059669';
-                buscarPorCPF(this.value);
-            }
-        });
-    }
-
-    const telefoneInput = document.querySelector('input[name="telefone"]');
-    if (telefoneInput) {
-        telefoneInput.addEventListener('input', maskTelefone);
-    }
-
-    const cepInput = document.querySelector('input[name="cep"]');
-    if (cepInput) {
-        cepInput.addEventListener('input', maskCEP);
-        cepInput.addEventListener('blur', autocompleteCEP);
-    }
-
-    // Verificar rascunho no sessionStorage
-    const rascunho = sessionStorage.getItem('rascunhoAtendimento');
-    if (rascunho && confirm('Deseja carregar o rascunho salvo anteriormente?')) {
-        try {
-            const data = JSON.parse(rascunho);
-            preencherFormulario(data);
-            showNotification('Rascunho carregado!', 'info');
-        } catch (error) {
-            console.error('Erro ao carregar rascunho:', error);
-        }
-    }
-
-    // Iniciar auto-save
-    iniciarAutoSave();
-
-    console.log('✅ Formulário carregado com sucesso!');
-});
-
-// ==========================================
-// AUTO-SAVE DE RASCUNHO
-// ==========================================
-function iniciarAutoSave() {
-    // Salvar automaticamente a cada 30 segundos
-    autoSaveInterval = setInterval(() => {
-        const formData = new FormData(document.getElementById('formNovoAtendimento'));
-        let hasData = false;
-
-        for (let [key, value] of formData.entries()) {
-            if (value && value.trim() !== '') {
-                hasData = true;
-                break;
-            }
-        }
-
-        if (hasData) {
-            salvarRascunho(true); // true = silencioso
-            console.log('💾 Rascunho salvo automaticamente');
-        }
-    }, 30000); // 30 segundos
-}
-
-// Limpar interval ao sair
-window.addEventListener('beforeunload', function() {
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-    }
-});
-
-// ==========================================
-// VALIDAÇÃO DE CPF
-// ==========================================
-function validarCPF(cpf) {
-    cpf = cpf.replace(/\D/g, '');
-
-    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
-        return false;
-    }
-
-    let soma = 0;
-    for (let i = 0; i < 9; i++) {
-        soma += parseInt(cpf.charAt(i)) * (10 - i);
-    }
-    let resto = 11 - (soma % 11);
-    let digito1 = resto === 10 || resto === 11 ? 0 : resto;
-
-    if (parseInt(cpf.charAt(9)) !== digito1) {
-        return false;
-    }
-
-    soma = 0;
-    for (let i = 0; i < 10; i++) {
-        soma += parseInt(cpf.charAt(i)) * (11 - i);
-    }
-    resto = 11 - (soma % 11);
-    let digito2 = resto === 10 || resto === 11 ? 0 : resto;
-
-    return parseInt(cpf.charAt(10)) === digito2;
-}
-
-// ==========================================
-// BUSCAR CIDADÃO POR CPF
-// ==========================================
-async function buscarPorCPF(cpf) {
-    const cpfLimpo = cpf.replace(/\D/g, '');
-
-    if (cpfLimpo.length !== 11) return;
-
-    try {
-        showLoading('Verificando cadastro...');
-        const token = localStorage.getItem('token');
-
-        const response = await fetch(`/api/atendimentos/buscar-cpf/${cpfLimpo}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const dados = await response.json();
-
-            if (dados.encontrado && dados.dados) {
-                const dataFormatada = dados.dados.ultimoAtendimento ?
-                    new Date(dados.dados.ultimoAtendimento).toLocaleDateString('pt-BR') :
-                    'Sem registro';
-
-                if (confirm(`✅ Cidadão já cadastrado!\n\nNome: ${dados.dados.nomeCompleto}\nÚltimo atendimento: ${dataFormatada}\n\nDeseja carregar os dados anteriores?`)) {
-                    preencherFormulario(dados.dados);
-                    showNotification('Dados carregados com sucesso!', 'success');
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao buscar CPF:', error);
-    } finally {
-        hideLoading();
-    }
-}
-
-// ==========================================
-// PREENCHER FORMULÁRIO COM DADOS
-// ==========================================
-function preencherFormulario(dados) {
-    Object.keys(dados).forEach(key => {
-        const element = document.querySelector(`[name="${key}"]`);
-        if (element) {
-            if (element.type === 'checkbox') {
-                element.checked = dados[key] === 'on' || dados[key] === true;
-            } else if (element.type === 'radio') {
-                const radio = document.querySelector(`[name="${key}"][value="${dados[key]}"]`);
-                if (radio) radio.checked = true;
-            } else {
-                element.value = dados[key];
-            }
-        }
-    });
-
-    // Processar arrays de checkboxes
-    if (dados.motivosAtendimento && Array.isArray(dados.motivosAtendimento)) {
-        dados.motivosAtendimento.forEach(valor => {
-            const checkbox = document.querySelector(`input[name="motivosAtendimento[]"][value="${valor}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-
-    if (dados.situacoesEspecificas && Array.isArray(dados.situacoesEspecificas)) {
-        dados.situacoesEspecificas.forEach(valor => {
-            const checkbox = document.querySelector(`input[name="situacoesEspecificas[]"][value="${valor}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-}
-
-// ==========================================
-// FUNÇÃO PARA ADICIONAR MEMBRO FAMILIAR
-// ==========================================
-function addFamilyMember() {
-    familyMemberCount++;
-    const container = document.getElementById('familyMembers');
-    const newMember = document.createElement('div');
-    newMember.className = 'family-member';
-    newMember.innerHTML = `
-        <div class="family-member-header">
-            <span class="family-member-title">Membro da Família ${familyMemberCount}</span>
-            <button type="button" class="family-member-remove" onclick="this.parentElement.parentElement.remove()">
-                <i class="fas fa-times"></i> Remover
-            </button>
-        </div>
-        <div class="form-grid-4">
-            <div class="form-group">
-                <label class="form-label">Nome</label>
-                <input type="text" class="form-control" name="familyMemberName[]">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Parentesco</label>
-                <select class="form-control" name="familyMemberRelation[]">
-                    <option value="">Selecione</option>
-                    <option value="conjuge">Cônjuge</option>
-                    <option value="companheiro">Companheiro(a)</option>
-                    <option value="filho">Filho(a)</option>
-                    <option value="pai">Pai</option>
-                    <option value="mae">Mãe</option>
-                    <option value="irmao">Irmão/Irmã</option>
-                    <option value="avo">Avô/Avó</option>
-                    <option value="neto">Neto(a)</option>
-                    <option value="sogro">Sogro(a)</option>
-                    <option value="genro">Genro/Nora</option>
-                    <option value="cunhado">Cunhado(a)</option>
-                    <option value="outros">Outros</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Idade</label>
-                <input type="number" class="form-control" name="familyMemberAge[]" min="0" max="120">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Data Inclusão</label>
-                <input type="date" class="form-control" name="familyMemberDateInclusao[]" value="${new Date().toISOString().split('T')[0]}">
-            </div>
-        </div>
-    `;
-    container.appendChild(newMember);
-    showNotification('Membro adicionado', 'success', 2000);
-}
-
-// ==========================================
-// FUNÇÃO PARA VOLTAR À PÁGINA DE ATENDIMENTOS
-// ==========================================
-function voltarAtendimentos() {
-    const form = document.getElementById('formNovoAtendimento');
-    const formData = new FormData(form);
-    let hasData = false;
-
-    for (let [key, value] of formData.entries()) {
-        if (value && value.trim() !== '') {
-            hasData = true;
-            break;
-        }
-    }
-
-    if (hasData) {
-        if (confirm('Você tem dados não salvos no formulário. Deseja realmente voltar?\n\nDica: Use Ctrl+S para salvar um rascunho.')) {
-            window.location.href = 'atendimento.html';
-        }
-    } else {
-        window.location.href = 'atendimento.html';
-    }
-}
-
-// ==========================================
-// FUNÇÃO PARA SALVAR RASCUNHO
-// ==========================================
-function salvarRascunho(silencioso = false) {
-    const formData = new FormData(document.getElementById('formNovoAtendimento'));
-    const rascunho = {};
-
-    for (let [key, value] of formData.entries()) {
-        rascunho[key] = value;
-    }
-
-    // Processar checkboxes
-    const motivosChecked = Array.from(
-        document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
-    ).map(cb => cb.value);
-    rascunho.motivosAtendimento = motivosChecked;
-
-    const situacoesChecked = Array.from(
-        document.querySelectorAll('input[name="situacoesEspecificas[]"]:checked')
-    ).map(cb => cb.value);
-    rascunho.situacoesEspecificas = situacoesChecked;
-
-    // Usar sessionStorage
-    sessionStorage.setItem('rascunhoAtendimento', JSON.stringify(rascunho));
-    sessionStorage.setItem('rascunhoTimestamp', new Date().toISOString());
-
-    if (!silencioso) {
-        showNotification('💾 Rascunho salvo com sucesso!', 'success', 2000);
-    }
-}
-
-// ==========================================
-// FUNÇÃO PARA SALVAR ATENDIMENTO
-// ==========================================
-async function salvarAtendimento() {
-    const form = document.getElementById('formNovoAtendimento');
-
-    // Validação básica
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        showNotification('Preencha todos os campos obrigatórios!', 'warning');
-        return;
-    }
-
-    // Validar CPF
-    const cpf = document.querySelector('input[name="cpf"]').value;
-    if (cpf && !validarCPF(cpf)) {
-        showNotification('CPF inválido! Verifique o número digitado.', 'error');
-        document.querySelector('input[name="cpf"]').focus();
-        return;
-    }
-
-    const formData = new FormData(form);
-    const atendimentoData = Object.fromEntries(formData);
-
-    // Gerar número de protocolo
-    const protocolo = 'AT' + Date.now();
-    atendimentoData.protocolo = protocolo;
-    atendimentoData.registro = protocolo.substring(2);
-    document.getElementById('protocoloNumber').textContent = protocolo;
-
-    // Processar checkboxes
-    atendimentoData.motivosAtendimento = Array.from(
-        document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
-    ).map(cb => cb.value);
-
-    atendimentoData.situacoesEspecificas = Array.from(
-        document.querySelectorAll('input[name="situacoesEspecificas[]"]:checked')
-    ).map(cb => cb.value);
-
-    // Coletar dados dos membros familiares
-    const familyMemberNames = document.querySelectorAll('input[name="familyMemberName[]"]');
-    const familyMembers = [];
-    familyMemberNames.forEach((input, index) => {
-        if (input.value) {
-            familyMembers.push({
-                nome: input.value,
-                parentesco: document.querySelectorAll('select[name="familyMemberRelation[]"]')[index]?.value,
-                idade: document.querySelectorAll('input[name="familyMemberAge[]"]')[index]?.value,
-                dataInclusao: document.querySelectorAll('input[name="familyMemberDateInclusao[]"]')[index]?.value
-            });
-        }
-    });
-    atendimentoData.composicaoFamiliar = familyMembers;
-
-    try {
-        showLoading('Salvando atendimento...');
-
-        // Buscar token do localStorage
-        const token = localStorage.getItem('token');
-        if (!token) {
-            showNotification('Sessão expirada. Faça login novamente.', 'error');
-            setTimeout(() => window.location.href = '/pages/login.html', 2000);
-            return;
-        }
-
-        // Enviar para o servidor
-        const response = await fetch('/api/atendimentos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(atendimentoData)
-        });
-
-        // Tratamento de erros específicos
-        if (response.status === 401) {
-            showNotification('Sessão expirada. Redirecionando para login...', 'error');
-            localStorage.removeItem('token');
-            setTimeout(() => window.location.href = '/pages/login.html', 2000);
-            return;
-        }
-
-        if (response.status === 403) {
-            showNotification('Você não tem permissão para criar atendimentos', 'error');
-            return;
-        }
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || error.mensagem || 'Erro ao salvar');
-        }
-
-        const resultado = await response.json();
-
-        showNotification(
-            `✅ Atendimento #${resultado.registro || protocolo} criado com sucesso!`,
-            'success'
-        );
-
-        // Limpar rascunho
-        sessionStorage.removeItem('rascunhoAtendimento');
-        sessionStorage.removeItem('rascunhoTimestamp');
-
-        // Limpar interval de auto-save
-        if (autoSaveInterval) {
-            clearInterval(autoSaveInterval);
-        }
-
-        setTimeout(() => {
-            window.location.href = '/pages/atendimento.html';
-        }, 1500);
-
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        showNotification(
-            error.message || 'Erro ao salvar atendimento. Tente novamente.',
-            'error'
-        );
-    } finally {
-        hideLoading();
-    }
-}
-
-// ==========================================
-// FUNÇÃO PARA EXPORTAR PDF
-// ==========================================
-async function exportarPDF() {
-    showLoading('Gerando PDF do formulário...');
-
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        const formData = new FormData(document.getElementById('formNovoAtendimento'));
-        let y = 20;
-        const leftMargin = 15;
-        const lineHeight = 7;
-        const pageHeight = 280;
-
-        // Função auxiliar para adicionar nova página
-        function checkPageBreak() {
-            if (y > pageHeight) {
-                doc.addPage();
-                y = 20;
-            }
-        }
-
-        // Cabeçalho
-        doc.setFontSize(18);
-        doc.setFont(undefined, 'bold');
-        doc.text('FORMULÁRIO DE ATENDIMENTO', 105, y, { align: 'center' });
-        y += 8;
-
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
-        doc.text('Sistema Fortalece SUAS - Rio Pardo/RS', 105, y, { align: 'center' });
-        y += 10;
-
-        doc.setFontSize(9);
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, y, { align: 'center' });
-        y += 12;
-
-        // Função para adicionar seção
-        function addSection(title) {
-            checkPageBreak();
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.text(title, leftMargin, y);
-            y += lineHeight;
-            doc.line(leftMargin, y, 195, y);
-            y += lineHeight;
-        }
-
-        // Função para adicionar campo
-        function addField(label, value) {
-            checkPageBreak();
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'bold');
-            doc.text(label + ':', leftMargin, y);
-            doc.setFont(undefined, 'normal');
-            const text = value || 'Não informado';
-            doc.text(text, leftMargin + 50, y);
-            y += lineHeight;
-        }
-
-        // 1. DADOS DO ATENDIMENTO
-        addSection('DADOS DO ATENDIMENTO');
-        addField('Data', formData.get('dataAtendimento') || '');
-        addField('Hora', formData.get('horaAtendimento') || '');
-        addField('Formato', formData.get('formatoAtendimento') || '');
-        addField('Recepcionista', formData.get('recepcionista') || '');
-        y += 3;
-
-        // 2. IDENTIFICAÇÃO
-        addSection('DADOS DE IDENTIFICAÇÃO');
-        addField('Nome Completo', formData.get('nomeCompleto') || '');
-        addField('Nome Social', formData.get('nomeSocial') || '');
-        addField('CPF', formData.get('cpf') || '');
-        addField('Data Nascimento', formData.get('dataNascimento') || '');
-        addField('Estado Civil', formData.get('estadoCivil') || '');
-        addField('RG', formData.get('rg') || '');
-        addField('NIS', formData.get('nis') || '');
-        addField('Cadastro Único', formData.get('cadUnico') || '');
-        y += 3;
-
-        // 3. CONTATO
-        addSection('DADOS DE CONTATO');
-        addField('Telefone', formData.get('telefone') || '');
-        addField('Email', formData.get('email') || '');
-        addField('Endereço', formData.get('endereco') || '');
-        addField('Bairro', formData.get('bairro') || '');
-        addField('CEP', formData.get('cep') || '');
-        addField('Cidade', formData.get('cidade') || '');
-        y += 3;
-
-        // 4. MOTIVOS DO ATENDIMENTO
-        addSection('MOTIVOS DO ATENDIMENTO');
-        const motivos = Array.from(
-            document.querySelectorAll('input[name="motivosAtendimento[]"]:checked')
-        ).map(cb => cb.nextElementSibling.textContent);
-
-        if (motivos.length > 0) {
-            doc.setFontSize(9);
-            motivos.forEach(motivo => {
-                checkPageBreak();
-                doc.text('• ' + motivo, leftMargin + 5, y);
-                y += lineHeight;
-            });
-        } else {
-            addField('Motivos', 'Nenhum motivo selecionado');
-        }
-        y += 3;
-
-        // 5. DESCRIÇÃO DA DEMANDA
-        addSection('DESCRIÇÃO DA DEMANDA');
-        doc.setFontSize(9);
-        const descricao = formData.get('descricaoDemanda') || 'Não informado';
-        const splitText = doc.splitTextToSize(descricao, 180);
-        splitText.forEach(line => {
-            checkPageBreak();
-            doc.text(line, leftMargin, y);
-            y += lineHeight;
-        });
-        y += 3;
-
-        // 6. PROFISSIONAL RESPONSÁVEL
-        addSection('PROFISSIONAL E ENCAMINHAMENTOS');
-        addField('Técnico Responsável', formData.get('tecnicoResponsavel') || '');
-        addField('Tipo de Atendimento', formData.get('tipoAtendimento') || '');
-        addField('Unidade', formData.get('unidade') || '');
-        addField('Status', formData.get('status') || '');
-        addField('Prioridade', formData.get('prioridade') || '');
-        y += 3;
-
-        // Rodapé
-        const totalPages = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Página ${i} de ${totalPages}`, 105, 290, { align: 'center' });
-            doc.text('Sistema Fortalece SUAS - Documento Confidencial', 105, 295, { align: 'center' });
-        }
-
-        // Salvar PDF
-        const nomeArquivo = `atendimento_${formData.get('cpf')?.replace(/\D/g, '') || Date.now()}_${Date.now()}.pdf`;
-        doc.save(nomeArquivo);
-
-        showNotification('✅ PDF gerado com sucesso!', 'success');
-
-    } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        showNotification('❌ Erro ao gerar PDF. Verifique se os dados estão corretos.', 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
-// ==========================================
-// FUNÇÕES AUXILIARES
-// ==========================================
-
-function showLoading(message = 'Carregando...') {
-    const loadingElement = document.getElementById('loading-overlay');
-    const messageElement = document.getElementById('loading-message');
-    if (messageElement) {
-        messageElement.textContent = message;
-    }
-    if (loadingElement) {
-        loadingElement.style.display = 'flex';
-    }
-}
-
-function hideLoading() {
-    const loadingElement = document.getElementById('loading-overlay');
-    if (loadingElement) {
-        loadingElement.style.display = 'none';
-    }
-}
-
-function showNotification(message, type = 'info', duration = 5000) {
-    const container = document.getElementById('notifications-container');
-    if (!container) return;
-
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type}`;
-
-    const icons = {
-        success: 'check-circle',
-        error: 'exclamation-circle',
-        warning: 'exclamation-triangle',
-        info: 'info-circle'
-    };
-
-    notification.innerHTML = `
-        <i class="fas fa-${icons[type] || 'info-circle'}"></i>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="background: none; border: none; margin-left: auto; cursor: pointer; font-size: 1.25rem; color: inherit;">&times;</button>
-    `;
-
-    container.appendChild(notification);
-
-    if (duration > 0) {
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOut 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, duration);
-    }
-}
-
-function logout() {
-    if (confirm('Tem certeza que deseja sair do sistema?')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        sessionStorage.clear();
-        showNotification('Encerrando sessão...', 'info');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1000);
-    }
-}
-
-// ==========================================
-// MÁSCARAS DE INPUT
-// ==========================================
-
-function maskCPF(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    event.target.value = value;
-}
-
-function maskTelefone(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length >= 11) {
-        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (value.length >= 10) {
-        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    } else if (value.length >= 6) {
-        value = value.replace(/(\d{2})(\d{4})(\d)/, '($1) $2-$3');
-    } else if (value.length >= 2) {
-        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-    }
-    event.target.value = value;
-}
-
-function maskCEP(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    event.target.value = value;
-}
-
-// ==========================================
-// AUTOCOMPLETE CEP
-// ==========================================
-
-async function autocompleteCEP(event) {
-    const cep = event.target.value.replace(/\D/g, '');
-    if (cep.length === 8) {
-        try {
-            showLoading('Buscando endereço...');
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            const data = await response.json();
-
-            if (!data.erro) {
-                document.querySelector('input[name="endereco"]').value = data.logradouro || '';
-                document.querySelector('input[name="bairro"]').value = data.bairro || '';
-                document.querySelector('input[name="cidade"]').value = data.localidade || 'Rio Pardo';
-                document.querySelector('input[name="estado"]').value = data.uf || 'RS';
-                showNotification('✅ Endereço encontrado!', 'success', 2000);
-            } else {
-                showNotification('CEP não encontrado', 'warning');
-            }
-        } catch (error) {
-            console.error('Erro ao buscar CEP:', error);
-            showNotification('Erro ao buscar CEP', 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-}
-
-// ==========================================
-// PREVENIR PERDA DE DADOS
-// ==========================================
-
-window.addEventListener('beforeunload', function(e) {
-    const form = document.getElementById('formNovoAtendimento');
-    const formData = new FormData(form);
-    let hasData = false;
-
-    for (let [key, value] of formData.entries()) {
-        if (value && value.trim() !== '') {
-            hasData = true;
-            break;
-        }
-    }
-
-    if (hasData) {
-        e.preventDefault();
-        e.returnValue = '';
-        salvarRascunho(true); // Salvar rascunho silenciosamente ao sair
-    }
-});
-
-// ==========================================
-// ATALHOS DE TECLADO
-// ==========================================
-
-document.addEventListener('keydown', function(event) {
-    // Ctrl+S para salvar rascunho
-    if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        salvarRascunho();
-    }
-
-    // ESC para voltar
-    if (event.key === 'Escape') {
-        voltarAtendimentos();
-    }
-
-    // Ctrl+P para gerar PDF
-    if (event.ctrlKey && event.key === 'p') {
-        event.preventDefault();
-        exportarPDF();
-    }
-});
-    </script>
+    <!-- JavaScript Externo -->
+    <script src="../src/js/novo.atendimento.app.js"></script>
 </body>
 </html>

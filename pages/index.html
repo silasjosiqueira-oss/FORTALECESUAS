@@ -544,18 +544,21 @@
                     }
 
                     const data = await response.json();
+                    console.log('📦 Resposta do servidor:', data);
 
-                    if (!data.sucesso || !data.valido) {
+                    // ✅ CORRIGIDO: O servidor retorna apenas { valido: true, usuario: {...} }
+                    if (!data.valido) {
                         throw new Error('Sessão inválida');
                     }
 
-                    this.usuario = data.sessao;
+                    // ✅ CORRIGIDO: O servidor retorna "usuario", não "sessao"
+                    this.usuario = data.usuario;
                     console.log('✅ Autenticação válida:', this.usuario);
 
                     // Atualizar nome do usuário na interface
                     const userNameElement = document.getElementById('userName');
                     if (userNameElement && this.usuario) {
-                        userNameElement.textContent = this.usuario.nome || 'Usuário';
+                        userNameElement.textContent = this.usuario.nome || this.usuario.username || 'Usuário';
                     }
 
                 } catch (error) {
@@ -756,6 +759,7 @@
                 console.log('🚪 Fazendo logout...');
 
                 localStorage.removeItem('token');
+                localStorage.removeItem('usuario');
 
                 fetch('/auth/logout', {
                     method: 'POST',

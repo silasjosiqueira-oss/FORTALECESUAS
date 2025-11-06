@@ -51,7 +51,9 @@
     "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.15.1",
+    "node-cache": "^5.1.2",
     "pg": "^8.16.3",
+    "response-time": "^2.3.4",
     "winston": "^3.11.0",
     "xss-clean": "^0.1.4"
   },
@@ -107,7 +109,7 @@
     "url": "https://github.com/silasjosiqueira-oss/FORTALECESUAS"
   },
   "bugs": {
-    "url": "https://github.com/silasjosiqueira-oss/FORTALECESUAS/issues"
+    "url": "https://github.com/silasjosiqueira-oss/FORTALECESUAS"
   },
   "homepage": "https://github.com/silasjosiqueira-oss/FORTALECESUAS"
 }
