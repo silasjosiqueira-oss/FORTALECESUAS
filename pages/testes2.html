@@ -1,845 +1,1159 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INICIO - FORTALECE SUAS</title>
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const path = require('path');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const responseTime = require('response-time');
+require('dotenv').config();
 
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('app-theme');
-            if (savedTheme && savedTheme !== 'light') {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-        })();
-    </script>
+// Cache para tenants (evita queries repetidas)
+const NodeCache = require('node-cache');
+const tenantCache = new NodeCache({
+    stdTTL: 300, // 5 minutos
+    checkperiod: 60, // Verificar expiração a cada 60s
+    useClones: false // Melhor performance
+});
 
-    <!-- CSS Structure -->
-<link rel="stylesheet" href="/css/base/variables.css">
-<link rel="stylesheet" href="/css/base/reset.css">
-<link rel="stylesheet" href="/css/base/typography.css">
-<link rel="stylesheet" href="/css/layout/sidebar.css">
-<link rel="stylesheet" href="/css/layout/header.css">
-<link rel="stylesheet" href="/css/layout/grid.css">
-<link rel="stylesheet" href="/css/layout/responsive.css">
-<link rel="stylesheet" href="/css/components/buttons.css">
-<link rel="stylesheet" href="/css/components/cards.css">
-<link rel="stylesheet" href="/css/components/forms.css">
-<link rel="stylesheet" href="/css/components/modal.css">
-<link rel="stylesheet" href="/css/main.css">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+// Importar módulos refatorados
+const { connectDatabase, getConnection } = require('./src/config/database');
+const logger = require('./src/utils/logger');
 
-    <style>
+// Importar rotas existentes
+const estoqueRoutes = require('./src/routes/estoque');
+const agendaRoutes = require('./src/routes/agenda');
+const adminRoutes = require('./src/routes/admin');
+const tenantsRoutes = require('./src/routes/tenants');
+const app = express();
 
-        /* Dashboard específico - versão limpa */
-        .welcome-section {
-            background: var(--theme-surface);
-            border: 1px solid var(--theme-surface-border);
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
+// ==========================================
+// MÉTRICAS E MONITORAMENTO
+// ==========================================
+
+// Armazenar estatísticas de requisições
+const requestStats = new Map();
+
+// Middleware para coletar métricas
+app.use(responseTime((req, res, time) => {
+    const route = req.route?.path || req.path;
+    const key = `${req.method}:${route}`;
+    const current = requestStats.get(key) || { count: 0, total: 0, errors: 0 };
+
+    requestStats.set(key, {
+        count: current.count + 1,
+        total: current.total + time,
+        avg: (current.total + time) / (current.count + 1),
+        errors: res.statusCode >= 400 ? current.errors + 1 : current.errors,
+        lastAccess: new Date()
+    });
+
+    // Log de requisições lentas (> 1 segundo)
+    if (time > 1000) {
+        logger.warn('Requisição lenta detectada', {
+            method: req.method,
+            path: req.path,
+            time: Math.round(time),
+            tenant: req.tenant?.nome_organizacao
+        });
+    }
+}));
+
+// ==========================================
+// RATE LIMITING
+// ==========================================
+
+// Rate limit global (mais permissivo)
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 500, // 500 requisições por IP
+    message: { error: 'Muitas requisições. Tente novamente em 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        // Usar tenant + IP para melhor controle
+        return `${req.tenantId || 'no-tenant'}-${req.ip}`;
+    }
+});
+
+// Rate limit para autenticação (mais restrito)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, // 10 tentativas de login
+    message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    skipSuccessfulRequests: true // Não conta requisições bem-sucedidas
+});
+
+// Rate limit para APIs (moderado)
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minuto
+    max: 100, // 100 requisições por minuto
+    message: { error: 'Limite de requisições excedido. Tente novamente em 1 minuto.' }
+});
+
+// ==========================================
+// MIDDLEWARE MULTI-TENANT MELHORADO
+// ==========================================
+
+// Middleware para identificar o Tenant pelo subdomínio (COM CACHE)
+const identifyTenant = async (req, res, next) => {
+    try {
+        const host = req.hostname || req.headers.host?.split(':')[0];
+
+        // Extrair subdomínio
+        const parts = host.split('.');
+        let subdomain = null;
+
+        // localhost:3000 ou IP direto = desenvolvimento
+        if (host === 'localhost' || host.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+            subdomain = 'demo'; // Tenant padrão para desenvolvimento
+            logger.info('[DEV] Modo desenvolvimento - usando tenant "demo"');
         }
+        // Subdomínio real: cliente.fortalecesuas.com
+        else if (parts.length >= 3) {
+            subdomain = parts[0];
 
-        .welcome-title {
-            font-size: 1.8rem;
-            color: var(--theme-text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-subtitle {
-            color: var(--theme-text-secondary);
-            font-size: 1rem;
-        }
-
-        .main-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .action-card {
-            background: var(--theme-surface);
-            border: 1px solid var(--theme-surface-border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .action-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--theme-shadow-lg);
-            border-color: var(--theme-primary);
-        }
-
-        .action-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--theme-primary);
-            color: #6366f1;;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .action-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--theme-text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .action-description {
-            color: var(--theme-text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        .resources-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .resources-section {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .resource-card {
-            background: var(--theme-surface);
-            border: 1px solid var(--theme-surface-border);
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-
-        .resource-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--theme-text-primary);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .resource-link {
-            display: block;
-            color: var(--theme-primary);
-            text-decoration: none;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--theme-surface-border);
-            transition: color 0.2s;
-        }
-
-        .resource-link:hover {
-            color: var(--theme-primary-hover);
-        }
-
-        .resource-link:last-child {
-            border-bottom: none;
-        }
-
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-box {
-            background: var(--theme-surface);
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #483D8B, #6A5ACD);
-        }
-
-        .stat-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-            border-color: #483D8B;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--theme-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--theme-text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .theme-toggle-btn {
-            background: var(--theme-surface);
-            border: 1px solid var(--theme-surface-border);
-            color: var(--theme-text-secondary);
-            transition: all 0.2s ease;
-        }
-
-        .theme-toggle-btn:hover {
-            background: var(--theme-surface-hover);
-            border-color: var(--theme-primary);
-            color: var(--theme-primary);
-        }
-
-        .date-time-widget {
-            background: var(--theme-surface);
-            border: 1px solid var(--theme-surface-border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .current-time {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--theme-text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .current-date {
-            color: var(--theme-text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .loading-stats {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--theme-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+            // Ignorar www e domínio principal
+            if (subdomain === 'www' || subdomain === 'fortalecesuas') {
+                return res.redirect('https://fortalecesuas.com/cadastro');
             }
         }
-
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar__header">
-                <div class="sidebar__logo">FS</div>
-                <h1 class="sidebar__title">FORTALECE SUAS</h1>
-            </div>
-
-            <nav class="sidebar__nav">
-                <ul>
-                    <li>
-                        <a class='active' href='/pages/'>
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Inicio</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/atendimento.html'>
-                            <i class="fas fa-users"></i>
-                            <span>Atendimentos</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/beneficios.html'>
-                            <i class="fas fa-hand-holding-heart"></i>
-                            <span>Benefícios</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/agenda.html'>
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Agenda</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/atividades.html'>
-                            <i class="fas fa-users-cog"></i>
-                            <span>Atividades</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/programas.html'>
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Programas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/relatorios.html'>
-                            <i class="fas fa-file-alt"></i>
-                            <span>Relatórios</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/estatisticas.html'>
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Estatísticas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/cadastroshtml'>
-                            <i class="fas fa-database"></i>
-                            <span>Cadastros</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='/pages/estoque.html'>
-                            <i class="fas fa-boxes"></i>
-                            <span>Estoque</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="ferramentas.html">
-                            <i class="fas fa-tools"></i>
-                            <span>Ferramentas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/pages/usuarios.html">
-                            <i class="fas fa-cogs"></i>
-                            <span>Usuarios</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="suporte.html">
-                            <i class="fas fa-life-ring"></i>
-                            <span>Suporte</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='#' onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Logoff</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-    <main class="main-content">
-      <header class="main-header">
-        <div class="header-title">
-          <h2>Sistema Fortalece - Assistência Social</h2>
-        </div>
-        <div class="header-actions">
-          <button class="btn btn--icon"><i class="fas fa-bell"></i><span class="badge">3</span></button>
-          <button class="btn btn--icon"><i class="fas fa-cog"></i></button>
-          <button class="btn btn--secondary" onclick="location.href='login.html'"><i class="fas fa-sign-out-alt"></i> Sair</button>
-        </div>
-      </header>
-
-            <div class="content-wrapper">
-                <!-- Data e Hora -->
-                <div class="date-time-widget">
-                    <div class="current-time" id="currentTime"></div>
-                    <div class="current-date" id="currentDate"></div>
-                </div>
-
-                <!-- Seção de Boas-vindas -->
-                <div class="welcome-section">
-                    <h1 class="welcome-title">Centro de Referência da Assistência Social</h1>
-                    <p class="welcome-subtitle">Gerencie atendimentos, benefícios e programas sociais de forma integrada</p>
-                </div>
-
-                <!-- Estatísticas Rápidas -->
-                <div class="quick-stats">
-                    <div class="stat-box">
-                        <div class="stat-number" id="atendimentosHoje">
-                            <div class="loading-stats"></div>
-                        </div>
-                        <div class="stat-label">Atendimentos do Mês</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="agendamentos">
-                            <div class="loading-stats"></div>
-                        </div>
-                        <div class="stat-label">Aguardando Atendimento</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="beneficiosAtivos">
-                            <div class="loading-stats"></div>
-                        </div>
-                        <div class="stat-label">Total de Benefícios</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="totalAtendimentos">
-                            <div class="loading-stats"></div>
-                        </div>
-                        <div class="stat-label">Total de Atendimentos</div>
-                    </div>
-                </div>
-
-                <!-- Ações Principais -->
-                <div class="main-actions">
-                    <div class="action-card" onclick="window.location.href='atendimento.html'">
-                        <div class="action-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h3 class="action-title">Novo Atendimento</h3>
-                        <p class="action-description">Registrar novo atendimento individual ou familiar</p>
-                    </div>
-
-                    <div class="action-card" onclick="window.location.href='beneficios.html'">
-                        <div class="action-icon">
-                            <i class="fas fa-hand-holding-heart"></i>
-                        </div>
-                        <h3 class="action-title">Gerir Benefícios</h3>
-                        <p class="action-description">Cadastrar e acompanhar benefícios sociais</p>
-                    </div>
-
-                    <div class="action-card" onclick="window.location.href='agenda.html'">
-                        <div class="action-icon">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <h3 class="action-title">Agendar Consulta</h3>
-                        <p class="action-description">Organizar agenda de atendimentos</p>
-                    </div>
-
-                    <div class="action-card" onclick="window.location.href='programas.html'">
-                        <div class="action-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3 class="action-title">Programas Sociais</h3>
-                        <p class="action-description">Gestão de programas e atividades comunitárias</p>
-                    </div>
-                </div>
-
-                <!-- Recursos e Links Úteis -->
-                <div class="resources-section">
-                    <div class="resource-card">
-                        <h3 class="resource-title">
-                            <i class="fas fa-external-link-alt"></i>
-                            Recursos Governamentais
-                        </h3>
-                        <a href="https://www.gov.br/cidadania/pt-br" target="_blank" class="resource-link">
-                            Ministério da Cidadania
-                        </a>
-                        <a href="https://www.gov.br/pt-br/servicos/solicitar-beneficio-de-prestacao-continuada-bpc" target="_blank" class="resource-link">
-                            Benefício de Prestação Continuada (BPC)
-                        </a>
-                        <a href="https://www.gov.br/pt-br/servicos/inscrever-se-no-cadastro-unico-para-programas-sociais-cadunico" target="_blank" class="resource-link">
-                            Cadastro Único (CadÚnico)
-                        </a>
-                        <a href="https://www.gov.br/pt-br/servicos/consultar-beneficios-do-programa-bolsa-familia" target="_blank" class="resource-link">
-                            Auxílio Brasil
-                        </a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3 class="resource-title">
-                            <i class="fas fa-book"></i>
-                            Legislação e Normas
-                        </h3>
-                        <a href="https://www.planalto.gov.br/ccivil_03/leis/l8742.htm" target="_blank" class="resource-link">
-                            LOAS - Lei 8.742/93
-                        </a>
-                        <a href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11340.htm" target="_blank" class="resource-link">
-                            Lei Maria da Penha
-                        </a>
-                        <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/lei/l13257.htm" target="_blank" class="resource-link">
-                            Marco Legal da Primeira Infância
-                        </a>
-                        <a href="https://www.planalto.gov.br/ccivil_03/leis/l8069.htm" target="_blank" class="resource-link">
-                            Estatuto da Criança e do Adolescente
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Notifications Container -->
-    <div id="notifications-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
-
-    <script>
-        // ==========================================
-        // SISTEMA DE DASHBOARD COM AUTENTICAÇÃO
-        // ==========================================
-
-        class DashboardAPI {
-            constructor() {
-                this.token = null;
-                this.usuario = null;
-                this.init();
-            }
-
-            async init() {
-                console.log('🚀 Iniciando Dashboard...');
-
-                // Verificar autenticação
-                await this.verificarAutenticacao();
-
-                // Carregar estatísticas
-                await this.loadDashboardStats();
-            }
-
-            async verificarAutenticacao() {
-                console.log('🔐 Verificando autenticação...');
-
-                // Buscar token
-                this.token = localStorage.getItem('token');
-
-                if (!this.token) {
-                    console.error('❌ Token não encontrado');
-                    showNotification('Você precisa fazer login primeiro', 'warning');
-                    setTimeout(() => {
-                        window.location.href = '/pages/login.html';
-                    }, 2000);
-                    throw new Error('Não autenticado');
-                }
-
-                try {
-                    // Verificar token no servidor
-                    const response = await fetch('/auth/verificar', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${this.token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Token inválido');
-                    }
-
-                    const data = await response.json();
-                    console.log('📦 Resposta do servidor:', data);
-
-                    // ✅ CORRIGIDO: O servidor retorna apenas { valido: true, usuario: {...} }
-                    if (!data.valido) {
-                        throw new Error('Sessão inválida');
-                    }
-
-                    // ✅ CORRIGIDO: O servidor retorna "usuario", não "sessao"
-                    this.usuario = data.usuario;
-                    console.log('✅ Autenticação válida:', this.usuario);
-
-                    // Atualizar nome do usuário na interface
-                    const userNameElement = document.getElementById('userName');
-                    if (userNameElement && this.usuario) {
-                        userNameElement.textContent = this.usuario.nome || this.usuario.username || 'Usuário';
-                    }
-
-                } catch (error) {
-                    console.error('❌ Erro na autenticação:', error);
-                    localStorage.removeItem('token');
-                    showNotification('Sessão expirada. Faça login novamente.', 'error');
-                    setTimeout(() => {
-                        window.location.href = '/pages/login.html';
-                    }, 2000);
-                    throw error;
-                }
-            }
-
-            async loadDashboardStats() {
-                try {
-                    console.log('📊 Carregando estatísticas do dashboard...');
-
-                    // Usar a rota correta com autenticação
-                    const response = await fetch('/api/estatisticas/dashboard', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${this.token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 401 || response.status === 403) {
-                        console.error('❌ Não autorizado');
-                        localStorage.removeItem('token');
-                        window.location.href = '/pages/login.html';
-                        return;
-                    }
-
-                    if (!response.ok) {
-                        throw new Error(`Erro HTTP: ${response.status}`);
-                    }
-
-                    const stats = await response.json();
-                    console.log('✅ Estatísticas carregadas:', stats);
-
-                    // Atualizar estatísticas na tela
-                    this.animateCounter('atendimentosHoje', stats.atendimentosMes || 0);
-                    this.animateCounter('agendamentos', stats.aguardandoAtendimento || 0);
-                    this.animateCounter('beneficiosAtivos', stats.totalBeneficios || 0);
-                    this.animateCounter('totalAtendimentos', stats.totalAtendimentos || 0);
-
-                    showNotification('Dados carregados com sucesso!', 'success');
-
-                } catch (error) {
-                    console.error('❌ Erro ao carregar estatísticas:', error);
-                    showNotification('Erro ao carregar dados do servidor', 'error');
-
-                    // Usar dados de exemplo
-                    this.loadOfflineData();
-                }
-            }
-
-            loadOfflineData() {
-                console.log('⚠️ Carregando dados offline...');
-                this.animateCounter('atendimentosHoje', 25);
-                this.animateCounter('agendamentos', 8);
-                this.animateCounter('beneficiosAtivos', 342);
-                this.animateCounter('totalAtendimentos', 1247);
-            }
-
-            animateCounter(elementId, target) {
-                const element = document.getElementById(elementId);
-                if (!element) return;
-
-                let current = 0;
-                const increment = Math.ceil(target / 30);
-                const duration = 1500; // 1.5 segundos
-                const stepTime = duration / 30;
-
-                element.innerHTML = ''; // Remover loading
-
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        element.textContent = target.toLocaleString('pt-BR');
-                        clearInterval(timer);
-                    } else {
-                        element.textContent = current.toLocaleString('pt-BR');
-                    }
-                }, stepTime);
-            }
-        }
-
-        // ==========================================
-        // FUNÇÕES GLOBAIS
-        // ==========================================
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-            if (newTheme === 'light') {
-                html.removeAttribute('data-theme');
-            } else {
-                html.setAttribute('data-theme', newTheme);
-            }
-
-            localStorage.setItem('app-theme', newTheme);
-            updateThemeButton(newTheme);
-        }
-
-        function updateThemeButton(theme) {
-            const btn = document.getElementById('theme-toggle');
-            if (btn) {
-                const icon = btn.querySelector('i');
-                if (theme === 'dark') {
-                    icon.className = 'fas fa-sun';
-                    btn.title = 'Mudar para tema claro';
-                } else {
-                    icon.className = 'fas fa-moon';
-                    btn.title = 'Mudar para tema escuro';
-                }
-            }
-        }
-
-        function updateDateTime() {
-            const now = new Date();
-
-            const timeOptions = {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-
-            const dateOptions = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-
-            const timeElement = document.getElementById('currentTime');
-            const dateElement = document.getElementById('currentDate');
-
-            if (timeElement) {
-                timeElement.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
-            }
-            if (dateElement) {
-                dateElement.textContent = now.toLocaleDateString('pt-BR', dateOptions);
-            }
-        }
-
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('notifications-container');
-            if (!container) return;
-
-            const notification = document.createElement('div');
-            const colors = {
-                success: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0', icon: 'check-circle' },
-                error: { bg: '#fef2f2', color: '#dc2626', border: '#fecaca', icon: 'exclamation-circle' },
-                warning: { bg: '#fffbeb', color: '#d97706', border: '#fed7aa', icon: 'exclamation-triangle' },
-                info: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', icon: 'info-circle' }
-            };
-
-            const style = colors[type] || colors.info;
-
-            notification.style.cssText = `
-                padding: 1rem;
-                margin-bottom: 1rem;
-                border-radius: 0.375rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                min-width: 300px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                background: ${style.bg};
-                color: ${style.color};
-                border: 1px solid ${style.border};
-                animation: slideInRight 0.3s ease;
-            `;
-
-            notification.innerHTML = `
-                <i class="fas fa-${style.icon}"></i>
-                <span>${message}</span>
-                <button onclick="this.parentElement.remove()"
-                        style="background: none; border: none; margin-left: auto; cursor: pointer; font-size: 1.25rem; color: inherit; opacity: 0.7;"
-                        title="Fechar">&times;</button>
-            `;
-
-            container.appendChild(notification);
-
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.style.animation = 'slideOut 0.3s ease';
-                    setTimeout(() => notification.remove(), 300);
-                }
-            }, 5000);
-        }
-
-        function logout() {
-            if (confirm('Tem certeza que deseja sair do sistema?')) {
-                console.log('🚪 Fazendo logout...');
-
-                localStorage.removeItem('token');
-                localStorage.removeItem('usuario');
-
-                fetch('/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).finally(() => {
-                    showNotification('Logout realizado com sucesso!', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/pages/login.html';
-                    }, 1500);
-                });
-            }
-        }
-
-        // ==========================================
-        // INICIALIZAÇÃO
-        // ==========================================
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM carregado');
-
-            // Setup tema
-            const savedTheme = localStorage.getItem('app-theme') || 'light';
-            updateThemeButton(savedTheme);
-
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', toggleTheme);
-            }
-
-            // Atualizar relógio
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-
-            // Efeitos hover nos cards
-            const actionCards = document.querySelectorAll('.action-card');
-            actionCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
+        // Domínio sem subdomínio
+        else {
+            return res.status(400).json({
+                error: 'Acesso inválido. Use: https://seucliente.fortalecesuas.com'
             });
+        }
 
-            // Inicializar API
-            try {
-                window.dashboardAPI = new DashboardAPI();
+        // *** CACHE: Tentar buscar do cache primeiro ***
+        let tenant = tenantCache.get(subdomain);
 
-                // Atualizar dados a cada 5 minutos
-                setInterval(() => {
-                    if (window.dashboardAPI) {
-                        window.dashboardAPI.loadDashboardStats().catch(() => {
-                           console.log('Falha ao atualizar dados - continuando offline');
-                        });
-                    }
-                }, 300000); // 5 minutos
-            } catch (error) {
-                console.error('❌ Erro ao inicializar dashboard:', error);
+        if (tenant) {
+            logger.debug('Tenant carregado do cache', { subdomain, tenant: tenant.nome_organizacao });
+        } else {
+            // Buscar tenant no banco apenas se não estiver no cache
+            const connection = await getConnection();
+            const [tenants] = await connection.query(
+                `SELECT t.*,
+                        COUNT(u.id) as usuarios_ativos,
+                        DATEDIFF(t.data_vencimento, NOW()) as dias_restantes
+                 FROM tenants t
+                 LEFT JOIN usuarios u ON u.tenant_id = t.id AND u.ativo = TRUE
+                 WHERE t.subdomain = ?
+                 GROUP BY t.id`,
+                [subdomain]
+            );
+
+            if (tenants.length === 0) {
+                return res.status(404).json({
+                    error: 'Organização não encontrada',
+                    message: 'Entre em contato com o suporte ou verifique o endereço.'
+                });
+            }
+
+            tenant = tenants[0];
+
+            // Armazenar no cache
+            tenantCache.set(subdomain, tenant);
+            logger.debug('Tenant armazenado no cache', { subdomain, tenant: tenant.nome_organizacao });
+        }
+
+        // Verificar status do tenant
+        if (tenant.status === 'suspenso') {
+            return res.status(403).json({
+                error: 'Conta suspensa',
+                message: 'Entre em contato com o suporte para regularizar.'
+            });
+        }
+
+        if (tenant.status === 'cancelado') {
+            return res.status(403).json({
+                error: 'Conta cancelada',
+                message: 'Esta organização não possui mais acesso ao sistema.'
+            });
+        }
+
+        // Verificar vencimento
+        if (tenant.dias_restantes < 0) {
+            return res.status(402).json({
+                error: 'Assinatura vencida',
+                message: `Sua assinatura venceu há ${Math.abs(tenant.dias_restantes)} dias. Renove para continuar.`,
+                dias_vencidos: Math.abs(tenant.dias_restantes)
+            });
+        }
+
+        // Aviso de vencimento próximo
+        if (tenant.dias_restantes <= 7 && tenant.dias_restantes > 0) {
+            res.set('X-Aviso-Vencimento', `Sua assinatura vence em ${tenant.dias_restantes} dias`);
+        }
+
+        // Anexar tenant ao request
+        req.tenant = tenant;
+        req.tenantId = tenant.id;
+
+        logger.info('Tenant identificado', {
+            tenant: tenant.nome_organizacao,
+            subdomain,
+            status: tenant.status,
+            dias_restantes: tenant.dias_restantes
+        });
+
+        next();
+
+    } catch (error) {
+        logger.error('Erro ao identificar tenant', { error: error.message, stack: error.stack });
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Middleware de autenticação JWT (MELHORADO)
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        logger.warn('Token não fornecido', {
+            path: req.path,
+            ip: req.ip,
+            tenant: req.tenant?.nome_organizacao
+        });
+        return res.status(401).json({ error: 'Token não fornecido' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'sua_chave_secreta_muito_segura', (err, decoded) => {
+        if (err) {
+            logger.warn('Token inválido ou expirado', {
+                error: err.message,
+                path: req.path,
+                tenant: req.tenant?.nome_organizacao
+            });
+            return res.status(403).json({ error: 'Token inválido ou expirado' });
+        }
+
+        // Verificar se o token pertence ao tenant correto
+        if (req.tenantId && decoded.tenantId !== req.tenantId) {
+            logger.error('Tentativa de acesso cross-tenant', {
+                tokenTenant: decoded.tenantId,
+                requestTenant: req.tenantId,
+                user: decoded.usuario
+            });
+            return res.status(403).json({ error: 'Token não pertence a esta organização' });
+        }
+
+        req.user = decoded;
+        next();
+    });
+};
+
+// ✅ NOVO: Middleware para verificar Super Admin
+const authenticateSuperAdmin = (req, res, next) => {
+    // Verificar se usuário está autenticado
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'Autenticação necessária',
+            message: 'Faça login para continuar'
+        });
+    }
+
+    // Verificar se é super admin pelo perfil/nível
+    if (req.user.perfil !== 'super_admin' && req.user.nivel_acesso !== 'super_admin') {
+        logger.warn('Tentativa de acesso super admin negada', {
+            user: req.user.username,
+            perfil: req.user.perfil,
+            path: req.path
+        });
+        return res.status(403).json({
+            error: 'Acesso negado',
+            message: 'Apenas Super Administradores podem acessar este recurso'
+        });
+    }
+
+    // ✅ Super admin verificado
+    logger.info('Acesso super admin autorizado', {
+        user: req.user.username,
+        path: req.path
+    });
+
+    next();
+};
+
+// Middleware para verificar permissões (OTIMIZADO)
+const checkPermission = (recurso, acao) => {
+    return async (req, res, next) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            // Admin e Super Admin têm todas as permissões
+            if (req.user.perfil === 'admin' || req.user.perfil === 'super_admin') {
+                return next();
+            }
+
+            // Cache de permissões por perfil (5 minutos)
+            const cacheKey = `perm_${req.user.perfil}_${recurso}_${acao}`;
+            let hasPermission = tenantCache.get(cacheKey);
+
+            if (hasPermission === undefined) {
+                const connection = await getConnection();
+                const [permissoes] = await connection.query(
+                    `SELECT p.* FROM permissoes p
+                     WHERE p.perfil = ? AND p.recurso = ? AND p.acao = ? AND p.permitido = TRUE`,
+                    [req.user.perfil, recurso, acao]
+                );
+
+                hasPermission = permissoes.length > 0;
+                tenantCache.set(cacheKey, hasPermission, 300); // 5 minutos
+            }
+
+            if (!hasPermission) {
+                logger.warn('Acesso negado - sem permissão', {
+                    user: req.user.username,
+                    perfil: req.user.perfil,
+                    recurso,
+                    acao
+                });
+                return res.status(403).json({
+                    error: 'Sem permissão',
+                    message: `Você não tem permissão para ${acao} em ${recurso}`
+                });
+            }
+
+            next();
+        } catch (error) {
+            logger.error('Erro ao verificar permissões', { error: error.message });
+            res.status(500).json({ error: 'Erro ao verificar permissões' });
+        }
+    };
+};
+
+// ==========================================
+// CONFIGURAÇÕES BÁSICAS
+// ==========================================
+
+// Compression para reduzir tamanho das respostas
+app.use(compression());
+
+// Helmet para segurança
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// ✅ CORS CORRIGIDO (não permite mais tudo)
+const corsOptions = {
+    origin: function(origin, callback) {
+        // Lista de origens permitidas
+        const allowedOrigins = [
+            /\.fortalecesuas\.com$/,
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://localhost:8080',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173'
+        ];
+
+        // Permitir requisições sem origin (Postman, mobile apps, etc)
+        if (!origin) return callback(null, true);
+
+        // Verificar se a origem está permitida
+        const isAllowed = allowedOrigins.some(pattern =>
+            typeof pattern === 'string' ? pattern === origin : pattern.test(origin)
+        );
+
+        if (isAllowed || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            logger.warn('Origem CORS bloqueada', { origin });
+            // ✅ CORRIGIDO: Agora bloqueia de verdade
+            callback(new Error('Origem não permitida pelo CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-CSRF-Token',
+        'X-Requested-With',
+        'X-Super-Admin-Key'
+    ]
+};
+
+app.use(cors(corsOptions));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Aplicar rate limiting global
+app.use(globalLimiter);
+
+// ==========================================
+// SERVIR ARQUIVOS ESTÁTICOS (ANTES DE TUDO!)
+// ==========================================
+
+// Middleware para configurar MIME types corretos
+app.use((req, res, next) => {
+    if (req.url.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (req.url.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (req.url.endsWith('.json')) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+    next();
+});
+
+// Servir arquivos estáticos (SEM middleware de tenant)
+app.use('/css', express.static(path.join(__dirname, 'css'), {
+    setHeaders: (res, filepath) => {
+        if (filepath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
+
+app.use('/src', express.static(path.join(__dirname, 'src')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/img', express.static(path.join(__dirname, 'img')));
+app.use('/pages', express.static(path.join(__dirname, 'pages')));
+
+// ==========================================
+// ROTAS PÚBLICAS (SEM AUTENTICAÇÃO)
+// ==========================================
+
+// Rota de cadastro (SEM tenant - página pública)
+app.get('/cadastro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'cadastro.html'));
+});
+
+// Health check melhorado
+app.get('/health', async (req, res) => {
+    try {
+        const connection = await getConnection();
+        await connection.query('SELECT 1');
+
+        const uptime = process.uptime();
+        const memory = process.memoryUsage();
+
+        res.json({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
+            database: 'connected',
+            cache: {
+                tenants: tenantCache.keys().length,
+                stats: tenantCache.getStats()
+            },
+            memory: {
+                rss: `${Math.round(memory.rss / 1024 / 1024)}MB`,
+                heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`,
+                heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`
+            },
+            environment: process.env.NODE_ENV || 'development'
+        });
+    } catch (error) {
+        logger.error('Health check falhou', { error: error.message });
+        res.status(503).json({
+            status: 'unhealthy',
+            timestamp: new Date().toISOString(),
+            database: 'disconnected',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Database error'
+        });
+    }
+});
+
+// Endpoint de métricas (protegido)
+app.get('/metrics', (req, res) => {
+    const apiKey = req.headers['x-metrics-key'];
+
+    if (apiKey !== process.env.METRICS_KEY && process.env.NODE_ENV === 'production') {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const metrics = Array.from(requestStats.entries()).map(([route, data]) => ({
+        route,
+        requests: data.count,
+        avgTime: Math.round(data.avg),
+        totalTime: Math.round(data.total),
+        errors: data.errors,
+        errorRate: data.count > 0 ? ((data.errors / data.count) * 100).toFixed(2) + '%' : '0%',
+        lastAccess: data.lastAccess
+    }));
+
+    // Ordenar por número de requisições
+    metrics.sort((a, b) => b.requests - a.requests);
+
+    res.json({
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        totalRequests: Array.from(requestStats.values()).reduce((sum, stat) => sum + stat.count, 0),
+        cache: tenantCache.getStats(),
+        routes: metrics
+    });
+});
+
+// Limpar cache (apenas em desenvolvimento ou com chave especial)
+app.post('/api/cache/clear', (req, res) => {
+    const apiKey = req.headers['x-admin-key'];
+
+    if (apiKey !== process.env.ADMIN_KEY && process.env.NODE_ENV === 'production') {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const keys = tenantCache.keys();
+    tenantCache.flushAll();
+
+    logger.info('Cache limpo manualmente', { keysCleared: keys.length });
+
+    res.json({
+        success: true,
+        message: 'Cache limpo com sucesso',
+        keysCleared: keys.length
+    });
+});
+
+// ==========================================
+// AUTENTICAÇÃO (COM RATE LIMITING ESPECIAL)
+// ==========================================
+
+// Login com rate limiting mais restrito
+app.post('/auth/login', authLimiter, identifyTenant, async (req, res) => {
+    try {
+        const { usuario, senha } = req.body;
+
+        if (!usuario || !senha) {
+            return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+        }
+
+        const connection = await getConnection();
+        const [usuarios] = await connection.query(
+            `SELECT u.*, t.nome_organizacao, t.status as tenant_status,
+                    na.codigo as nivel_acesso_codigo, na.nome as nivel_acesso_nome
+             FROM usuarios u
+             INNER JOIN tenants t ON t.id = u.tenant_id
+             LEFT JOIN niveis_acesso na ON na.codigo = u.nivel_acesso_codigo
+             WHERE (u.username = ? OR u.email = ?) AND u.tenant_id = ? AND u.ativo = TRUE`,
+            [usuario, usuario, req.tenantId]
+        );
+
+        if (usuarios.length === 0) {
+            logger.warn('Tentativa de login com usuário inválido', {
+                usuario,
+                tenant: req.tenant.nome_organizacao,
+                ip: req.ip
+            });
+            return res.status(401).json({ error: 'Usuário ou senha inválidos' });
+        }
+
+        const user = usuarios[0];
+
+        const senhaValida = await bcrypt.compare(senha, user.senha_hash);
+
+        if (!senhaValida) {
+            logger.warn('Tentativa de login com senha inválida', {
+                usuario,
+                tenant: req.tenant.nome_organizacao,
+                ip: req.ip
+            });
+            return res.status(401).json({ error: 'Usuário ou senha inválidos' });
+        }
+
+        // ✅ Incluir nível de acesso no token
+        const token = jwt.sign(
+            {
+                id: user.id,
+                username: user.username,
+                perfil: user.perfil || user.nivel_acesso_codigo,
+                nivel_acesso: user.nivel_acesso_codigo,
+                tenantId: req.tenantId,
+                nomeOrganizacao: user.nome_organizacao
+            },
+            process.env.JWT_SECRET || 'sua_chave_secreta_muito_segura',
+            { expiresIn: '8h' }
+        );
+
+        // Atualizar último acesso
+        await connection.query(
+            'UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?',
+            [user.id]
+        );
+
+        logger.info('Login bem-sucedido', {
+            username: user.username,
+            perfil: user.perfil || user.nivel_acesso_codigo,
+            tenant: req.tenant.nome_organizacao
+        });
+
+        res.json({
+            sucesso: true,
+            token,
+            usuario: {
+                id: user.id,
+                username: user.username,
+                nome: user.nome_completo,
+                email: user.email,
+                perfil: user.perfil || user.nivel_acesso_codigo,
+                nivel_acesso: user.nivel_acesso_codigo,
+                organizacao: user.nome_organizacao
             }
         });
 
-        // Adicionar animação de slide out
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-</html>
+    } catch (error) {
+        logger.error('Erro no login', { error: error.message, stack: error.stack });
+        res.status(500).json({ error: 'Erro ao fazer login' });
+    }
+});
 
+// Verificar token
+app.get('/auth/verificar', identifyTenant, authenticateToken, (req, res) => {
+    res.json({
+        valido: true,
+        usuario: req.user
+    });
+});
+
+// Logout
+app.post('/auth/logout', identifyTenant, authenticateToken, (req, res) => {
+    logger.info('Logout', {
+        usuario: req.user.username,
+        tenant: req.tenant.nome_organizacao
+    });
+    res.json({ sucesso: true, mensagem: 'Logout realizado' });
+});
+
+// ==========================================
+// PÁGINA INICIAL (COM TENANT)
+// ==========================================
+
+app.get('/', identifyTenant, (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'index.html'));
+});
+
+// ==========================================
+// ROTAS DE ATENDIMENTO (MANTIDAS EXATAMENTE COMO ESTAVAM)
+// ==========================================
+
+// Listar atendimentos
+app.get('/api/atendimentos', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const { dataInicio, dataFim, status, tecnico, busca, cpf, page = 1, limit = 50 } = req.query;
+
+        let query = `
+            SELECT
+                a.*,
+                DATE_FORMAT(a.data_atendimento, '%d/%m/%Y') as data_formatada
+            FROM atendimentos a
+            WHERE a.tenant_id = ?
+        `;
+        const params = [req.tenantId];
+
+        // NOVO: Filtro específico por CPF
+        if (cpf) {
+            const cpfLimpo = cpf.replace(/\D/g, ''); // Remove formatação
+            query += ' AND a.cpf = ?';
+            params.push(cpfLimpo);
+        }
+
+        if (dataInicio) {
+            query += ' AND a.data_atendimento >= ?';
+            params.push(dataInicio);
+        }
+        if (dataFim) {
+            query += ' AND a.data_atendimento <= ?';
+            params.push(dataFim);
+        }
+        if (status) {
+            query += ' AND a.status = ?';
+            params.push(status);
+        }
+        if (tecnico) {
+            query += ' AND a.tecnico_responsavel = ?';
+            params.push(tecnico);
+        }
+        if (busca) {
+            query += ' AND (a.nome_completo LIKE ? OR a.cpf LIKE ? OR a.telefone LIKE ?)';
+            const buscaTermo = `%${busca}%`;
+            params.push(buscaTermo, buscaTermo, buscaTermo);
+        }
+
+        query += ' ORDER BY a.data_atendimento DESC, a.hora_atendimento DESC';
+
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        query += ' LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), offset);
+
+        const connection = await getConnection();
+        const [atendimentos] = await connection.query(query, params);
+
+        // CORRIGIDO: Aplicar os mesmos filtros no contador de total
+        let countQuery = 'SELECT COUNT(*) as total FROM atendimentos a WHERE a.tenant_id = ?';
+        const countParams = [req.tenantId];
+
+        // NOVO: Incluir CPF no count também
+        if (cpf) {
+            const cpfLimpo = cpf.replace(/\D/g, '');
+            countQuery += ' AND a.cpf = ?';
+            countParams.push(cpfLimpo);
+        }
+
+        if (dataInicio) {
+            countQuery += ' AND a.data_atendimento >= ?';
+            countParams.push(dataInicio);
+        }
+        if (dataFim) {
+            countQuery += ' AND a.data_atendimento <= ?';
+            countParams.push(dataFim);
+        }
+        if (status) {
+            countQuery += ' AND a.status = ?';
+            countParams.push(status);
+        }
+        if (tecnico) {
+            countQuery += ' AND a.tecnico_responsavel = ?';
+            countParams.push(tecnico);
+        }
+        if (busca) {
+            countQuery += ' AND (a.nome_completo LIKE ? OR a.cpf LIKE ? OR a.telefone LIKE ?)';
+            const buscaTermo = `%${busca}%`;
+            countParams.push(buscaTermo, buscaTermo, buscaTermo);
+        }
+
+        const [[{ total }]] = await connection.query(countQuery, countParams);
+
+        res.json({
+            sucesso: true,
+            atendimentos,
+            paginacao: {
+                total,
+                pagina: parseInt(page),
+                limite: parseInt(limit),
+                totalPaginas: Math.ceil(total / parseInt(limit))
+            }
+        });
+
+    } catch (error) {
+        logger.error('Erro ao listar atendimentos', { error: error.message });
+        res.status(500).json({ error: 'Erro ao buscar atendimentos' });
+    }
+});
+
+// Buscar atendimento específico
+app.get('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const connection = await getConnection();
+        const [atendimentos] = await connection.query(
+            `SELECT a.*,
+                    DATE_FORMAT(a.data_atendimento, '%d/%m/%Y') as data_formatada
+             FROM atendimentos a
+             WHERE a.id = ? AND a.tenant_id = ?`,
+            [req.params.id, req.tenantId]
+        );
+
+        if (atendimentos.length === 0) {
+            return res.status(404).json({ error: 'Atendimento não encontrado' });
+        }
+
+        res.json({ sucesso: true, atendimento: atendimentos[0] });
+
+    } catch (error) {
+        logger.error('Erro ao buscar atendimento', { error: error.message, id: req.params.id });
+        res.status(500).json({ error: 'Erro ao buscar atendimento' });
+    }
+});
+
+// Criar atendimento
+app.post('/api/atendimentos', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const dados = req.body;
+
+        // Validação básica
+        if (!dados.nomeCompleto || !dados.cpf) {
+            return res.status(400).json({
+                error: 'Dados obrigatórios faltando',
+                campos: ['nomeCompleto', 'cpf']
+            });
+        }
+
+        const connection = await getConnection();
+
+        // Gerar registro no formato: 2025-0001, 2025-0002, etc.
+        const ano = new Date().getFullYear();
+
+        // Buscar o último número de registro do ano atual
+        const [ultimoRegistro] = await connection.query(
+            `SELECT registro FROM atendimentos
+             WHERE tenant_id = ? AND registro LIKE ?
+             ORDER BY id DESC LIMIT 1`,
+            [req.tenantId, `${ano}-%`]
+        );
+
+        let numeroSequencial = 1;
+        if (ultimoRegistro.length > 0 && ultimoRegistro[0].registro) {
+            // Extrair o número do último registro (ex: "2025-0042" -> 42)
+            const match = ultimoRegistro[0].registro.match(/\d{4}-(\d+)/);
+            if (match && match[1]) {
+                numeroSequencial = parseInt(match[1]) + 1;
+            }
+        }
+
+        // Formatar com zeros à esquerda (ex: 0001, 0042, 1234)
+        const registro = `${ano}-${String(numeroSequencial).padStart(4, '0')}`;
+
+        const [result] = await connection.query(
+            `INSERT INTO atendimentos (
+                tenant_id, usuario_id, registro, data_atendimento, hora_atendimento,
+                nome_completo, cpf, telefone, data_nascimento,
+                tecnico_responsavel, tipo_atendimento, unidade,
+                status, prioridade, dados_completos
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                req.tenantId,
+                req.user.id,
+                registro,
+                dados.dataAtendimento || null,
+                dados.horaAtendimento || null,
+                dados.nomeCompleto,
+                dados.cpf,
+                dados.telefone,
+                dados.dataNascimento || null,
+                dados.tecnicoResponsavel,
+                dados.tipoAtendimento || 'Atendimento Geral',
+                dados.unidade || 'Secretaria',
+                dados.status || 'aguardando',
+                dados.prioridade || 'normal',
+                JSON.stringify(dados)
+            ]
+        );
+
+        logger.info('Atendimento criado', {
+            id: result.insertId,
+            registro,
+            usuario: req.user.username,
+            tenant: req.tenant.nome_organizacao
+        });
+
+        res.json({
+            sucesso: true,
+            mensagem: 'Atendimento criado com sucesso',
+            id: result.insertId,
+            registro: registro
+        });
+
+    } catch (error) {
+        logger.error('Erro ao criar atendimento', { error: error.message });
+        res.status(500).json({ error: 'Erro ao criar atendimento' });
+    }
+});
+
+// Atualizar atendimento
+app.put('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const dados = req.body;
+        const connection = await getConnection();
+
+        const [result] = await connection.query(
+            `UPDATE atendimentos SET
+                data_atendimento = ?,
+                hora_atendimento = ?,
+                nome_completo = ?,
+                cpf = ?,
+                telefone = ?,
+                data_nascimento = ?,
+                tecnico_responsavel = ?,
+                tipo_atendimento = ?,
+                unidade = ?,
+                status = ?,
+                prioridade = ?,
+                dados_completos = ?
+            WHERE id = ? AND tenant_id = ?`,
+            [
+                dados.dataAtendimento || null,
+                dados.horaAtendimento || null,
+                dados.nomeCompleto,
+                dados.cpf,
+                dados.telefone,
+                dados.dataNascimento || null,
+                dados.tecnicoResponsavel,
+                dados.tipoAtendimento,
+                dados.unidade,
+                dados.status,
+                dados.prioridade,
+                JSON.stringify(dados),
+                req.params.id,
+                req.tenantId
+            ]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Atendimento não encontrado' });
+        }
+
+        logger.info('Atendimento atualizado', {
+            id: req.params.id,
+            usuario: req.user.username,
+            tenant: req.tenant.nome_organizacao
+        });
+
+        res.json({ sucesso: true, mensagem: 'Atendimento atualizado' });
+
+    } catch (error) {
+        logger.error('Erro ao atualizar atendimento', { error: error.message, id: req.params.id });
+        res.status(500).json({ error: 'Erro ao atualizar atendimento' });
+    }
+});
+
+// Deletar atendimento
+app.delete('/api/atendimentos/:id', identifyTenant, authenticateToken, async (req, res) => {
+    try {
+        const connection = await getConnection();
+        const [result] = await connection.query(
+            'DELETE FROM atendimentos WHERE id = ? AND tenant_id = ?',
+            [req.params.id, req.tenantId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Atendimento não encontrado' });
+        }
+
+        logger.info('Atendimento excluído', {
+            id: req.params.id,
+            usuario: req.user.username,
+            tenant: req.tenant.nome_organizacao
+        });
+
+        res.json({ sucesso: true, mensagem: 'Atendimento excluído' });
+
+    } catch (error) {
+        logger.error('Erro ao deletar atendimento', { error: error.message, id: req.params.id });
+        res.status(500).json({ error: 'Erro ao deletar atendimento' });
+    }
+});
+
+// ==========================================
+// ROTAS MODULARES (COM TENANT) - TODAS MANTIDAS
+// ==========================================
+
+// Aplicar rate limiting para APIs
+app.use('/api/', apiLimiter);
+
+// Rotas principais com /api
+app.use('/api/estoque', identifyTenant, authenticateToken, estoqueRoutes);
+app.use('/api/agenda', identifyTenant, authenticateToken, agendaRoutes);
+app.use('/api/admin', identifyTenant, authenticateToken, adminRoutes);
+
+// ✅ Rota de tenants (Super Admin apenas) - COM VALIDAÇÃO
+app.use('/api/admin/tenants', authenticateToken, authenticateSuperAdmin, tenantsRoutes);
+
+// Rotas legacy (para compatibilidade) - MANTIDAS
+app.use('/estoque', identifyTenant, authenticateToken, estoqueRoutes);
+app.use('/eventos', identifyTenant, authenticateToken, agendaRoutes);
+app.use('/agendamentos', identifyTenant, authenticateToken, agendaRoutes);
+
+// Carregar rotas dinamicamente - MANTIDO EXATAMENTE COMO ESTAVA
+const routesToLoad = [
+    { path: '/api/atividades', file: './src/routes/atividades', name: 'atividades' },
+    { path: '/api/permissoes', file: './src/routes/permissoes', name: 'permissões' },
+    { path: '/api/usuarios', file: './src/routes/usuarios', name: 'usuarios' },
+    { path: '/api/profissionais', file: './src/routes/profissionais', name: 'profissionais' },
+    { path: '/api/estatisticas', file: './src/routes/estatisticas', name: 'estatísticas' },
+    { path: '/api/beneficios', file: './src/routes/beneficios', name: 'benefícios' }
+];
+
+routesToLoad.forEach(route => {
+    try {
+        const routeModule = require(route.file);
+        app.use(route.path, identifyTenant, authenticateToken, routeModule);
+
+        // Adicionar rotas legacy se for benefícios
+        if (route.name === 'benefícios') {
+            app.use('/beneficios', identifyTenant, authenticateToken, routeModule);
+        }
+
+        logger.info(`Rota ${route.name} carregada com sucesso`);
+    } catch (e) {
+        logger.warn(`Rota ${route.name} não encontrada`, { error: e.message });
+    }
+});
+
+// ==========================================
+// TRATAMENTO DE ERROS
+// ==========================================
+
+app.use((req, res) => {
+    logger.warn('Rota não encontrada', {
+        path: req.path,
+        method: req.method,
+        tenant: req.tenant?.nome_organizacao
+    });
+    res.status(404).json({
+        sucesso: false,
+        mensagem: 'Rota não encontrada',
+        path: req.path
+    });
+});
+
+app.use((err, req, res, next) => {
+    logger.error('Erro não tratado', {
+        error: err.message,
+        stack: err.stack,
+        path: req.path,
+        tenant: req.tenant?.nome_organizacao
+    });
+    res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro interno do servidor',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
+
+// ==========================================
+// INICIALIZAÇÃO
+// ==========================================
+
+async function startServer() {
+    try {
+        logger.info('Inicializando Sistema CRAS Multi-Tenant...');
+
+        await connectDatabase();
+
+        const PORT = process.env.PORT || 3000;
+
+        const server = app.listen(PORT, '0.0.0.0', () => {
+            logger.info('');
+            logger.info('=================================================');
+            logger.info('  ✅ SERVIDOR MULTI-TENANT RODANDO COM MELHORIAS');
+            logger.info('=================================================');
+            logger.info('');
+            logger.info(`Porta: ${PORT}`);
+            logger.info('Sistema: Multi-Tenant (Subdomínios)');
+            logger.info('Autenticação: JWT');
+            logger.info('Cache: Node-Cache (300s TTL)');
+            logger.info('Rate Limiting: Ativo');
+            logger.info('Compression: Ativo');
+            logger.info('Métricas: Ativo');
+            logger.info('');
+            logger.info('URLs de Exemplo:');
+            logger.info(`   • Demo: http://demo.localhost:${PORT}`);
+            logger.info('   • Cliente1: http://cliente1.fortalecesuas.com');
+            logger.info(`   • Health: http://localhost:${PORT}/health`);
+            logger.info(`   • Metrics: http://localhost:${PORT}/metrics`);
+            logger.info('');
+            logger.info('API Endpoints:');
+            logger.info('   • Login: POST /auth/login');
+            logger.info('   • Verificar: GET /auth/verificar');
+            logger.info('   • Logout: POST /auth/logout');
+            logger.info('   • Atendimentos: GET /api/atendimentos');
+            logger.info('   • Usuários: GET /api/usuarios');
+            logger.info('   • Benefícios: GET /api/beneficios');
+            logger.info('   • Tenants (Super Admin): GET /api/admin/tenants');
+            logger.info('');
+            logger.info('Melhorias Ativas:');
+            logger.info('   ✓ Cache de tenants');
+            logger.info('   ✓ Rate limiting (global + auth + API)');
+            logger.info('   ✓ Compression de respostas');
+            logger.info('   ✓ Logging estruturado');
+            logger.info('   ✓ Métricas de performance');
+            logger.info('   ✓ Health check avançado');
+            logger.info('   ✓ CORS corrigido (bloqueio real)');
+            logger.info('   ✓ Segurança reforçada');
+            logger.info('   ✓ Validação Super Admin');
+            logger.info('');
+            logger.info('=================================================');
+        });
+
+        // Graceful shutdown
+        const gracefulShutdown = async (signal) => {
+            logger.warn(`Recebido sinal ${signal}, iniciando shutdown gracioso...`);
+
+            server.close(async () => {
+                logger.info('Servidor HTTP fechado');
+
+                try {
+                    // Limpar cache
+                    tenantCache.flushAll();
+                    logger.info('Cache limpo');
+
+                    // Fechar conexões do banco
+                    const { closeDatabase } = require('./src/config/database');
+                    await closeDatabase();
+                    logger.info('Conexões do banco fechadas');
+
+                    // Salvar métricas finais
+                    const totalRequests = Array.from(requestStats.values())
+                        .reduce((sum, stat) => sum + stat.count, 0);
+                    logger.info('Estatísticas finais', {
+                        totalRequests,
+                        uptime: process.uptime()
+                    });
+
+                } catch (error) {
+                    logger.error('Erro durante shutdown', { error: error.message });
+                }
+
+                logger.info('Shutdown completo. Até logo! 👋');
+                process.exit(0);
+            });
+
+            // Timeout de segurança
+            setTimeout(() => {
+                logger.error('Forçando shutdown após timeout de 10s');
+                process.exit(1);
+            }, 10000);
+        };
+
+        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+        // Tratar erros não capturados
+        process.on('uncaughtException', (error) => {
+            logger.error('Exceção não capturada', { error: error.message, stack: error.stack });
+            gracefulShutdown('uncaughtException');
+        });
+
+        process.on('unhandledRejection', (reason, promise) => {
+            logger.error('Promise rejeitada não tratada', { reason, promise });
+        });
+
+    } catch (error) {
+        logger.error('Erro ao inicializar servidor', { error: error.message, stack: error.stack });
+        process.exit(1);
+    }
+}
+
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
+
+
+
+
+
+
+
+<body>
+    <div class="login-box">
+        <h2>Login SuperAdmin</h2>
+        <form id="superadmin-form">
+            <div class="form-group">
+                <label>Email ou Usuário</label>
+                <input type="text" id="usuario" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="senha" required>
+            </div>
+            <div class="form-group">
+                <label>Chave de Acesso</label>
+                <input type="password" id="chave" placeholder="SUPERADMIN_KEY" required>
+            </div>
+            <button type="submit">Entrar</button>
+            <div id="alert" class="alert"></div>
+        </form>
+    </div>

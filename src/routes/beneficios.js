@@ -24,7 +24,7 @@ const extractTenantId = (req, res, next) => {
     next();
 };
 
-// Aplicar middleware
+// Aplicar middleware em todas as rotas deste router
 router.use(extractTenantId);
 
 // ===================================
@@ -33,24 +33,35 @@ router.use(extractTenantId);
 
 // Listar todas as movimentações
 router.get('/movimentacao', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
-        const [rows] = await connection.query(`
-            SELECT * FROM beneficios_movimentacao
+        connection = await getConnection();
+
+        const [rows] = await connection.query(
+            `
+            SELECT *
+            FROM beneficios_movimentacao
             WHERE tenant_id = ?
             ORDER BY data DESC
             LIMIT 100
-        `, [req.tenant_id]);
+        `,
+            [req.tenant_id]
+        );
 
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar movimentações:', error);
         res.status(500).json({ mensagem: 'Erro ao buscar movimentações', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Criar nova movimentação
 router.post('/movimentacao', async (req, res) => {
+    let connection;
     try {
         const { beneficio, nome, cpf, data, acao, situacao, unidade, observacoes } = req.body;
 
@@ -58,12 +69,16 @@ router.post('/movimentacao', async (req, res) => {
             return res.status(400).json({ mensagem: 'Campos obrigatórios faltando' });
         }
 
-        const connection = await getConnection();
-        const [result] = await connection.query(`
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
             INSERT INTO beneficios_movimentacao
             (tenant_id, beneficio, nome, cpf, data, acao, situacao, unidade, observacoes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [req.tenant_id, beneficio, nome, cpf, data, acao, situacao, unidade, observacoes]);
+        `,
+            [req.tenant_id, beneficio, nome, cpf, data, acao, situacao, unidade, observacoes]
+        );
 
         res.status(201).json({
             mensagem: 'Movimentação criada com sucesso',
@@ -72,13 +87,52 @@ router.post('/movimentacao', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar movimentação:', error);
         res.status(500).json({ mensagem: 'Erro ao criar movimentação', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
+    }
+});
+
+// Atualizar movimentação
+router.put('/movimentacao/:id', async (req, res) => {
+    let connection;
+    try {
+        const { beneficio, nome, cpf, data, acao, situacao, unidade, observacoes } = req.body;
+
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
+            UPDATE beneficios_movimentacao
+            SET beneficio = ?, nome = ?, cpf = ?, data = ?, acao = ?,
+                situacao = ?, unidade = ?, observacoes = ?
+            WHERE id = ? AND tenant_id = ?
+        `,
+            [beneficio, nome, cpf, data, acao, situacao, unidade, observacoes, req.params.id, req.tenant_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ mensagem: 'Movimentação não encontrada' });
+        }
+
+        res.json({ mensagem: 'Movimentação atualizada com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar movimentação:', error);
+        res.status(500).json({ mensagem: 'Erro ao atualizar movimentação', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Deletar movimentação
 router.delete('/movimentacao/:id', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
+
         const [result] = await connection.query(
             'DELETE FROM beneficios_movimentacao WHERE id = ? AND tenant_id = ?',
             [req.params.id, req.tenant_id]
@@ -92,6 +146,10 @@ router.delete('/movimentacao/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar movimentação:', error);
         res.status(500).json({ mensagem: 'Erro ao deletar movimentação', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
@@ -101,24 +159,35 @@ router.delete('/movimentacao/:id', async (req, res) => {
 
 // Listar Bolsa Família
 router.get('/bolsa', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
-        const [rows] = await connection.query(`
-            SELECT * FROM beneficios_bolsa_familia
+        connection = await getConnection();
+
+        const [rows] = await connection.query(
+            `
+            SELECT *
+            FROM beneficios_bolsa_familia
             WHERE tenant_id = ?
             ORDER BY entrada DESC
             LIMIT 100
-        `, [req.tenant_id]);
+        `,
+            [req.tenant_id]
+        );
 
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar Bolsa Família:', error);
         res.status(500).json({ mensagem: 'Erro ao buscar Bolsa Família', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Criar novo registro Bolsa Família
 router.post('/bolsa', async (req, res) => {
+    let connection;
     try {
         const { rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes } = req.body;
 
@@ -126,12 +195,16 @@ router.post('/bolsa', async (req, res) => {
             return res.status(400).json({ mensagem: 'Campos obrigatórios faltando' });
         }
 
-        const connection = await getConnection();
-        const [result] = await connection.query(`
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
             INSERT INTO beneficios_bolsa_familia
             (tenant_id, rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [req.tenant_id, rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes]);
+        `,
+            [req.tenant_id, rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes]
+        );
 
         res.status(201).json({
             mensagem: 'Registro de Bolsa Família criado com sucesso',
@@ -140,13 +213,52 @@ router.post('/bolsa', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar registro Bolsa Família:', error);
         res.status(500).json({ mensagem: 'Erro ao criar registro', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
+    }
+});
+
+// Atualizar registro Bolsa Família
+router.put('/bolsa/:id', async (req, res) => {
+    let connection;
+    try {
+        const { rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes } = req.body;
+
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
+            UPDATE beneficios_bolsa_familia
+            SET rf = ?, nis = ?, cpf = ?, grupo = ?, entrada = ?,
+                renovacao = ?, situacao = ?, observacoes = ?
+            WHERE id = ? AND tenant_id = ?
+        `,
+            [rf, nis, cpf, grupo, entrada, renovacao, situacao, observacoes, req.params.id, req.tenant_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ mensagem: 'Registro não encontrado' });
+        }
+
+        res.json({ mensagem: 'Registro atualizado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar registro:', error);
+        res.status(500).json({ mensagem: 'Erro ao atualizar registro', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Deletar registro Bolsa Família
 router.delete('/bolsa/:id', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
+
         const [result] = await connection.query(
             'DELETE FROM beneficios_bolsa_familia WHERE id = ? AND tenant_id = ?',
             [req.params.id, req.tenant_id]
@@ -160,6 +272,10 @@ router.delete('/bolsa/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar registro:', error);
         res.status(500).json({ mensagem: 'Erro ao deletar registro', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
@@ -169,9 +285,12 @@ router.delete('/bolsa/:id', async (req, res) => {
 
 // Listar Benefícios Eventuais
 router.get('/eventuais', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
-        const [rows] = await connection.query(`
+        connection = await getConnection();
+
+        const [rows] = await connection.query(
+            `
             SELECT
                 id,
                 tenant_id,
@@ -179,7 +298,7 @@ router.get('/eventuais', async (req, res) => {
                 nome,
                 cpf,
                 valor,
-                data_solicitacao as data,
+                data_solicitacao AS data,
                 situacao,
                 observacoes,
                 created_at,
@@ -188,17 +307,24 @@ router.get('/eventuais', async (req, res) => {
             WHERE tenant_id = ?
             ORDER BY data_solicitacao DESC
             LIMIT 100
-        `, [req.tenant_id]);
+        `,
+            [req.tenant_id]
+        );
 
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar benefícios eventuais:', error);
         res.status(500).json({ mensagem: 'Erro ao buscar benefícios eventuais', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Criar novo Benefício Eventual
 router.post('/eventuais', async (req, res) => {
+    let connection;
     try {
         const { tipo, nome, cpf, valor, data, situacao, observacoes } = req.body;
 
@@ -206,12 +332,16 @@ router.post('/eventuais', async (req, res) => {
             return res.status(400).json({ mensagem: 'Campos obrigatórios faltando' });
         }
 
-        const connection = await getConnection();
-        const [result] = await connection.query(`
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
             INSERT INTO beneficios_eventuais
             (tenant_id, tipo, nome, cpf, valor, data_solicitacao, situacao, observacoes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [req.tenant_id, tipo, nome, cpf, valor, data, situacao, observacoes]);
+        `,
+            [req.tenant_id, tipo, nome, cpf, valor, data, situacao, observacoes]
+        );
 
         res.status(201).json({
             mensagem: 'Benefício eventual criado com sucesso',
@@ -220,13 +350,52 @@ router.post('/eventuais', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar benefício eventual:', error);
         res.status(500).json({ mensagem: 'Erro ao criar benefício eventual', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
+    }
+});
+
+// Atualizar Benefício Eventual
+router.put('/eventuais/:id', async (req, res) => {
+    let connection;
+    try {
+        const { tipo, nome, cpf, valor, data, situacao, observacoes } = req.body;
+
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
+            UPDATE beneficios_eventuais
+            SET tipo = ?, nome = ?, cpf = ?, valor = ?, data_solicitacao = ?,
+                situacao = ?, observacoes = ?
+            WHERE id = ? AND tenant_id = ?
+        `,
+            [tipo, nome, cpf, valor, data, situacao, observacoes, req.params.id, req.tenant_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ mensagem: 'Benefício não encontrado' });
+        }
+
+        res.json({ mensagem: 'Benefício atualizado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar benefício:', error);
+        res.status(500).json({ mensagem: 'Erro ao atualizar benefício', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Deletar Benefício Eventual
 router.delete('/eventuais/:id', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
+
         const [result] = await connection.query(
             'DELETE FROM beneficios_eventuais WHERE id = ? AND tenant_id = ?',
             [req.params.id, req.tenant_id]
@@ -240,6 +409,10 @@ router.delete('/eventuais/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar benefício:', error);
         res.status(500).json({ mensagem: 'Erro ao deletar benefício', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
@@ -249,14 +422,20 @@ router.delete('/eventuais/:id', async (req, res) => {
 
 // Listar BPC
 router.get('/bpc', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
-        const [rows] = await connection.query(`
-            SELECT * FROM beneficios_bpc
+        connection = await getConnection();
+
+        const [rows] = await connection.query(
+            `
+            SELECT *
+            FROM beneficios_bpc
             WHERE tenant_id = ?
             ORDER BY data_cadastro DESC
             LIMIT 100
-        `, [req.tenant_id]);
+        `,
+            [req.tenant_id]
+        );
 
         res.json(rows);
     } catch (error) {
@@ -265,11 +444,16 @@ router.get('/bpc', async (req, res) => {
         console.error('SQL:', error.sql);
         console.error('Params:', [req.tenant_id]);
         res.status(500).json({ mensagem: 'Erro ao buscar BPC', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Criar novo registro BPC
 router.post('/bpc', async (req, res) => {
+    let connection;
     try {
         const { nome, cpf, nis, categoria, protocolo, situacao, observacoes } = req.body;
 
@@ -277,12 +461,16 @@ router.post('/bpc', async (req, res) => {
             return res.status(400).json({ mensagem: 'Campos obrigatórios faltando' });
         }
 
-        const connection = await getConnection();
-        const [result] = await connection.query(`
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
             INSERT INTO beneficios_bpc
             (tenant_id, nome, cpf, nis, categoria, protocolo, situacao, observacoes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [req.tenant_id, nome, cpf, nis, categoria, protocolo, situacao, observacoes]);
+        `,
+            [req.tenant_id, nome, cpf, nis, categoria, protocolo, situacao, observacoes]
+        );
 
         res.status(201).json({
             mensagem: 'Registro de BPC criado com sucesso',
@@ -291,13 +479,52 @@ router.post('/bpc', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar registro BPC:', error);
         res.status(500).json({ mensagem: 'Erro ao criar registro BPC', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
+    }
+});
+
+// Atualizar registro BPC
+router.put('/bpc/:id', async (req, res) => {
+    let connection;
+    try {
+        const { nome, cpf, nis, categoria, protocolo, situacao, observacoes, tipoBpc } = req.body;
+
+        connection = await getConnection();
+
+        const [result] = await connection.query(
+            `
+            UPDATE beneficios_bpc
+            SET nome = ?, cpf = ?, nis = ?, categoria = ?, protocolo = ?,
+                situacao = ?, observacoes = ?
+            WHERE id = ? AND tenant_id = ?
+        `,
+            [nome, cpf, nis, categoria || tipoBpc, protocolo, situacao, observacoes, req.params.id, req.tenant_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ mensagem: 'Registro não encontrado' });
+        }
+
+        res.json({ mensagem: 'Registro atualizado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar registro:', error);
+        res.status(500).json({ mensagem: 'Erro ao atualizar registro', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
 // Deletar registro BPC
 router.delete('/bpc/:id', async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
+
         const [result] = await connection.query(
             'DELETE FROM beneficios_bpc WHERE id = ? AND tenant_id = ?',
             [req.params.id, req.tenant_id]
@@ -311,6 +538,10 @@ router.delete('/bpc/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar registro:', error);
         res.status(500).json({ mensagem: 'Erro ao deletar registro', erro: error.message });
+    } finally {
+        if (connection && typeof connection.release === 'function') {
+            connection.release();
+        }
     }
 });
 
