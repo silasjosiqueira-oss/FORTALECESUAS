@@ -1,5 +1,105 @@
 :root {
-    /* Suas variáveis existentes */
+    /* ========================================
+       COLORS - Sistema de Cores Completo
+       ======================================== */
+
+    /* Slate/Gray Scale */
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-200: #e2e8f0;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #64748b;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    --color-slate-900: #0f172a;
+
+    /* Blue - Primary */
+    --color-blue-50: #eff6ff;
+    --color-blue-100: #dbeafe;
+    --color-blue-200: #bfdbfe;
+    --color-blue-300: #93c5fd;
+    --color-blue-400: #60a5fa;
+    --color-blue-500: #3b82f6;
+    --color-blue-600: #2563eb;
+    --color-blue-700: #1d4ed8;
+    --color-blue-800: #1e40af;
+    --color-blue-900: #1e3a8a;
+
+    /* Purple - Sidebar */
+    --color-purple-50: #faf5ff;
+    --color-purple-100: #f3e8ff;
+    --color-purple-200: #e9d5ff;
+    --color-purple-300: #d8b4fe;
+    --color-purple-400: #c084fc;
+    --color-purple-500: #a855f7;
+    --color-purple-600: #9333ea;
+    --color-purple-700: #7e22ce;
+    --color-purple-800: #6b21a8;
+    --color-purple-900: #581c87;
+    --color-purple-dark: #6f42c1; /* Cor original da sidebar */
+    --color-purple-darker: #483D8B; /* Cor tabelas */
+
+    /* Green - Success */
+    --color-green-50: #f0fdf4;
+    --color-green-100: #dcfce7;
+    --color-green-200: #bbf7d0;
+    --color-green-300: #86efac;
+    --color-green-400: #4ade80;
+    --color-green-500: #22c55e;
+    --color-green-600: #16a34a;
+    --color-green-700: #15803d;
+    --color-green-800: #166534;
+    --color-green-900: #14532d;
+    --color-green-legacy: #27ae60; /* Cor original do sistema */
+    --color-green-alt: #059669; /* Variação usada */
+
+    /* Orange/Yellow - Warning */
+    --color-orange-50: #fffbeb;
+    --color-orange-100: #fef3c7;
+    --color-orange-200: #fde68a;
+    --color-orange-300: #fcd34d;
+    --color-orange-400: #fbbf24;
+    --color-orange-500: #f59e0b;
+    --color-orange-600: #d97706;
+    --color-orange-700: #b45309;
+    --color-orange-800: #92400e;
+    --color-orange-900: #78350f;
+    --color-orange-legacy: #f39c12; /* Cor original do sistema */
+    --color-orange-alt: #e67e22; /* Variação usada */
+
+    /* Red - Danger/Error */
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-200: #fecaca;
+    --color-red-300: #fca5a5;
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    --color-red-800: #991b1b;
+    --color-red-900: #7f1d1d;
+    --color-red-legacy: #e74c3c; /* Cor original do sistema */
+
+    /* Cyan - Info */
+    --color-cyan-50: #ecfeff;
+    --color-cyan-100: #cffafe;
+    --color-cyan-200: #a5f3fc;
+    --color-cyan-300: #67e8f9;
+    --color-cyan-400: #22d3ee;
+    --color-cyan-500: #06b6d4;
+    --color-cyan-600: #0891b2;
+    --color-cyan-700: #0e7490;
+    --color-cyan-800: #155e75;
+    --color-cyan-900: #164e63;
+    --color-cyan-legacy: #3498db; /* Cor original do sistema */
+
+    /* Neutral Colors */
+    --color-white: #ffffff;
+    --color-black: #000000;
+
+    /* Legacy Colors - Mapeamento das cores antigas */
     --color-primary: #1a5276;
     --color-primary-light: #2c7cb0;
     --color-secondary: #e67e22;
@@ -12,51 +112,277 @@
     --color-gray-300: #dee2e6;
     --color-gray-800: #343a40;
     --color-gray-900: #212529;
+
+    /* ========================================
+       SPACING - Sistema de Espaçamento
+       ======================================== */
+
     --space-unit: 0.8rem;
-    --space-sm: calc(var(--space-unit) * 1);
-    --space-md: calc(var(--space-unit) * 2);
-    --space-lg: calc(var(--space-unit) * 3);
-    --space-xl: calc(var(--space-unit) * 4);
+    --space-px: 1px;
+    --space-0: 0;
+    --space-xs: 0.25rem;      /* 4px */
+    --space-sm: 0.5rem;       /* 8px */
+    --space-md: 1rem;         /* 16px */
+    --space-lg: 1.5rem;       /* 24px */
+    --space-xl: 2rem;         /* 32px */
+    --space-2xl: 2.5rem;      /* 40px */
+    --space-3xl: 3rem;        /* 48px */
+    --space-4xl: 4rem;        /* 64px */
+    --space-5xl: 5rem;        /* 80px */
+
+    /* Legacy Spacing */
+    --space-1: calc(var(--space-unit) * 1);  /* 0.8rem */
+    --space-2: calc(var(--space-unit) * 2);  /* 1.6rem */
+    --space-3: calc(var(--space-unit) * 3);  /* 2.4rem */
+    --space-4: calc(var(--space-unit) * 4);  /* 3.2rem */
+
+    /* ========================================
+       TYPOGRAPHY - Tamanhos de Fonte
+       ======================================== */
+
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-md: 1.125rem;     /* 18px */
+    --font-size-lg: 1.25rem;      /* 20px */
+    --font-size-xl: 1.5rem;       /* 24px */
+    --font-size-2xl: 1.875rem;    /* 30px */
+    --font-size-3xl: 2.25rem;     /* 36px */
+    --font-size-4xl: 3rem;        /* 48px */
+
+    /* Font Weights */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    /* Line Heights */
+    --line-height-tight: 1.2;
+    --line-height-snug: 1.4;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+    --line-height-loose: 2;
+
+    /* Font Families */
+    --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family-fallback: Arial, sans-serif;
+
+    /* ========================================
+       BORDER RADIUS
+       ======================================== */
+
+    --radius-none: 0;
+    --radius-sm: 0.25rem;         /* 4px */
+    --radius-base: 0.4rem;        /* 6.4px - legacy */
+    --radius-md: 0.5rem;          /* 8px */
+    --radius-lg: 0.8rem;          /* 12.8px - legacy */
+    --radius-xl: 1rem;            /* 16px */
+    --radius-2xl: 1.5rem;         /* 24px */
+    --radius-3xl: 2rem;           /* 32px */
+    --radius-full: 9999px;        /* Círculo completo */
+
+    /* Legacy */
     --border-radius: 0.4rem;
     --border-radius-lg: 0.8rem;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-    --transition: all 0.3s ease;
 
-    /* Novas variáveis adaptadas do Fortalece Dados */
-    --sidebar-bg: #6f42c1;
-    --sidebar-width: 25rem;
-    --navbar-height: 5.6rem;
-    --menu-item-bg: transparent;
-    --menu-item-hover-bg: rgba(255, 255, 255, 0.1);
-    --menu-item-active-bg: #007bff;
-    --menu-separator-bg: #495057;
-    --menu-icon-color: #ffffff;
-    --menu-text-color: #ffffff;
-    --loading-overlay-bg: rgba(255, 255, 255, 0.9);
+    /* ========================================
+       SHADOWS - Sombras
+       ======================================== */
 
-    /* Cores para loading animation */
-    --loading-color-1: #007bff;
-    --loading-color-2: #007bff;
-    --loading-color-3: #007bff;
-    --loading-color-4: #007bff;
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
-    /* Variáveis específicas do sistema administrativo */
-    --admin-sidebar-text: #ffffff;
-    --admin-border-color: #495057;
+    /* Dropdown Shadow */
+    --shadow-dropdown: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+    /* Legacy */
     --admin-dropdown-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     --admin-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    /* ========================================
+       TRANSITIONS - Animações
+       ======================================== */
+
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Timing Functions */
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Legacy */
+    --transition: all 0.3s ease;
+    --admin-transition: all 0.15s ease-in-out;
+    --admin-submenu-transition: all 0.3s ease;
+
+    /* ========================================
+       Z-INDEX - Camadas
+       ======================================== */
+
+    --z-base: 0;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-notification: 9999;
+
+    /* ========================================
+       LAYOUT - Dimensões e Estrutura
+       ======================================== */
+
+    /* Sidebar */
+    --sidebar-bg: var(--color-purple-dark);
+    --sidebar-width: 25rem;
+    --sidebar-text: var(--color-white);
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-active-bg: var(--color-blue-600);
+
+    /* Navbar */
+    --navbar-height: 5.6rem;
+    --navbar-bg: var(--color-white);
+
+    /* Content */
+    --content-max-width: 1400px;
+    --content-padding: 2rem;
+
+    /* Menu */
+    --menu-item-bg: transparent;
+    --menu-item-hover-bg: rgba(255, 255, 255, 0.1);
+    --menu-item-active-bg: var(--color-blue-600);
+    --menu-separator-bg: #495057;
+    --menu-icon-color: var(--color-white);
+    --menu-text-color: var(--color-white);
+    --menu-padding: 1.2rem 2rem;
+    --submenu-padding: 1.2rem 4.5rem;
+
+    /* ========================================
+       BORDERS - Bordas
+       ======================================== */
+
+    --border-width-thin: 1px;
+    --border-width-base: 2px;
+    --border-width-thick: 4px;
+
+    --border-color-base: var(--color-slate-200);
+    --border-color-dark: var(--color-slate-300);
+    --border-color-light: var(--color-slate-100);
+
+    /* Legacy */
+    --admin-border-color: #495057;
+
+    /* ========================================
+       COMPONENTS - Cores de Componentes
+       ======================================== */
+
+    /* Hover States */
+    --hover-bg: var(--color-slate-50);
+    --hover-border: var(--color-blue-300);
     --admin-hover-bg: #f8f9fa;
-    --admin-primary-blue: #0d6efd;
+
+    /* Focus States */
+    --focus-ring-color: rgba(37, 99, 235, 0.1);
+    --focus-ring-width: 3px;
+    --focus-border-color: var(--color-blue-600);
+
+    /* Disabled States */
+    --disabled-bg: var(--color-slate-100);
+    --disabled-text: var(--color-slate-400);
+    --disabled-opacity: 0.5;
+
+    /* Loading */
+    --loading-overlay-bg: rgba(255, 255, 255, 0.9);
+    --loading-spinner-color: var(--color-blue-600);
+
+    /* Loading Animation Colors */
+    --loading-color-1: var(--color-blue-600);
+    --loading-color-2: var(--color-blue-600);
+    --loading-color-3: var(--color-blue-600);
+    --loading-color-4: var(--color-blue-600);
+
+    /* ========================================
+       SEMANTIC COLORS - Cores Semânticas
+       ======================================== */
+
+    /* Primary (Blue) */
+    --color-primary-50: var(--color-blue-50);
+    --color-primary-500: var(--color-blue-600);
+    --color-primary-600: var(--color-blue-700);
+    --admin-primary-blue: var(--color-blue-600);
+
+    /* Success (Green) */
+    --color-success-50: var(--color-green-50);
+    --color-success-500: var(--color-green-600);
+    --color-success-600: var(--color-green-700);
+
+    /* Warning (Orange) */
+    --color-warning-50: var(--color-orange-50);
+    --color-warning-500: var(--color-orange-600);
+    --color-warning-600: var(--color-orange-700);
+
+    /* Danger (Red) */
+    --color-danger-50: var(--color-red-50);
+    --color-danger-500: var(--color-red-600);
+    --color-danger-600: var(--color-red-700);
+
+    /* Info (Cyan) */
+    --color-info-50: var(--color-cyan-50);
+    --color-info-500: var(--color-cyan-600);
+    --color-info-600: var(--color-cyan-700);
+
+    /* Text Colors */
+    --text-primary: var(--color-slate-900);
+    --text-secondary: var(--color-slate-600);
+    --text-tertiary: var(--color-slate-500);
+    --text-disabled: var(--color-slate-400);
+    --text-inverse: var(--color-white);
     --admin-text-muted: #6c757d;
 
-    /* Layout */
+    /* Background Colors */
+    --bg-primary: var(--color-white);
+    --bg-secondary: var(--color-slate-50);
+    --bg-tertiary: var(--color-slate-100);
+
+    /* ========================================
+       BREAKPOINTS - Responsividade
+       ======================================== */
+
+    --breakpoint-xs: 480px;
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+    --breakpoint-2xl: 1536px;
+
+    /* ========================================
+       LEGACY SUPPORT
+       ======================================== */
+
+    /* Admin Layout */
+    --admin-sidebar-text: var(--color-white);
     --admin-content-padding: 2rem;
     --admin-menu-padding: 1.2rem 2rem;
     --admin-submenu-padding: 1.2rem 4.5rem;
+}
 
-    /* Transições */
-    --admin-transition: all 0.15s ease-in-out;
-    --admin-submenu-transition: all 0.3s ease;
+/* ========================================
+   DARK MODE SUPPORT (Opcional)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Implementar variáveis para modo escuro se necessário */
+    }
 }

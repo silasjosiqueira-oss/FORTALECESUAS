@@ -484,7 +484,7 @@ function renderAtendimentosTable() {
         const dataHora = a.data_atendimento || '';
 
         return `
-            <tr class="clickable" onclick="verDetalhesAtendimento(${a.id})">
+            <tr class="clickable" onclick="editarAtendimento(${a.id})">
                 <td>${registro}</td>
                 <td>
                     <span class="status-badge ${getStatusClass(status)}">

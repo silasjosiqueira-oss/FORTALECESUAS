@@ -1,148 +1,139 @@
-// src/middleware/rateLimiter.js
-
 const rateLimit = require('express-rate-limit');
 
-// Store para rate limiting (em produção use Redis)
-const store = new Map();
-
-// Rate limiter para autenticação
-const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas por IP
-  message: {
-    error: true,
-    message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
-    retryAfter: 15 * 60
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection.remoteAddress;
-  },
-  handler: (req, res) => {
-    console.warn(`Rate limit excedido para IP: ${req.ip} na rota de auth`);
-    res.status(429).json({
-      error: true,
-      message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
-      retryAfter: 15 * 60
-    });
-  }
-});
-
-// Rate limiter para API geral
-const apiRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
-  message: {
-    error: true,
-    message: 'Muitas requisições. Tente novamente em 15 minutos.',
-    retryAfter: 15 * 60
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection.remoteAddress;
-  },
-  handler: (req, res) => {
-    console.warn(`Rate limit excedido para IP: ${req.ip} na API`);
-    res.status(429).json({
-      error: true,
-      message: 'Muitas requisições. Tente novamente em 15 minutos.',
-      retryAfter: 15 * 60
-    });
-  }
-});
-
-// Rate limiter mais restritivo para operações administrativas
-const adminRateLimit = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutos
-  max: 20, // máximo 20 requests por IP
-  message: {
-    error: true,
-    message: 'Muitas requisições administrativas. Tente novamente em 5 minutos.',
-    retryAfter: 5 * 60
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection.remoteAddress;
-  },
-  handler: (req, res) => {
-    console.warn(`Rate limit admin excedido para IP: ${req.ip}`);
-    res.status(429).json({
-      error: true,
-      message: 'Muitas requisições administrativas. Tente novamente em 5 minutos.',
-      retryAfter: 5 * 60
-    });
-  }
-});
-
-// Rate limiter global muito permissivo
-const globalRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 1000, // máximo 1000 requests por IP
-  message: {
-    error: true,
-    message: 'Limite global de requisições excedido.',
-    retryAfter: 15 * 60
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection.remoteAddress;
-  }
-});
-
-// Função para limpar rate limit em caso de sucesso
-const clearRateLimitOnSuccess = (req, res, next) => {
-  const originalSend = res.send;
-
-  res.send = function(data) {
-    // Se a resposta foi bem-sucedida (2xx), limpar o contador de tentativas falhas
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      // Em uma implementação real com Redis, você limparia o contador aqui
-      console.log(`Rate limit resetado para IP: ${req.ip} após sucesso`);
-    }
-
-    return originalSend.call(this, data);
-  };
-
-  next();
-};
-
-// Middleware personalizado para casos específicos
-const createCustomRateLimit = (options = {}) => {
-  const defaultOptions = {
-    windowMs: 15 * 60 * 1000,
-    max: 50,
+/**
+ * Rate limiter global
+ */
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 500,
     message: {
-      error: true,
-      message: 'Muitas requisições. Tente novamente mais tarde.'
+        error: 'Muitas requisições',
+        message: 'Tente novamente em 15 minutos'
     },
     standardHeaders: true,
-    legacyHeaders: false
-  };
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return `global:${req.tenantId || 'no-tenant'}:${req.ip}`;
+    }
+});
 
-  return rateLimit({ ...defaultOptions, ...options });
-};
+/**
+ * Rate limiter para autenticação
+ */
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, // 10 tentativas
+    message: {
+        error: 'Muitas tentativas de login',
+        message: 'Tente novamente em 15 minutos'
+    },
+    skipSuccessfulRequests: true,
+    keyGenerator: (req) => {
+        const username = req.body?.username || req.body?.usuario || 'unknown';
+        return `auth:${username}:${req.ip}`;
+    },
+    handler: (req, res) => {
+        const username = req.body?.username || req.body?.usuario;
+        const logger = require('../utils/logger');
 
-// Rate limiters por tipo de operação
-const rateLimiter = {
-  auth: authRateLimit,
-  api: apiRateLimit,
-  admin: adminRateLimit,
-  global: globalRateLimit,
-  custom: createCustomRateLimit
-};
+        logger.warn('Rate limit de autenticação atingido', {
+            username,
+            ip: req.ip,
+            userAgent: req.headers['user-agent']
+        });
+
+        res.status(429).json({
+            error: 'Muitas tentativas de login',
+            message: 'Sua conta foi temporariamente bloqueada. Tente novamente em 15 minutos.',
+            retryAfter: 900
+        });
+    }
+});
+
+/**
+ * Rate limiter por usuário
+ */
+const userLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minuto
+    max: 100,
+    keyGenerator: (req) => {
+        if (req.user?.role === 'super_admin') {
+            return null; // Super admin sem limite
+        }
+        return `user:${req.tenantId}:${req.user?.id || req.ip}`;
+    },
+    skip: (req) => req.user?.role === 'super_admin',
+    handler: (req, res) => {
+        const logger = require('../utils/logger');
+
+        logger.warn('Rate limit de usuário atingido', {
+            user: req.user?.username,
+            tenant: req.tenant?.nome_organizacao,
+            ip: req.ip,
+            path: req.path
+        });
+
+        res.status(429).json({
+            error: 'Limite de requisições excedido',
+            message: 'Você está fazendo muitas requisições. Aguarde um momento.',
+            retryAfter: 60
+        });
+    }
+});
+
+/**
+ * Rate limiter para operações de escrita
+ */
+const writeLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 30, // 30 escritas por minuto
+    keyGenerator: (req) => {
+        return `write:${req.tenantId}:${req.user?.id || req.ip}`;
+    },
+    skip: (req) => req.user?.role === 'super_admin',
+    message: {
+        error: 'Limite de operações de escrita excedido',
+        message: 'Aguarde um momento antes de criar/editar mais registros'
+    }
+});
+
+/**
+ * Rate limiter para operações de leitura
+ */
+const readLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 200, // 200 leituras por minuto
+    keyGenerator: (req) => {
+        return `read:${req.tenantId}:${req.user?.id || req.ip}`;
+    },
+    skip: (req) => req.user?.role === 'super_admin',
+    message: {
+        error: 'Limite de consultas excedido',
+        message: 'Aguarde um momento antes de fazer mais consultas'
+    }
+});
+
+/**
+ * Rate limiter para operações pesadas (relatórios, exportações)
+ */
+const heavyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 operações pesadas
+    keyGenerator: (req) => {
+        return `heavy:${req.tenantId}:${req.user?.id}`;
+    },
+    skip: (req) => req.user?.role === 'super_admin',
+    message: {
+        error: 'Limite de operações pesadas excedido',
+        message: 'Aguarde alguns minutos antes de gerar outro relatório ou exportação'
+    }
+});
 
 module.exports = {
-  rateLimiter,
-  clearRateLimitOnSuccess,
-  createCustomRateLimit,
-
-  // Exportações individuais para compatibilidade
-  authRateLimit,
-  apiRateLimit,
-  adminRateLimit,
-  globalRateLimit
+    globalLimiter,
+    authLimiter,
+    userLimiter,
+    writeLimiter,
+    readLimiter,
+    heavyLimiter
 };
